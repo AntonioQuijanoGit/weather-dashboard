@@ -327,25 +327,39 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   private updateCharts(history: WeatherDataPoint[]): void {
-    const N = this.windowPoints();
-    const last = history.slice(-N);
-    const labels = last.map(d => d.time);
-    const temperatures = last.map(d => d.temperature);
-    const energies = last.map(d => d.energy);
+  const N = this.windowPoints();
+  const last = history.slice(-N);
+  
+  // Generar etiquetas relativas al tiempo actual
+  const now = new Date();
+  const labels = last.map((d, index) => {
+    // Calcular el timestamp relativo (cada punto es 5 segundos atrás)
+    const secondsAgo = (last.length - 1 - index) * 5;
+    const timestamp = new Date(now.getTime() - secondsAgo * 1000);
+    
+    const hours = String(timestamp.getHours()).padStart(2, '0');
+    const minutes = String(timestamp.getMinutes()).padStart(2, '0');
+    const seconds = String(timestamp.getSeconds()).padStart(2, '0');
+    
+    return `${hours}:${minutes}:${seconds}`;
+  });
+  
+  const temperatures = last.map(d => d.temperature);
+  const energies = last.map(d => d.energy);
 
-    if (this.temperatureChart) {
-      this.temperatureChart.data.labels = labels;
-      (this.temperatureChart.data.datasets[0].data as number[]) = temperatures;
-      this.temperatureChart.getDatasetMeta(0).hidden = !this.showTemp;
-      this.temperatureChart.update('none');
-    }
-    if (this.energyChart) {
-      this.energyChart.data.labels = labels;
-      (this.energyChart.data.datasets[0].data as number[]) = energies;
-      this.energyChart.getDatasetMeta(0).hidden = !this.showEnergy;
-      this.energyChart.update('none');
-    }
+  if (this.temperatureChart) {
+    this.temperatureChart.data.labels = labels;
+    (this.temperatureChart.data.datasets[0].data as number[]) = temperatures;
+    this.temperatureChart.getDatasetMeta(0).hidden = !this.showTemp;
+    this.temperatureChart.update('none');
   }
+  if (this.energyChart) {
+    this.energyChart.data.labels = labels;
+    (this.energyChart.data.datasets[0].data as number[]) = energies;
+    this.energyChart.getDatasetMeta(0).hidden = !this.showEnergy;
+    this.energyChart.update('none');
+  }
+}
 
   private drawSparklines(history?: WeatherDataPoint[]): void {
     const N = 60;
