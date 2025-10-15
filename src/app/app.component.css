@@ -1,4 +1,71 @@
 /* ===============================
+   Design tokens (light/dark)
+   =============================== */
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+  --border: rgba(2, 6, 23, 0.08);
+
+  --text: #0f172a;
+  --text-2: #334155;
+  --muted: #64748b;
+
+  --brand: #0EA5A2;     /* serie temperatura */
+  --brand-2: #475569;   /* serie energía */
+
+  --kpi-up: #16a34a;    /* verde */
+  --kpi-down: #ef4444;  /* rojo  */
+
+  --shadow: 0 10px 25px rgba(2,6,23,.06), 0 2px 6px rgba(2,6,23,.04);
+  --shadow-soft: 0 6px 14px rgba(2,6,23,.06), 0 1px 3px rgba(2,6,23,.04);
+
+  /* Switch (modo claro por defecto) */
+  --switch-border: #cbd5e1;
+  --switch-track: linear-gradient(#ffffff, #f3f4f6);
+  --switch-track-on: #111827;
+  --switch-thumb: #ffffff;
+  --switch-thumb-border: #d1d5db;
+}
+
+/* Modo oscuro */
+body.theme-dark {
+  --bg: #0b1220;
+  --surface: #0f172a;
+  --surface-2: #111827;
+  --border: rgba(148,163,184,0.12);
+
+  --text: #e5e7eb;
+  --text-2: #cbd5e1;
+  --muted: #94a3b8;
+
+  --shadow: 0 10px 25px rgba(2,6,23,.35), 0 2px 6px rgba(2,6,23,.3);
+  --shadow-soft: 0 6px 14px rgba(2,6,23,.28), 0 1px 3px rgba(2,6,23,.24);
+
+  /* Switch */
+  --switch-border: #0f172a;
+  --switch-track: #374151;
+  --switch-track-on: #0b1220;
+  --switch-thumb: #e5e7eb;
+  --switch-thumb-border: #111827;
+}
+
+/* ===============================
+   Resets / Base
+   =============================== */
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: radial-gradient(1200px 600px at 20% -5%, rgba(14,165,162,0.12), transparent 40%),
+              radial-gradient(900px 500px at 100% 0%, rgba(71,85,105,0.12), transparent 35%),
+              var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "IBM Plex Sans", sans-serif;
+  line-height: 1.45;
+}
+
+/* ===============================
    Header
    =============================== */
 .header {
@@ -112,10 +179,18 @@
 }
 .kpi-body .timestamp { color: var(--muted); font-size: 12px; }
 
+/* Trend chips */
 .trend {
   font-size: 14px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
   background: var(--surface); border: 1px solid var(--border); color: var(--muted);
 }
+.trend.up   { color: var(--kpi-up) !important; }
+.trend.down { color: var(--kpi-down) !important; }
+.trend.flat { color: var(--muted) !important; }
+
+body.theme-dark .trend.up   { color: #10B981 !important; }
+body.theme-dark .trend.down { color: #F87171 !important; }
+
 .sparkline {
   width: 100%; height: 36px; display: block; margin-top: 6px;
   filter: contrast(.95) saturate(.95);
@@ -200,30 +275,46 @@
 .footer .tech-info { margin-top: 6px; }
 
 /* ===============================
-   Theme switch
+   Theme switch (centrado perfecto)
    =============================== */
 .theme-switch { display: inline-flex; align-items: center; gap: 12px; }
-.theme-switch__input { position: absolute; opacity: 0; pointer-events: none; }
-.theme-switch__label { display: inline-flex; align-items: center; gap: .75rem; cursor: pointer; user-select: none; }
 
-/* Iconos sol/luna activos */
-.theme-switch__icon { font-size: 14px; opacity: .55; transition: opacity .2s ease; }
+.theme-switch__input {
+  position: absolute; opacity: 0; pointer-events: none;
+}
+
+/* Evita que el texto altere la altura del track */
+.theme-switch__label {
+  display: inline-flex;
+  align-items: center;
+  gap: .75rem;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1;
+}
+
+.theme-switch__icon { font-size: 14px; opacity: .55; transition: opacity .2s ease; line-height: 1; }
 .theme-switch__input:not(:checked) + .theme-switch__label .theme-switch__icon:first-child { opacity: .95; }
-.theme-switch__input:checked + .theme-switch__label .theme-switch__icon:last-child { opacity: .95; }
+.theme-switch__input:checked + .theme-switch__label .theme-switch__icon:last-child     { opacity: .95; }
 
-/* Pista/Thumb */
+/* Track */
 .theme-switch__track {
-  position: relative; width: 52px; height: 28px; border-radius: 999px;
-  background:
-    linear-gradient(90deg,
-      #e5e7eb 0 50%,
-      #1f2937 50% 100%);
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 0;
+  width: 52px;
+  height: 28px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #e5e7eb 0 50%, #1f2937 50% 100%);
   background-size: 200% 100%;
   background-position: left center;
   border: 1.5px solid var(--switch-border);
   box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
   transition: background-position .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
+
+/* “Relleno” direccional */
 .theme-switch__track::after {
   content: "";
   position: absolute;
@@ -232,28 +323,42 @@
   background: rgba(0,0,0,.06);
   transition: left .25s ease, right .25s ease, background .25s ease;
 }
+
+/* Thumb centrado */
 .theme-switch__thumb {
-  position: absolute; top: 3px; left: 3px;
+  position: absolute;
+  left: 3px;
+  top: 50%;
+  transform: translate(0, -50%);
   width: 22px; height: 22px; border-radius: 50%;
   background: var(--switch-thumb);
   border: 1.5px solid var(--switch-thumb-border);
   box-shadow: 0 2px 4px rgba(0,0,0,.18);
   transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
-  transform: translateX(0);
 }
-.theme-switch__input:checked + .theme-switch__label .theme-switch__track { background-position: right center; }
-.theme-switch__input:checked + .theme-switch__label .theme-switch__track::after { left: 26px; right: 6px; background: rgba(255,255,255,.1); }
-.theme-switch__input:checked + .theme-switch__label .theme-switch__thumb { transform: translateX(24px); }
 
-/* Hover/Focus */
-.theme-switch__label:hover .theme-switch__track { box-shadow: 0 0 0 3px rgba(14,165,162,.12); }
+/* Estado checked */
+.theme-switch__input:checked + .theme-switch__label .theme-switch__track {
+  background-position: right center;
+}
+.theme-switch__input:checked + .theme-switch__label .theme-switch__track::after {
+  left: 26px; right: 6px; background: rgba(255,255,255,.1);
+}
+.theme-switch__input:checked + .theme-switch__label .theme-switch__thumb {
+  transform: translate(24px, -50%);
+}
+
+/* Hover y focus */
+.theme-switch__label:hover .theme-switch__track {
+  box-shadow: 0 0 0 3px rgba(14,165,162,.12);
+}
 .theme-switch__input:focus-visible + .theme-switch__label .theme-switch__track {
   outline: 2px solid #22c55e;
   outline-offset: 2px;
 }
 
 /* ===============================
-   Skeletons
+   Skeletons (carga inicial)
    =============================== */
 .skeletons {
   display: grid; gap: 14px;
@@ -267,15 +372,3 @@
   border: 1px solid var(--border);
 }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-/* ===============================
-   Trend colors override (¡fijo!)
-   =============================== */
-.trend { color: var(--muted); font-weight: 700; }
-.trend.up   { color: var(--kpi-up) !important; }   /* verde */
-.trend.down { color: var(--kpi-down) !important; } /* rojo  */
-.trend.flat { color: var(--muted) !important; }
-
-/* (opcional) un pelín distintas en oscuro */
-body.theme-dark .trend.up   { color: #10B981 !important; }
-body.theme-dark .trend.down { color: #F87171 !important; }
