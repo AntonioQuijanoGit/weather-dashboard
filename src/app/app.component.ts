@@ -84,6 +84,8 @@ export class AppComponent implements OnInit, OnDestroy {
   // Tendencias
   trendTemp: 'up' | 'down' | 'flat' = 'flat';
   trendEnergy: 'up' | 'down' | 'flat' = 'flat';
+  private lastRealTrendTemp: 'up' | 'down' = 'down';
+  private lastRealTrendEnergy: 'up' | 'down' = 'down';
 
   constructor(private weatherService: WeatherDataService) {}
 
@@ -102,9 +104,15 @@ export class AppComponent implements OnInit, OnDestroy {
     // Charts + datos
     this.initializeCharts();
     this.subscribeToData();
-    this.weatherService.startStreaming();
-    this.isStreaming = true;
-    this.startTimer();
+
+    this.weatherService.startStreamingFromYAML('assets/data.yml')
+      .then(() => {
+        this.isStreaming = true;
+        this.startTimer();
+      })
+      .catch(err => {
+        console.error('Error cargando datos:', err);
+      });
 
     // Redibuja sparklines al redimensionar
     this.resizeSub = fromEvent(window, 'resize').subscribe(() => this.drawSparklines());
@@ -219,7 +227,7 @@ export class AppComponent implements OnInit, OnDestroy {
       ...commonOptions,
       scales: {
         x: { grid: { color: t.grid }, ticks: { color: t.tick, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
-        y: { grid: { color: t.grid }, ticks: { color: t.tick, autoSkip: true, maxTicksLimit: 5 }, beginAtZero: true }
+        y: { grid: { color: t.grid }, ticks: { color: t.tick, autoSkip: true, maxTicksLimit: 5 }, beginAtZero: false }
       }
     };
 
@@ -239,8 +247,23 @@ export class AppComponent implements OnInit, OnDestroy {
   private subscribeToData(): void {
     this.subscriptions.add(
       this.weatherService.getCurrentData().subscribe((d) => {
-        this.trendTemp = this.compareTrend(this.currentTemperature, d.temperature);
-        this.trendEnergy = this.compareTrend(this.currentEnergy, d.energy);
+        const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
+        const newTrendEnergy = this.compareTrend(this.currentEnergy, d.energy);
+        
+        // Mantener tendencias fijas (solo cambian cuando hay movimiento real)
+        if (newTrendTemp !== 'flat') {
+          this.lastRealTrendTemp = newTrendTemp;
+          this.trendTemp = newTrendTemp;
+        } else {
+          this.trendTemp = this.lastRealTrendTemp;
+        }
+        
+        if (newTrendEnergy !== 'flat') {
+          this.lastRealTrendEnergy = newTrendEnergy;
+          this.trendEnergy = newTrendEnergy;
+        } else {
+          this.trendEnergy = this.lastRealTrendEnergy;
+        }
 
         this.currentTemperature = d.temperature;
         this.currentEnergy = d.energy;
@@ -259,7 +282,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private compareTrend(prev: number, next: number): 'up'|'down'|'flat' {
     const delta = next - prev;
-    const eps = 0.01;
+    const eps = 0.001;
     if (delta > eps) return 'up';
     if (delta < -eps) return 'down';
     return 'flat';

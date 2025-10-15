@@ -1,7 +1,7 @@
 // src/app/services/weather-data.service.ts
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, interval, Observable, Subscription, lastValueFrom } from 'rxjs';
+import { BehaviorSubject, timer, Observable, Subscription, lastValueFrom } from 'rxjs';
 import { map } from 'rxjs/operators';
 import * as yaml from 'js-yaml';
 
@@ -33,7 +33,7 @@ export class WeatherDataService {
 
   constructor(private http: HttpClient) {
     // Si sólo quieres usar YAML, comenta esta línea
-    this.generateMockData();
+    // this.generateMockData();
   }
 
   /** Lee un YAML en /assets y lo convierte a objeto tipado */
@@ -43,17 +43,57 @@ export class WeatherDataService {
     );
   }
 
-  /** Carga datos desde YAML (array de WeatherDataPoint) y arranca el streaming */
-  async startStreamingFromYAML(path: string): Promise<void> {
-    const data = await lastValueFrom(this.loadYAMLFile<WeatherDataPoint[]>(path));
-    if (Array.isArray(data)) {
-      this.mockData = data;
-      this.resetStreaming();
-      this.startStreaming();
-    } else {
-      console.warn('El YAML no es un array de WeatherDataPoint');
-    }
+  /** Carga datos desde YAML (estructura con temperature y power) y arranca el streaming */
+ /** Carga datos desde YAML (estructura con temperature y power) y arranca el streaming */
+async startStreamingFromYAML(path: string): Promise<void> {
+  interface YAMLStructure {
+    temperature: {
+      unit: string;
+      values: Array<{ time: string; value: number }>;
+    };
+    power: {
+      unit: string;
+      values: Array<{ time: string; value: string | number }>;
+    };
   }
+
+  const data = await lastValueFrom(this.loadYAMLFile<YAMLStructure>(path));
+  
+  if (!data?.temperature?.values || !data?.power?.values) {
+    console.warn('El YAML no tiene la estructura esperada (temperature y power)');
+    return;
+  }
+
+  // Crear un mapa de power por time para búsqueda rápida
+  const powerMap = new Map<string, number>();
+  data.power.values.forEach(item => {
+    const powerValue = typeof item.value === 'string' 
+      ? parseFloat(item.value) 
+      : item.value;
+    powerMap.set(item.time, powerValue);
+  });
+
+  // Combinar temperatura y power
+// Combinar temperatura y power
+this.mockData = data.temperature.values.map(item => {
+  const temp = this.convertDKToCelsius(item.value);
+  const powerMW = powerMap.get(item.time) || 0;
+  
+  // Convertir MW a kWh (energía producida en 5 segundos)
+  // kWh = MW × 1000 kW/MW × (5 segundos / 3600 segundos/hora)
+  const energy = powerMW * 1000 * (5 / 3600);
+
+    return {
+      time: item.time,
+      temperature: temp,
+      energy: Number(energy.toFixed(2))
+    };
+  });
+
+  console.log(`Cargados ${this.mockData.length} puntos desde YAML`);
+  this.resetStreaming();
+  this.startStreaming();
+}
 
   /** Genera datos simulados para demostración (24h, paso de 5s) */
   private generateMockData(): void {
@@ -98,7 +138,18 @@ export class WeatherDataService {
     const stepsSinceMidnight = Math.floor((now.getTime() - midnight.getTime()) / stepMs);
     this.currentIndex = Math.min(Math.max(stepsSinceMidnight, 0), this.mockData.length - 1);
 
-    this.streamSub = interval(stepMs).subscribe(() => {
+    // 🆕 Prellenar historial con los últimos 60 puntos (o los disponibles)
+    const historyStartIndex = Math.max(0, this.currentIndex - 60);
+    this.dataHistory = this.mockData.slice(historyStartIndex, this.currentIndex);
+    this.dataHistorySubject.next([...this.dataHistory]);
+
+    // 🆕 Emitir el dato actual inmediatamente
+    if (this.mockData[this.currentIndex]) {
+      this.currentDataSubject.next(this.mockData[this.currentIndex]);
+    }
+
+    // 🆕 Usar timer(0, 5000) en lugar de interval(5000)
+    this.streamSub = timer(0, stepMs).subscribe(() => {
       if (this.currentIndex < this.mockData.length) {
         const currentData = this.mockData[this.currentIndex];
 
