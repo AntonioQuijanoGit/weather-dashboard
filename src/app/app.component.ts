@@ -245,40 +245,44 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // ======== Datos ========
   private subscribeToData(): void {
-    this.subscriptions.add(
-      this.weatherService.getCurrentData().subscribe((d) => {
-        const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
-        const newTrendEnergy = this.compareTrend(this.currentEnergy, d.energy);
-        
-        // Mantener tendencias fijas (solo cambian cuando hay movimiento real)
-        if (newTrendTemp !== 'flat') {
-          this.lastRealTrendTemp = newTrendTemp;
-          this.trendTemp = newTrendTemp;
-        } else {
-          this.trendTemp = this.lastRealTrendTemp;
-        }
-        
-        if (newTrendEnergy !== 'flat') {
-          this.lastRealTrendEnergy = newTrendEnergy;
-          this.trendEnergy = newTrendEnergy;
-        } else {
-          this.trendEnergy = this.lastRealTrendEnergy;
-        }
+  this.subscriptions.add(
+    this.weatherService.getCurrentData().subscribe((d) => {
+      const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
+      const newTrendEnergy = this.compareTrend(this.currentEnergy, d.energy);
+      
+      // Mantener tendencias fijas (solo cambian cuando hay movimiento real)
+      if (newTrendTemp !== 'flat') {
+        this.lastRealTrendTemp = newTrendTemp;
+        this.trendTemp = newTrendTemp;
+      } else {
+        this.trendTemp = this.lastRealTrendTemp;
+      }
+      
+      if (newTrendEnergy !== 'flat') {
+        this.lastRealTrendEnergy = newTrendEnergy;
+        this.trendEnergy = newTrendEnergy;
+      } else {
+        this.trendEnergy = this.lastRealTrendEnergy;
+      }
 
-        this.currentTemperature = d.temperature;
-        this.currentEnergy = d.energy;
-        this.currentTime = d.time;
-        this.dataPointsProcessed = this.weatherService.getProcessedDataCount();
-      })
-    );
+      this.currentTemperature = d.temperature;
+      this.currentEnergy = d.energy;
+      
+      // Usar hora real del sistema
+      const now = new Date();
+      this.currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      
+      this.dataPointsProcessed = this.weatherService.getProcessedDataCount();
+    })
+  );
 
-    this.subscriptions.add(
-      this.weatherService.getDataHistory().subscribe((history) => {
-        this.updateCharts(history);
-        this.drawSparklines(history);
-      })
-    );
-  }
+  this.subscriptions.add(
+    this.weatherService.getDataHistory().subscribe((history) => {
+      this.updateCharts(history);
+      this.drawSparklines(history);
+    })
+  );
+}
 
   private compareTrend(prev: number, next: number): 'up'|'down'|'flat' {
     const delta = next - prev;
