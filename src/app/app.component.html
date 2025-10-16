@@ -1,36 +1,37 @@
 <header class="header">
   <div class="brand">
-    <div class="brand__logo">🌤️</div>
-<div class="brand__text">
-  <h1>Meteológica</h1>
-  <p>Predicción en tiempo real</p>
-</div>
+    <div class="brand__logo">
+      <iconify-icon icon="solar:wind-bold-duotone" width="22" height="22" aria-hidden="true"></iconify-icon>
+    </div>
+    <div class="brand__text">
+      <h1>Meteológica</h1>
+      <p>Predicción en tiempo real</p>
+    </div>
   </div>
 
   <div class="header-actions">
-    <!-- Switch Claro/Oscuro -->
+    <!-- Switch Claro/Oscuro con Iconify -->
     <div class="theme-switch" aria-label="Cambiar tema">
-  <input
-  #themeToggle
-  id="themeToggle"
-  type="checkbox"
-  class="theme-switch__input"
-  [checked]="themeChoice==='dark'"
-  (change)="setTheme(themeToggle.checked ? 'dark' : 'light')"
-  aria-labelledby="themeSwitchLabel"
-/>
-
-
+      <input
+        #themeToggle
+        id="themeToggle"
+        type="checkbox"
+        class="theme-switch__input"
+        [checked]="themeChoice==='dark'"
+        (change)="setTheme(themeToggle.checked ? 'dark' : 'light')"
+        aria-labelledby="themeSwitchLabel"
+      />
       <label class="theme-switch__label" for="themeToggle">
-        <span class="theme-switch__icon">☀️</span>
+        <iconify-icon class="theme-switch__icon" icon="ph:sun-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
         <span class="theme-switch__track">
           <span class="theme-switch__thumb"></span>
         </span>
-        <span id="themeSwitchLabel" class="theme-switch__icon">🌙</span>
+        <span id="themeSwitchLabel" class="sr-only">Cambiar tema</span>
+        <iconify-icon class="theme-switch__icon" icon="ph:moon-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
       </label>
     </div>
 
-    <div class="status" [class.active]="isStreaming" aria-live="polite">
+    <div class="status" role="status" aria-live="polite" aria-atomic="true" [class.active]="isStreaming">
       <span class="status-indicator"></span>
       <span>{{ isStreaming ? 'Actualizando datos en tiempo real' : 'Inicializando...' }}</span>
     </div>
@@ -38,34 +39,38 @@
 </header>
 
 <main class="container">
-  <!-- Controles (solo series) -->
+  <!-- Controles -->
   <section class="toolbar card-surface">
     <div class="series-group" role="group" aria-label="Series">
       <span class="label">Series:</span>
 
       <label class="toggle">
-        <input
-          #tempChk
-          type="checkbox"
-          [checked]="showTemp"
-          (change)="onTempCheckboxChange(tempChk.checked)">
-        <span>🌡️ Temperatura</span>
+        <input #tempChk type="checkbox" [checked]="showTemp" (change)="onTempCheckboxChange(tempChk.checked)">
+        <span>
+          <iconify-icon icon="ph:thermometer-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          &nbsp;Temperatura
+        </span>
       </label>
 
       <label class="toggle">
-        <input
-          #energyChk
-          type="checkbox"
-          [checked]="showEnergy"
-          (change)="onEnergyCheckboxChange(energyChk.checked)">
-        <span>⚡ Energía</span>
+        <input #energyChk type="checkbox" [checked]="showEnergy" (change)="onEnergyCheckboxChange(energyChk.checked)">
+        <span>
+          <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          &nbsp;Energía
+        </span>
       </label>
     </div>
   </section>
 
   <!-- KPIs -->
   <section class="current-values card-surface">
-    <h2 class="section-title">Indicadores actuales</h2>
+    <div class="kpis-header">
+      <h2 class="section-title">Indicadores</h2>
+      <div class="microcopy">
+        <span class="dot" [class.on]="isStreaming"></span>
+        <span class="muted">Actualizado {{ lastUpdatedRel }}</span>
+      </div>
+    </div>
 
     @if (processedDisplay==='0') {
       <div class="skeletons">
@@ -74,42 +79,48 @@
       </div>
     } @else {
       <div class="cards">
+        <!-- KPI Temperatura -->
         <div class="card kpi" role="group" aria-label="Temperatura media">
-          <div class="kpi-header">
-            <div class="card-icon">🌡️</div>
-            <h3>Temperatura media</h3>
-          </div>
-          <div class="kpi-body">
-            <div class="value">
-              {{ tempDisplay }}°C
-              <span class="trend"
-                    [class.up]="trendTemp==='up'"
-                    [class.down]="trendTemp==='down'"
-                    [class.flat]="trendTemp==='flat'">
-                {{ trendTemp==='up' ? '▲' : trendTemp==='down' ? '▼' : '—' }}
-              </span>
+          <div class="kpi-head">
+            <div class="kpi-title">
+              <iconify-icon icon="ph:thermometer-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
+              <span>Temperatura media</span>
             </div>
-            <div class="timestamp">Última actualización: {{ currentTime }}</div>
+            <div class="kpi-trend" [class.up]="trendTemp==='up'" [class.down]="trendTemp==='down'">
+              <iconify-icon
+                [icon]="trendTemp==='up' ? 'ph:trend-up-duotone' : trendTemp==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
+                width="16" height="16" aria-hidden="true"></iconify-icon>
+              <span class="muted">{{ trendTemp==='flat' ? 'estable' : (trendTemp==='up' ? 'alza' : 'baja') }}</span>
+            </div>
+          </div>
+
+          <div class="kpi-body">
+            <div class="kpi-value">
+              {{ tempDisplay }}<span class="unit">°C</span>
+            </div>
             <canvas #sparkTemp class="sparkline" aria-hidden="true"></canvas>
           </div>
         </div>
 
+        <!-- KPI Energía -->
         <div class="card kpi" role="group" aria-label="Energía producida">
-          <div class="kpi-header">
-            <div class="card-icon">⚡</div>
-            <h3>Energía producida</h3>
-          </div>
-          <div class="kpi-body">
-            <div class="value">
-              {{ energyDisplay }} kWh
-              <span class="trend"
-                    [class.up]="trendEnergy==='up'"
-                    [class.down]="trendEnergy==='down'"
-                    [class.flat]="trendEnergy==='flat'">
-                {{ trendEnergy==='up' ? '▲' : trendEnergy==='down' ? '▼' : '—' }}
-              </span>
+          <div class="kpi-head">
+            <div class="kpi-title">
+              <iconify-icon icon="ph:lightning-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
+              <span>Energía producida</span>
             </div>
-            <div class="timestamp">Última actualización: {{ currentTime }}</div>
+            <div class="kpi-trend" [class.up]="trendEnergy==='up'" [class.down]="trendEnergy==='down'">
+              <iconify-icon
+                [icon]="trendEnergy==='up' ? 'ph:trend-up-duotone' : trendEnergy==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
+                width="16" height="16" aria-hidden="true"></iconify-icon>
+              <span class="muted">{{ trendEnergy==='flat' ? 'estable' : (trendEnergy==='up' ? 'alza' : 'baja') }}</span>
+            </div>
+          </div>
+
+          <div class="kpi-body">
+            <div class="kpi-value">
+              {{ energyDisplay }}<span class="unit">kWh</span>
+            </div>
             <canvas #sparkEnergy class="sparkline" aria-hidden="true"></canvas>
           </div>
         </div>
@@ -118,32 +129,87 @@
   </section>
 
   <!-- Gráficas -->
-  <section class="charts">
-    <div class="chart-container card-surface">
-      <div class="section-title">Temperatura (°C)</div>
-      <canvas #temperatureChart></canvas>
-    </div>
-    <div class="chart-container card-surface">
-      <div class="section-title">Energía producida (kWh)</div>
-      <canvas #energyChart></canvas>
-    </div>
-  </section>
+  <!-- Gráficas -->
+<section class="charts">
+  <div class="chart-container card-surface">
+    <div class="section-title">Temperatura (°C)</div>
+    <p id="tempChartDesc" class="sr-only">
+      Gráfico de líneas de temperatura en grados Celsius.
+      Ventana activa: {{ activeRangeLabel }}.
+      Última actualización: {{ lastUpdatedRel }}.
+    </p>
+    <canvas
+      #temperatureChart
+      role="img"
+      [attr.aria-label]="'Serie de temperatura en °C, ventana ' + activeRangeLabel"
+      [attr.aria-describedby]="'tempChartDesc'">
+    </canvas>
+  </div>
+
+  <div class="chart-container card-surface">
+    <div class="section-title">Energía producida (kWh)</div>
+    <p id="energyChartDesc" class="sr-only">
+      Gráfico de líneas de energía producida en kilovatios-hora.
+      Ventana activa: {{ activeRangeLabel }}.
+      Última actualización: {{ lastUpdatedRel }}.
+    </p>
+    <canvas
+      #energyChart
+      role="img"
+      [attr.aria-label]="'Serie de energía en kWh, ventana ' + activeRangeLabel"
+      [attr.aria-describedby]="'energyChartDesc'">
+    </canvas>
+  </div>
+</section>
+
 
   <!-- Estadísticas -->
   <section class="statistics card-surface">
-    <h2 class="section-title">Estadísticas</h2>
+    <div class="stats-header">
+      <h2 class="section-title">Estadísticas</h2>
+      <div class="muted">Ventana: {{ activeRangeLabel }}</div>
+
+    </div>
+
     <div class="stats-grid">
       <div class="stat">
         <span class="stat-label">Datos procesados</span>
         <span class="stat-value">{{ processedDisplay }}</span>
       </div>
       <div class="stat">
+        <span class="stat-label">Temp. media (ventana)</span>
+        <span class="stat-value">{{ stats.tempAvg.toFixed(1) }} °C</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Máx. temperatura</span>
+        <span class="stat-value">{{ stats.tempMax.toFixed(1) }} °C</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Energía acumulada</span>
+        <span class="stat-value">{{ stats.energySum.toFixed(2) }} kWh</span>
+      </div>
+      <div class="stat">
         <span class="stat-label">Intervalo de actualización</span>
-        <span class="stat-value">5 segundos</span>
+        <span class="stat-value">5 s</span>
       </div>
       <div class="stat">
         <span class="stat-label">Tiempo transcurrido</span>
         <span class="stat-value">{{ elapsedTime }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Donuts -->
+  <section class="charts card-surface" style="margin-top:16px; padding:14px;">
+    <h2 class="section-title">Distribuciones</h2>
+    <div class="donut-grid">
+      <div class="donut-card">
+        <div class="section-title" style="margin:0 0 8px;">Energía por franja</div>
+        <canvas #energyDonut></canvas>
+      </div>
+      <div class="donut-card">
+        <div class="section-title" style="margin:0 0 8px;">Temperatura — rangos</div>
+        <canvas #tempDonut></canvas>
       </div>
     </div>
   </section>
