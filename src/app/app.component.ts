@@ -1,3 +1,4 @@
+// src/app/app.component.ts
 import {
   Component,
   OnInit,
@@ -14,9 +15,9 @@ import {
   ChartType,
   registerables
 } from 'chart.js';
-import { WeatherDataService, WeatherDataPoint } from './weather-data.service';
+import { WeatherStreamService } from './services/data/weather-stream.service';
+import { WeatherDataPoint } from './services/data/weather-data-loader.service';
 import { Subscription, fromEvent } from 'rxjs';
-
 
 Chart.register(...registerables);
 
@@ -164,17 +165,17 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   lastUpdatedRel: string = 'hace 0 s';
   private rtf = new Intl.RelativeTimeFormat('es-ES', { numeric: 'auto' });
 
-  // Captions Donuts (para tu HTML)
+  // Captions Donuts
   energyPeakTime = '--:--';
   energyPeakKwh  = 0;
   tempStateLabel = 'Estable';
   tempVariationLabel = '±0.0°C';
 
-  // NUEVO: Control de animaciones de contador
+  // Control de animaciones de contador
   private tempAnimationFrame?: number;
   private energyAnimationFrame?: number;
 
-  constructor(private weatherService: WeatherDataService) {}
+  constructor(private weatherStream: WeatherStreamService) {}
 
   // ---------- Ciclo de vida ----------
   ngOnInit(): void {
@@ -195,8 +196,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscribeToData();
 
     // Arranque de streaming (YAML en assets)
-    this.weatherService
-      .startStreamingFromYAML('assets/data.yml')
+    this.weatherStream
+      .startStreaming('assets/data.yml')
       .then(() => {
         this.isStreaming = true;
         this.startTimer();
@@ -222,7 +223,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
-    // NUEVO: Cancelar animaciones pendientes
+    // Cancelar animaciones pendientes
     if (this.tempAnimationFrame) {
       cancelAnimationFrame(this.tempAnimationFrame);
     }
@@ -387,9 +388,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           tooltip: {
             ...commonOptions.plugins!.tooltip!,
             callbacks: {
-              // título = hora (label del eje X tal cual)
               title: (items) => (items?.[0]?.label ?? ''),
-              // cuerpo = valor + unidad con formato es-ES
               label: (item) => {
                 const val = typeof item.parsed?.y === 'number' ? item.parsed.y : 0;
                 return `${this.nfTemp.format(val)} °C`;
@@ -565,15 +564,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // ---------- NUEVO: Animación de valores numéricos ----------
-  /**
-   * Anima un valor numérico de start a end con easing suave
-   * @param start Valor inicial
-   * @param end Valor final
-   * @param duration Duración en ms
-   * @param onUpdate Callback que recibe el valor actual en cada frame
-   * @param onComplete Callback opcional cuando termina
-   */
+  // ---------- Animación de valores numéricos ----------
   private animateValue(
     start: number,
     end: number,
@@ -588,7 +579,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / duration, 1);
       
-      // Easing function: easeOutCubic para suavidad
+      // Easing function: easeOutCubic
       const eased = 1 - Math.pow(1 - progress, 3);
       
       const currentValue = start + delta * eased;
@@ -597,7 +588,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       if (progress < 1) {
         return requestAnimationFrame(animate);
       } else {
-        onUpdate(end); // Asegurar valor final exacto
+        onUpdate(end);
         if (onComplete) onComplete();
         return 0;
       }
@@ -610,7 +601,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private subscribeToData(): void {
     // Dato actual
     this.subscriptions.add(
-      this.weatherService.getCurrentData().subscribe((d: WeatherDataPoint) => {
+      this.weatherStream.getCurrentData().subscribe((d: WeatherDataPoint) => {
         const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
         const newTrendEnergy = this.compareTrend(this.currentEnergy, d.energy);
 
@@ -629,7 +620,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         }
 
         // ANIMACIÓN: Temperatura
-        // Cancelar animación anterior si existe
         if (this.tempAnimationFrame) {
           cancelAnimationFrame(this.tempAnimationFrame);
         }
@@ -637,14 +627,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.tempAnimationFrame = this.animateValue(
           this.currentTemperature,
           d.temperature,
-          400, // 400ms de duración
+          400,
           (value) => {
             this.currentTemperature = value;
           }
         );
 
         // ANIMACIÓN: Energía
-        // Cancelar animación anterior si existe
         if (this.energyAnimationFrame) {
           cancelAnimationFrame(this.energyAnimationFrame);
         }
@@ -652,29 +641,27 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.energyAnimationFrame = this.animateValue(
           this.currentEnergy,
           d.energy,
-          400, // 400ms de duración
+          400,
           (value) => {
             this.currentEnergy = value;
           }
         );
 
-        // Tiempo actual (sin animación)
+        // Tiempo actual
         const now = new Date();
         this.currentTime =
           `${String(now.getHours()).padStart(2,'0')}:` +
           `${String(now.getMinutes()).padStart(2,'0')}:` +
           `${String(now.getSeconds()).padStart(2,'0')}`;
 
-        this.dataPointsProcessed = this.weatherService.getProcessedDataCount();
-
-        // sello de última actualización
+        this.dataPointsProcessed = this.weatherStream.getProcessedDataCount();
         this.lastUpdatedAt = Date.now();
       })
     );
 
-    // Historial para gráficos + donuts + stats + sparklines
+    // Historial
     this.subscriptions.add(
-      this.weatherService.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
+      this.weatherStream.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
         this.updateCharts(history);
         this.updateDonuts(history);
         this.updateStats(history);
@@ -693,7 +680,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private windowPoints(): number {
     const m = this.ranges.find(r => r.key === this.activeRangeKey)?.minutes ?? 15;
-    return Math.max(12, Math.floor((m * 60) / 5)); // 5s por punto
+    return Math.max(12, Math.floor((m * 60) / 5));
   }
 
   onChangeRange(key: string): void {
@@ -768,7 +755,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
       if (p.energy > maxEnergy) {
         maxEnergy = p.energy;
-        peakTime = p.time.slice(0, 5); // HH:MM
+        peakTime = p.time.slice(0, 5);
       }
     }
 
@@ -780,12 +767,11 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       this.energyDonut.update('none');
     }
-    // exposiciones para captions
     this.energyPeakTime = peakTime;
     this.energyPeakKwh  = Number(maxEnergy.toFixed(2));
 
     // Temperatura por rangos + estado
-    const tempCounts = [0, 0, 0, 0]; // <10, 10–20, 20–30, ≥30
+    const tempCounts = [0, 0, 0, 0];
     const tempValues: number[] = [];
 
     for (const p of history) {
@@ -821,7 +807,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       this.tempDonut.update('none');
     }
-    // exposiciones para captions
     this.tempStateLabel = tempState;
     this.tempVariationLabel = tempVariation;
   }
