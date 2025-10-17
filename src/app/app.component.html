@@ -129,182 +129,173 @@
   </section>
 
   <!-- Gráficas -->
-  <!-- Gráficas -->
-<section class="charts">
-  <div class="chart-container card-surface">
-    <div class="section-title">Temperatura (°C)</div>
-    <p id="tempChartDesc" class="sr-only">
-      Gráfico de líneas de temperatura en grados Celsius.
-      Ventana activa: {{ activeRangeLabel }}.
-      Última actualización: {{ lastUpdatedRel }}.
-    </p>
-    <canvas
-      #temperatureChart
-      role="img"
-      [attr.aria-label]="'Serie de temperatura en °C, ventana ' + activeRangeLabel"
-      [attr.aria-describedby]="'tempChartDesc'">
-    </canvas>
-  </div>
+  <section class="charts">
+    <div class="chart-container card-surface">
+      <div class="section-title">Temperatura (°C)</div>
+      <p id="tempChartDesc" class="sr-only">
+        Gráfico de líneas de temperatura en grados Celsius.
+        Ventana activa: {{ activeRangeLabel }}.
+        Última actualización: {{ lastUpdatedRel }}.
+      </p>
+      <canvas
+        #temperatureChart
+        role="img"
+        [attr.aria-label]="'Serie de temperatura en °C, ventana ' + activeRangeLabel"
+        [attr.aria-describedby]="'tempChartDesc'">
+      </canvas>
+    </div>
 
-  <div class="chart-container card-surface">
-    <div class="section-title">Energía producida (kWh)</div>
-    <p id="energyChartDesc" class="sr-only">
-      Gráfico de líneas de energía producida en kilovatios-hora.
-      Ventana activa: {{ activeRangeLabel }}.
-      Última actualización: {{ lastUpdatedRel }}.
-    </p>
-    <canvas
-      #energyChart
-      role="img"
-      [attr.aria-label]="'Serie de energía en kWh, ventana ' + activeRangeLabel"
-      [attr.aria-describedby]="'energyChartDesc'">
-    </canvas>
-  </div>
-</section>
-
+    <div class="chart-container card-surface">
+      <div class="section-title">Energía producida (kWh)</div>
+      <p id="energyChartDesc" class="sr-only">
+        Gráfico de líneas de energía producida en kilovatios-hora.
+        Ventana activa: {{ activeRangeLabel }}.
+        Última actualización: {{ lastUpdatedRel }}.
+      </p>
+      <canvas
+        #energyChart
+        role="img"
+        [attr.aria-label]="'Serie de energía en kWh, ventana ' + activeRangeLabel"
+        [attr.aria-describedby]="'energyChartDesc'">
+      </canvas>
+    </div>
+  </section>
 
   <!-- Estadísticas -->
-  <!-- Estadísticas -->
-<!-- Estadísticas -->
-<section class="statistics card-surface">
-  <div class="stats-header">
-    <h2 class="section-title">Estadísticas</h2>
-    <div class="muted">Ventana: {{ activeRangeLabel }}</div>
-  </div>
-
-  <div class="stats-grid">
-
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:database-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Datos procesados
-      </span>
-      <span class="stat-value">{{ processedDisplay }}</span>
+  <section class="statistics card-surface">
+    <div class="stats-header">
+      <h2 class="section-title">Estadísticas</h2>
+      <div class="muted">Ventana: {{ activeRangeLabel }}</div>
     </div>
 
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:thermometer-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Temp. media (ventana)
-      </span>
-      <span class="stat-value">{{ stats.tempAvg.toFixed(1) }} °C</span>
-    </div>
+    <div class="stats-grid">
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:database-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Datos procesados
+        </span>
+        <span class="stat-value">{{ processedDisplay }}</span>
+      </div>
 
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:flame-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Máx. temperatura
-      </span>
-      <span class="stat-value">{{ stats.tempMax.toFixed(1) }} °C</span>
-    </div>
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:thermometer-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Temp. media (ventana)
+        </span>
+        <span class="stat-value">{{ stats.tempAvg.toFixed(1) }} °C</span>
+      </div>
 
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Energía acumulada
-      </span>
-      <span class="stat-value">{{ stats.energySum.toFixed(2) }} kWh</span>
-    </div>
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:flame-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Máx. temperatura
+        </span>
+        <span class="stat-value">{{ stats.tempMax.toFixed(1) }} °C</span>
+      </div>
 
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:clock-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Intervalo de actualización
-      </span>
-      <span class="stat-value">5 s</span>
-    </div>
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Energía acumulada
+        </span>
+        <span class="stat-value">{{ stats.energySum.toFixed(2) }} kWh</span>
+      </div>
 
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:hourglass-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Tiempo transcurrido
-      </span>
-      <span class="stat-value">{{ elapsedTime }}</span>
-    </div>
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:clock-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Intervalo de actualización
+        </span>
+        <span class="stat-value">5 s</span>
+      </div>
 
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:activity-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Progreso de la ventana
-      </span>
-      <span class="stat-value">{{ windowProgressPct }}%</span>
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:hourglass-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Tiempo transcurrido
+        </span>
+        <span class="stat-value">{{ elapsedTime }}</span>
+      </div>
 
-      <div class="progress">
-        <div class="progress__bar" [style.width.%]="windowProgressPct"></div>
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:activity-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Progreso de la ventana
+        </span>
+        <span class="stat-value">{{ windowProgressPct }}%</span>
+
+        <div class="progress">
+          <div class="progress__bar" [style.width.%]="windowProgressPct"></div>
+        </div>
       </div>
     </div>
+  </section>
 
-  </div>
-</section>
-
-
-
-  <!-- Donuts -->
+  <!-- Resumen del periodo (KPIs, sin donuts) -->
   <section class="summary-kpis card-surface" style="margin-top:16px;">
-  <div class="kpis-header">
-    <h2 class="section-title">Resumen del periodo</h2>
-    <div class="muted">Ventana: {{ activeRangeLabel }}</div>
-  </div>
-
-  <div class="cards kpi-quad">
-    <!-- 1) Pico de energía -->
-    <div class="card kpi" role="group" aria-label="Pico de energía">
-      <div class="kpi-head">
-        <div class="kpi-title">
-          <iconify-icon icon="ph:lightning-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-          <span>Pico de energía</span>
-        </div>
-      </div>
-      <div class="kpi-body">
-        <div class="kpi-value">{{ energyPeakKwh.toFixed(2) }}<span class="unit">kWh</span></div>
-        <div class="muted">Hoy a las {{ energyPeakTime }}</div>
-      </div>
+    <div class="kpis-header">
+      <h2 class="section-title">Resumen del periodo</h2>
+      <div class="muted">Ventana: {{ activeRangeLabel }}</div>
     </div>
 
-    <!-- 2) Temperatura media -->
-    <div class="card kpi" role="group" aria-label="Temperatura media (ventana)">
-      <div class="kpi-head">
-        <div class="kpi-title">
-          <iconify-icon icon="ph:thermometer-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-          <span>Temperatura media</span>
+    <div class="cards kpi-quad">
+      <!-- 1) Pico de energía -->
+      <div class="card kpi" role="group" aria-label="Pico de energía">
+        <div class="kpi-head">
+          <div class="kpi-title">
+            <iconify-icon icon="ph:lightning-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
+            <span>Pico de energía</span>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ energyPeakKwh.toFixed(2) }}<span class="unit">kWh</span></div>
+          <div class="muted">Hoy a las {{ energyPeakTime }}</div>
         </div>
       </div>
-      <div class="kpi-body">
-        <div class="kpi-value">{{ stats.tempAvg.toFixed(1) }}<span class="unit">°C</span></div>
-        <div class="muted">Últimos {{ activeRangeLabel }}</div>
-      </div>
-    </div>
 
-    <!-- 3) Variación térmica -->
-    <div class="card kpi" role="group" aria-label="Variación térmica">
-      <div class="kpi-head">
-        <div class="kpi-title">
-          <iconify-icon icon="ph:activity-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-          <span>Variación térmica</span>
+      <!-- 2) Temperatura media -->
+      <div class="card kpi" role="group" aria-label="Temperatura media (ventana)">
+        <div class="kpi-head">
+          <div class="kpi-title">
+            <iconify-icon icon="ph:thermometer-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
+            <span>Temperatura media</span>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ stats.tempAvg.toFixed(1) }}<span class="unit">°C</span></div>
+          <div class="muted">Últimos {{ activeRangeLabel }}</div>
         </div>
       </div>
-      <div class="kpi-body">
-        <div class="kpi-value">{{ tempVariationLabel.replace('.', ',') }}</div>
-        <div class="muted">{{ tempStateLabel }}</div>
-      </div>
-    </div>
 
-    <!-- 4) Energía acumulada -->
-    <div class="card kpi" role="group" aria-label="Energía acumulada (ventana)">
-      <div class="kpi-head">
-        <div class="kpi-title">
-          <iconify-icon icon="ph:battery-charging-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-          <span>Energía acumulada</span>
+      <!-- 3) Variación térmica -->
+      <div class="card kpi" role="group" aria-label="Variación térmica">
+        <div class="kpi-head">
+          <div class="kpi-title">
+            <iconify-icon icon="ph:activity-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
+            <span>Variación térmica</span>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ tempVariationLabel.replace('.', ',') }}</div>
+          <div class="muted">{{ tempStateLabel }}</div>
         </div>
       </div>
-      <div class="kpi-body">
-        <div class="kpi-value">{{ stats.energySum.toFixed(2) }}<span class="unit">kWh</span></div>
-        <div class="muted">Últimos {{ activeRangeLabel }}</div>
+
+      <!-- 4) Energía acumulada -->
+      <div class="card kpi" role="group" aria-label="Energía acumulada (ventana)">
+        <div class="kpi-head">
+          <div class="kpi-title">
+            <iconify-icon icon="ph:battery-charging-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
+            <span>Energía acumulada</span>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">{{ stats.energySum.toFixed(2) }}<span class="unit">kWh</span></div>
+          <div class="muted">Últimos {{ activeRangeLabel }}</div>
+        </div>
       </div>
     </div>
-  </div>
-</section>
-
+  </section>
 </main>
 
 <footer class="footer">
