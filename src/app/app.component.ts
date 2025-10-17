@@ -15,6 +15,7 @@ import {
   registerables
 } from 'chart.js';
 import { WeatherStreamService } from './services/data/weather-stream.service';
+import { CommonModule } from '@angular/common';
 import { WeatherDataPoint } from './services/data/weather-data-loader.service';
 import { Subscription, fromEvent } from 'rxjs';
 
@@ -35,7 +36,7 @@ type RangeKey = '5m' | '15m' | '60m' | '24h';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -71,7 +72,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   get activeRangeLabel(): string {
     const item = this.ranges.find(r => r.key === this.activeRangeKey);
     return item ? item.label : '';
-  }
+    }
 
   // Mostrar/ocultar series
   showTemp = true;
@@ -99,18 +100,21 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   get energyDisplay(): string { return this.nfEnergy.format(this.currentEnergy); }
   get processedDisplay(): string { return this.nfInt.format(this.dataPointsProcessed); }
 
-  // Tendencias
+  // Tendencias y pulses (animaciones sutiles en KPIs)
   trendTemp:   'up' | 'down' | 'flat' = 'flat';
   trendEnergy: 'up' | 'down' | 'flat' = 'flat';
   tempPulse = false;
   energyPulse = false;
-
 
   private lastRealTrendTemp:   'up' | 'down' = 'down';
   private lastRealTrendEnergy: 'up' | 'down' = 'down';
 
   // Estadísticas simples
   stats = { tempAvg: 0, tempMax: 0, energySum: 0, points: 0 };
+
+  // Para calcular variaciones vs ventana anterior (usado por el HTML)
+  prevStats: { tempAvg: number; energySum: number } = { tempAvg: 0, energySum: 0 };
+  deltas: { tempAvgPct: number; energySumPct: number } = { tempAvgPct: 0, energySumPct: 0 };
 
   // "Actualizado hace …"
   lastUpdatedAt: number = Date.now();
@@ -403,14 +407,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.tempAnimationFrame = this.animateValue(this.currentTemperature, d.temperature, 400, (value) => {
           this.currentTemperature = value;
         });
-        this.tempPulse = !this.tempPulse
+        this.tempPulse = !this.tempPulse;
 
         if (this.energyAnimationFrame) cancelAnimationFrame(this.energyAnimationFrame);
         this.energyAnimationFrame = this.animateValue(this.currentEnergy, d.energy, 400, (value) => {
           this.currentEnergy = value;
         });
-          this.energyPulse = !this.energyPulse; 
-
+        this.energyPulse = !this.energyPulse;
 
         const now = new Date();
         this.currentTime =
@@ -427,7 +430,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.add(
       this.weatherStream.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
         this.updateCharts(history);
-        this.updateSummary(history); // ← KPIs de resumen sin donuts
+        this.updateSummary(history); // KPIs de resumen sin donuts
         this.updateStats(history);
         this.drawSparklines(history);
       })
@@ -447,9 +450,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     return Math.max(12, Math.floor((m * 60) / 5));
   }
 
-  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-     % de progreso de la ventana activa (0–100)
-     <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+  /* % de progreso de la ventana activa (0–100) */
   get windowProgressPct(): number {
     const total = this.windowPoints();
     const points = this.stats?.points ?? 0;
@@ -559,27 +560,109 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private updateStats(history: WeatherDataPoint[]): void {
-    if (!history?.length) {
-      this.stats = { tempAvg: 0, tempMax: 0, energySum: 0, points: 0 };
-      return;
-    }
-    const points = history.length;
-    let tempSum = 0;
-    let tempMax = Number.NEGATIVE_INFINITY;
-    let energySum = 0;
+  if (!history?.length) {
+    this.stats = { tempAvg: 0, tempMax: 0, energySum: 0, points: 0 };
+    this.prevStats = { tempAvg: 0, energySum: 0 };
+    this.deltas = { tempAvgPct: 0, energySumPct: 0 };
+    return;
+  }
 
-    for (const p of history) {
-      tempSum += p.temperature;
-      if (p.temperature > tempMax) tempMax = p.temperature;
-      energySum += p.energy;
-    }
+  const points = history.length;
+  let tempSum = 0;
+  let tempMax = Number.NEGATIVE_INFINITY;
+  let energySum = 0;
+
+  for (const p of history) {
+    tempSum += p.temperature;
+    if (p.temperature > tempMax) tempMax = p.temperature;
+    energySum += p.energy;
+  }
+
+  const currTempAvg = tempSum / points;
+  const currEnergySum = energySum;
+
+  // Intento 1: ventana anterior real (mismo tamaño N)
+  const N = this.windowPoints();
+  const lastN = history.slice(-N);
+  let prevSlice: WeatherDataPoint[] = [];
+  if (history.length >= 2 * N) {
+    prevSlice = history.slice(-2 * N, -N);
+  }
+
+  // Fallback: si no hay ventana anterior real, divide la ventana actual en dos mitades
+  let prevTempAvg = currTempAvg;
+  let prevEnergySum = currEnergySum;
+
+  if (prevSlice.length === N) {
+    // Comparación clásica: anterior vs actual
+    let tSum = 0, eSum = 0;
+    for (const p of prevSlice) { tSum += p.temperature; eSum += p.energy; }
+    prevTempAvg = tSum / prevSlice.length;
+    prevEnergySum = eSum;
+  } else if (lastN.length >= 6) { // pide al menos algunos puntos para que tenga sentido
+    const mid = Math.floor(lastN.length / 2);
+    const firstHalf = lastN.slice(0, mid);
+    const secondHalf = lastN.slice(mid);
+
+    const avg = (arr: WeatherDataPoint[], sel: 'temperature' | 'energy') =>
+      arr.reduce((a, b) => a + b[sel], 0) / arr.length;
+
+    const sum = (arr: WeatherDataPoint[], sel: 'energy' | 'temperature') =>
+      arr.reduce((a, b) => a + b[sel], 0);
+
+    prevTempAvg = avg(firstHalf, 'temperature');
+    prevEnergySum = sum(firstHalf, 'energy');
+
+    // Recalcula “actual” con la segunda mitad para que el delta sea mitad2 vs mitad1
+    const currTempAvgHalf = avg(secondHalf, 'temperature');
+    const currEnergySumHalf = sum(secondHalf, 'energy');
+
+    // Sobrescribe los "curr" usados para delta (los KPIs principales se quedan con toda la ventana)
+    // pero los mostramos redondeados al final igualmente.
+    const pct = (curr: number, prev: number) =>
+      !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
+
+    this.prevStats = {
+      tempAvg: Number(prevTempAvg.toFixed(1)),
+      energySum: Number(prevEnergySum.toFixed(2)),
+    };
+    this.deltas = {
+      tempAvgPct: Number(pct(currTempAvgHalf, prevTempAvg).toFixed(1)),
+      energySumPct: Number(pct(currEnergySumHalf, prevEnergySum).toFixed(1)),
+    };
+
+    // KPIs de la tarjeta “Estadísticas” siguen usando toda la ventana:
     this.stats = {
-      tempAvg: Number((tempSum / points).toFixed(1)),
+      tempAvg: Number(currTempAvg.toFixed(1)),
       tempMax: Number(tempMax.toFixed(1)),
-      energySum: Number(energySum.toFixed(2)),
+      energySum: Number(currEnergySum.toFixed(2)),
       points,
     };
+    return;
   }
+
+  // Caso normal (sí hay ventana anterior real)
+  const pct = (curr: number, prev: number) =>
+    !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
+
+  this.prevStats = {
+    tempAvg: Number(prevTempAvg.toFixed(1)),
+    energySum: Number(prevEnergySum.toFixed(2)),
+  };
+
+  this.deltas = {
+    tempAvgPct: Number(pct(currTempAvg, prevTempAvg).toFixed(1)),
+    energySumPct: Number(pct(currEnergySum, prevEnergySum).toFixed(1)),
+  };
+
+  this.stats = {
+    tempAvg: Number(currTempAvg.toFixed(1)),
+    tempMax: Number(tempMax.toFixed(1)),
+    energySum: Number(currEnergySum.toFixed(2)),
+    points,
+  };
+}
+
 
   private drawSparklines(history?: WeatherDataPoint[]): void {
     const N = 60;

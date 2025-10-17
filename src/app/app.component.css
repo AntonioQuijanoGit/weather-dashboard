@@ -189,6 +189,7 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
 }
 
 /* Barra de progreso */
+/* 📊 Barra de progreso — Limpia y sin el "palito" molesto */
 .progress {
   grid-column: 1 / -1;
   margin-top: 8px;
@@ -196,7 +197,10 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
   background: rgba(2, 6, 23, 0.06);
   border-radius: 999px;
   overflow: hidden;
-  border: 1px solid var(--border);
+
+  /* ✅ Quita cualquier borde fantasma */
+  border: 0;
+  box-shadow: none;
 }
 
 body.theme-dark .progress {
@@ -205,9 +209,25 @@ body.theme-dark .progress {
 
 .progress__bar {
   height: 100%;
-  background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #22d3ee));
+  background: linear-gradient(
+    90deg,
+    var(--accent),
+    color-mix(in oklab, var(--accent) 70%, #22d3ee)
+  );
   transition: width 0.35s ease;
+
+  /* ✅ Aseguramos que la barra tampoco tenga borde */
+  border: 0;
+  box-shadow: none;
 }
+
+/* 🛠️ Refuerzo por si hay estilos globales heredados */
+.progress,
+.progress__bar {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
 
 /* ===== Animación KPI: flash y bounce (Temperatura) ===== */
 @keyframes kpiFlashUp   { 0%{ background: rgba(16,185,129,.18) } 100%{ background: transparent } }
@@ -241,3 +261,71 @@ body.theme-dark .progress {
     animation: none !important;
   }
 }
+
+.delta-pill{
+  display:inline-flex; align-items:center; gap:6px;
+  margin-left:8px; padding:2px 8px; border-radius:999px;
+  font-size:12px; font-weight:600; line-height:1;
+  border:1px solid var(--border); color:var(--text-2);
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
+}
+.delta-pill.up   { border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.10); color:#065f46; }
+.delta-pill.down { border-color: rgba(239,68,68,.35);  background: rgba(239,68,68,.10);  color:#7f1d1d; }
+body.theme-dark .delta-pill.up   { color: #86efac; }
+body.theme-dark .delta-pill.down { color: #fca5a5; }
+
+/* Entrada sutil */
+@keyframes fadeSlideIn { from { opacity:0; transform: translateY(-2px); } to { opacity:1; transform:none; } }
+.delta-pill { animation: fadeSlideIn .25s ease-out; }
+
+.stat-value {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.stat-value::after,
+.stat-value::before {
+  content: none !important;
+}
+
+/* Estilo especial para el stat con barra de progreso */
+.stat.stat--with-progress {
+  display: grid;
+  grid-template-columns: 1fr auto; /* Label a la izquierda, valor a la derecha */
+  row-gap: 8px;
+  align-items: baseline;
+}
+
+.stat.stat--with-progress .stat-label {
+  grid-column: 1 / 2;
+}
+
+.stat.stat--with-progress .stat-value {
+  grid-column: 2 / 3;
+  justify-self: end;
+  text-align: right;
+}
+
+.stat.stat--with-progress .progress {
+  grid-column: 1 / -1; /* La barra ocupa todo el ancho debajo */
+}
+/* ----- Flechas y porcentaje de cambio (Temp. y Energía) ----- */
+/* ----- Flechas de cambio (Temp. y Energía) ----- */
+/* --- Solo la flecha cambia de color --- */
+.delta iconify-icon {
+  transition: color 0.3s ease;
+}
+
+.delta.up iconify-icon {
+  color: #16a34a; /* Verde cuando sube */
+}
+
+.delta.down iconify-icon {
+  color: #dc2626; /* Rojo cuando baja */
+}
+
+/* El número mantiene el color por defecto */
+.delta {
+  color: inherit;
+}
+
