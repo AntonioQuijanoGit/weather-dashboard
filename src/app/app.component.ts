@@ -7,7 +7,7 @@ import {
   ViewChild,
   ElementRef,
   CUSTOM_ELEMENTS_SCHEMA,
-  ChangeDetectorRef  // ← AÑADIDO
+  ChangeDetectorRef
 } from '@angular/core';
 import {
   Chart,
@@ -52,14 +52,12 @@ const centerTextPlugin = {
     const centerY = top + height / 2;
 
     ctx.save();
-    // título
     ctx.font = `700 ${pluginOptions.fontSize || 24}px ${pluginOptions.fontFamily || 'inherit'}`;
     ctx.fillStyle = pluginOptions.color || '#0f172a';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(pluginOptions.text || '', centerX, centerY - 10);
 
-    // subtítulo
     if (pluginOptions.subtitle) {
       ctx.font = `500 ${pluginOptions.subtitleFontSize || 12}px ${pluginOptions.fontFamily || 'inherit'}`;
       ctx.fillStyle = pluginOptions.subtitleColor || '#64748b';
@@ -145,13 +143,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private slate = '#475569';
 
   // Formateadores
-  // Formateadores
-nfTemp   = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });  // ← CAMBIAR aquí
-nfEnergy = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-nfInt    = new Intl.NumberFormat('es-ES');
-get tempDisplay(): string   { return this.nfTemp.format(this.currentTemperature); }
-get energyDisplay(): string { return this.nfEnergy.format(this.currentEnergy); }
-get processedDisplay(): string { return this.nfInt.format(this.dataPointsProcessed); }
+  nfTemp   = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  nfEnergy = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  nfInt    = new Intl.NumberFormat('es-ES');
+  get tempDisplay(): string   { return this.nfTemp.format(this.currentTemperature); }
+  get energyDisplay(): string { return this.nfEnergy.format(this.currentEnergy); }
+  get processedDisplay(): string { return this.nfInt.format(this.dataPointsProcessed); }
 
   // Tendencias
   trendTemp:   'up' | 'down' | 'flat' = 'flat';
@@ -179,62 +176,57 @@ get processedDisplay(): string { return this.nfInt.format(this.dataPointsProcess
 
   constructor(
     private weatherStream: WeatherStreamService,
-    private cdr: ChangeDetectorRef  // ← AÑADIDO
+    private cdr: ChangeDetectorRef
   ) {}
 
   // ---------- Ciclo de vida ----------
-ngOnInit(): void {
-  Chart.register(centerTextPlugin);
+  ngOnInit(): void {
+    Chart.register(centerTextPlugin);
 
-  // Tema guardado o preferencia del SO
-  const stored = localStorage.getItem('theme');
-  if (stored === 'light' || stored === 'dark') {
-    this.themeChoice = stored;
-  } else {
-    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-    this.themeChoice = prefersDark ? 'dark' : 'light';
-    localStorage.setItem('theme', this.themeChoice);
+    // Tema guardado o preferencia del SO
+    const stored = localStorage.getItem('theme');
+    if (stored === 'light' || stored === 'dark') {
+      this.themeChoice = stored;
+    } else {
+      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+      this.themeChoice = prefersDark ? 'dark' : 'light';
+      localStorage.setItem('theme', this.themeChoice);
+    }
+    this.applyThemeFromChoice();
+
+    // Suscripciones a datos
+    this.subscribeToData();
+
+    // Arranque de streaming (YAML en assets)
+    this.weatherStream
+      .startStreaming('assets/data.yml')
+      .then(() => {
+        this.isStreaming = true;
+        this.startTimer();
+      })
+      .catch((err: unknown) => console.error('Error cargando assets/data.yml:', err));
+
+    // Redibujar sparklines on resize
+    this.resizeSub = fromEvent(window, 'resize').subscribe(() => this.drawSparklines());
+
+    // Atajo teclado: 't' alterna tema
+    this.subscriptions.add(
+      fromEvent<KeyboardEvent>(window, 'keydown').subscribe((ev) => {
+        if (ev.key.toLowerCase() === 't') {
+          this.setTheme(this.themeChoice === 'dark' ? 'light' : 'dark');
+          queueMicrotask(() => this.themeToggleEl?.nativeElement?.focus());
+        }
+      })
+    );
   }
-  this.applyThemeFromChoice();
-
-  // Suscripciones a datos
-  this.subscribeToData();
-
-  // Arranque de streaming (YAML en assets)
-  this.weatherStream
-    .startStreaming('assets/data.yml')
-    .then(() => {
-      this.isStreaming = true;
-      this.startTimer();
-    })
-    .catch((err: unknown) => console.error('Error cargando assets/data.yml:', err));
-
-  // Redibujar sparklines on resize
-  this.resizeSub = fromEvent(window, 'resize').subscribe(() => this.drawSparklines());
-
-  // Atajo teclado: 't' alterna tema
-  this.subscriptions.add(
-    fromEvent<KeyboardEvent>(window, 'keydown').subscribe((ev) => {
-      if (ev.key.toLowerCase() === 't') {
-        this.setTheme(this.themeChoice === 'dark' ? 'light' : 'dark');
-        queueMicrotask(() => this.themeToggleEl?.nativeElement?.focus());
-      }
-    })
-  );
-}
 
   ngAfterViewInit(): void {
     this.initializeCharts();
   }
 
   ngOnDestroy(): void {
-    // Cancelar animaciones pendientes
-    if (this.tempAnimationFrame) {
-      cancelAnimationFrame(this.tempAnimationFrame);
-    }
-    if (this.energyAnimationFrame) {
-      cancelAnimationFrame(this.energyAnimationFrame);
-    }
+    if (this.tempAnimationFrame) cancelAnimationFrame(this.tempAnimationFrame);
+    if (this.energyAnimationFrame) cancelAnimationFrame(this.energyAnimationFrame);
 
     this.subscriptions.unsubscribe();
     this.resizeSub?.unsubscribe?.();
@@ -300,7 +292,6 @@ ngOnInit(): void {
     restyle(this.temperatureChart);
     restyle(this.energyChart);
 
-    // Donuts
     const applyDonutTheme = (donut?: Chart<'doughnut'>) => {
       if (!donut) return;
       if (donut.options?.plugins?.centerText) {
@@ -369,23 +360,19 @@ ngOnInit(): void {
       },
     };
 
-    // ===== Temperatura (línea) =====
     this.temperatureChart = new Chart(this.temperatureChartRef.nativeElement, {
       type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Temperatura (°C)',
-          data: [],
-          borderColor: this.teal,
-          backgroundColor: 'transparent',
-          tension: 0.25,
-          fill: false,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          borderWidth: 1.75,
-        }],
-      },
+      data: { labels: [], datasets: [{
+        label: 'Temperatura (°C)',
+        data: [],
+        borderColor: this.teal,
+        backgroundColor: 'transparent',
+        tension: 0.25,
+        fill: false,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderWidth: 1.75,
+      }]},
       options: {
         ...commonOptions,
         plugins: {
@@ -404,24 +391,20 @@ ngOnInit(): void {
       },
     });
 
-    // ===== Energía (línea) =====
     this.energyChart = new Chart(this.energyChartRef.nativeElement, {
       type: 'line',
-      data: {
-        labels: [],
-        datasets: [{
-          label: 'Energía (kWh)',
-          data: [],
-          borderColor: this.slate,
-          backgroundColor: 'transparent',
-          tension: 0.25,
-          fill: false,
-          pointRadius: 0,
-          pointHoverRadius: 0,
-          borderWidth: 1.75,
-          borderDash: [4, 3],
-        }],
-      },
+      data: { labels: [], datasets: [{
+        label: 'Energía (kWh)',
+        data: [],
+        borderColor: this.slate,
+        backgroundColor: 'transparent',
+        tension: 0.25,
+        fill: false,
+        pointRadius: 0,
+        pointHoverRadius: 0,
+        borderWidth: 1.75,
+        borderDash: [4, 3],
+      }]},
       options: {
         ...commonOptions,
         plugins: {
@@ -440,7 +423,7 @@ ngOnInit(): void {
       },
     });
 
-    // ===== Donut Energía =====
+    // Donuts (si sigues usándolos)
     if (this.energyDonutRef?.nativeElement) {
       const donutOpts: ChartOptions<'doughnut'> = {
         responsive: true,
@@ -503,7 +486,6 @@ ngOnInit(): void {
       });
     }
 
-    // ===== Donut Temperatura =====
     if (this.tempDonutRef?.nativeElement) {
       const donutOpts2: ChartOptions<'doughnut'> = {
         responsive: true,
@@ -570,111 +552,83 @@ ngOnInit(): void {
   }
 
   // ---------- Animación de valores numéricos ----------
-private animateValue(
-  start: number,
-  end: number,
-  duration: number,
-  onUpdate: (value: number) => void,
-  onComplete?: () => void
-): number {
-  const startTime = performance.now();
-  const delta = end - start;
+  private animateValue(
+    start: number,
+    end: number,
+    duration: number,
+    onUpdate: (value: number) => void,
+    onComplete?: () => void
+  ): number {
+    const startTime = performance.now();
+    const delta = end - start;
 
-  const animate = (currentTime: number) => {
-    const elapsed = currentTime - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    
-    const eased = 1 - Math.pow(1 - progress, 3);
-    const currentValue = start + delta * eased;
-    
-    onUpdate(currentValue);
-    this.cdr.markForCheck();
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const currentValue = start + delta * eased;
 
-    if (progress < 1) {
-      return requestAnimationFrame(animate);
-    } else {
-      onUpdate(end);
+      onUpdate(currentValue);
       this.cdr.markForCheck();
-      if (onComplete) onComplete();
-      return 0;
-    }
-  };
 
-  return requestAnimationFrame(animate);
-}
+      if (progress < 1) {
+        return requestAnimationFrame(animate);
+      } else {
+        onUpdate(end);
+        this.cdr.markForCheck();
+        if (onComplete) onComplete();
+        return 0;
+      }
+    };
+
+    return requestAnimationFrame(animate);
+  }
 
   // ---------- Datos ----------
   private subscribeToData(): void {
-  // Dato actual
-  this.subscriptions.add(
-    this.weatherStream.getCurrentData().subscribe((d: WeatherDataPoint) => {
-      const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
-      const newTrendEnergy = this.compareTrend(this.currentEnergy, d.energy);
+    // Dato actual
+    this.subscriptions.add(
+      this.weatherStream.getCurrentData().subscribe((d: WeatherDataPoint) => {
+        const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
+        const newTrendEnergy = this.compareTrend(this.currentEnergy, d.energy);
 
-      if (newTrendTemp !== 'flat') { 
-        this.lastRealTrendTemp = newTrendTemp; 
-        this.trendTemp = newTrendTemp; 
-      } else { 
-        this.trendTemp = this.lastRealTrendTemp; 
-      }
+        if (newTrendTemp !== 'flat') { this.lastRealTrendTemp = newTrendTemp; this.trendTemp = newTrendTemp; }
+        else { this.trendTemp = this.lastRealTrendTemp; }
 
-      if (newTrendEnergy !== 'flat') { 
-        this.lastRealTrendEnergy = newTrendEnergy; 
-        this.trendEnergy = newTrendEnergy; 
-      } else { 
-        this.trendEnergy = this.lastRealTrendEnergy; 
-      }
+        if (newTrendEnergy !== 'flat') { this.lastRealTrendEnergy = newTrendEnergy; this.trendEnergy = newTrendEnergy; }
+        else { this.trendEnergy = this.lastRealTrendEnergy; }
 
-      // ANIMACIÓN: Temperatura
-      if (this.tempAnimationFrame) {
-        cancelAnimationFrame(this.tempAnimationFrame);
-      }
-      
-      this.tempAnimationFrame = this.animateValue(
-        this.currentTemperature,
-        d.temperature,
-        400,
-        (value) => {
+        if (this.tempAnimationFrame) cancelAnimationFrame(this.tempAnimationFrame);
+        this.tempAnimationFrame = this.animateValue(this.currentTemperature, d.temperature, 400, (value) => {
           this.currentTemperature = value;
-        }
-      );
+        });
 
-      // ANIMACIÓN: Energía
-      if (this.energyAnimationFrame) {
-        cancelAnimationFrame(this.energyAnimationFrame);
-      }
-      
-      this.energyAnimationFrame = this.animateValue(
-        this.currentEnergy,
-        d.energy,
-        400,
-        (value) => {
+        if (this.energyAnimationFrame) cancelAnimationFrame(this.energyAnimationFrame);
+        this.energyAnimationFrame = this.animateValue(this.currentEnergy, d.energy, 400, (value) => {
           this.currentEnergy = value;
-        }
-      );
+        });
 
-      // Tiempo actual
-      const now = new Date();
-      this.currentTime =
-        `${String(now.getHours()).padStart(2,'0')}:` +
-        `${String(now.getMinutes()).padStart(2,'0')}:` +
-        `${String(now.getSeconds()).padStart(2,'0')}`;
+        const now = new Date();
+        this.currentTime =
+          `${String(now.getHours()).padStart(2,'0')}:` +
+          `${String(now.getMinutes()).padStart(2,'0')}:` +
+          `${String(now.getSeconds()).padStart(2,'0')}`;
 
-      this.dataPointsProcessed = this.weatherStream.getProcessedDataCount();
-      this.lastUpdatedAt = Date.now();
-    })
-  );
+        this.dataPointsProcessed = this.weatherStream.getProcessedDataCount();
+        this.lastUpdatedAt = Date.now();
+      })
+    );
 
-  // Historial
-  this.subscriptions.add(
-    this.weatherStream.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
-      this.updateCharts(history);
-      this.updateDonuts(history);
-      this.updateStats(history);
-      this.drawSparklines(history);
-    })
-  );
-}
+    // Historial
+    this.subscriptions.add(
+      this.weatherStream.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
+        this.updateCharts(history);
+        this.updateDonuts(history);
+        this.updateStats(history);
+        this.drawSparklines(history);
+      })
+    );
+  }
 
   private compareTrend(prev: number, next: number): 'up' | 'down' | 'flat' {
     const delta = next - prev;
@@ -687,6 +641,17 @@ private animateValue(
   private windowPoints(): number {
     const m = this.ranges.find(r => r.key === this.activeRangeKey)?.minutes ?? 15;
     return Math.max(12, Math.floor((m * 60) / 5));
+  }
+
+  /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+     NUEVO: % de progreso de la ventana activa (0–100)
+     <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
+  get windowProgressPct(): number {
+    const total = this.windowPoints();
+    const points = this.stats?.points ?? 0;
+    if (!total || !Number.isFinite(points)) return 0;
+    const pct = (points / total) * 100;
+    return Math.max(0, Math.min(100, Math.round(pct)));
   }
 
   onChangeRange(key: string): void {
@@ -749,7 +714,6 @@ private animateValue(
   private updateDonuts(history: WeatherDataPoint[]): void {
     if (!history?.length) return;
 
-    // Energía por franja y pico
     const energyBuckets = [0, 0, 0, 0];
     let maxEnergy = 0;
     let peakTime = '--:--';
@@ -775,18 +739,15 @@ private animateValue(
     }
     this.energyPeakTime = peakTime;
     this.energyPeakKwh  = Number(maxEnergy.toFixed(2));
-    
-    // Temperatura por rangos + estado
+
     const tempCounts = [0, 0, 0, 0];
     const tempValues: number[] = [];
 
     for (const p of history) {
       const t = p.temperature;
       tempValues.push(t);
-      if (t < 10) tempCounts[0]++;
-      else if (t < 20) tempCounts[1]++;
-      else if (t < 30) tempCounts[2]++;
-      else tempCounts[3]++;
+      if (t < 10) tempCounts[0]++; else if (t < 20) tempCounts[1]++;
+      else if (t < 30) tempCounts[2]++; else tempCounts[3]++;
     }
 
     let tempState = 'Estable';
