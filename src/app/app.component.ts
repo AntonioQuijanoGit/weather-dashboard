@@ -12,8 +12,6 @@ import {
 import {
   Chart,
   ChartConfiguration,
-  ChartOptions,
-  ChartType,
   registerables
 } from 'chart.js';
 import { WeatherStreamService } from './services/data/weather-stream.service';
@@ -21,51 +19,6 @@ import { WeatherDataPoint } from './services/data/weather-data-loader.service';
 import { Subscription, fromEvent } from 'rxjs';
 
 Chart.register(...registerables);
-
-// === Declaración de tipos para el plugin custom ===
-declare module 'chart.js' {
-  interface PluginOptionsByType<TType extends ChartType> {
-    centerText?: {
-      display?: boolean;
-      text?: string;
-      subtitle?: string;
-      fontSize?: number;
-      subtitleFontSize?: number;
-      color?: string;
-      subtitleColor?: string;
-      fontFamily?: string;
-    };
-  }
-}
-
-// === Plugin texto centro donut ===
-const centerTextPlugin = {
-  id: 'centerText',
-  afterDatasetsDraw: (chart: Chart) => {
-    const { ctx, chartArea } = chart;
-    if (!chart.config.options?.plugins) return;
-    const pluginOptions = (chart.config.options.plugins as any).centerText;
-    if (!pluginOptions?.display) return;
-
-    const { top, width, height } = chartArea;
-    const centerX = width / 2;
-    const centerY = top + height / 2;
-
-    ctx.save();
-    ctx.font = `700 ${pluginOptions.fontSize || 24}px ${pluginOptions.fontFamily || 'inherit'}`;
-    ctx.fillStyle = pluginOptions.color || '#0f172a';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(pluginOptions.text || '', centerX, centerY - 10);
-
-    if (pluginOptions.subtitle) {
-      ctx.font = `500 ${pluginOptions.subtitleFontSize || 12}px ${pluginOptions.fontFamily || 'inherit'}`;
-      ctx.fillStyle = pluginOptions.subtitleColor || '#64748b';
-      ctx.fillText(pluginOptions.subtitle, centerX, centerY + 18);
-    }
-    ctx.restore();
-  }
-};
 
 type ThemeTokens = {
   grid: string;
@@ -92,8 +45,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('energyChart') energyChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('sparkTemp') sparkTempRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('sparkEnergy') sparkEnergyRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('energyDonut') energyDonutRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('tempDonut')   tempDonutRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('themeToggle') themeToggleEl!: ElementRef<HTMLInputElement>;
 
   // Estado UI
@@ -129,8 +80,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   // Charts
   private temperatureChart?: Chart;
   private energyChart?: Chart;
-  private energyDonut?: Chart<'doughnut'>;
-  private tempDonut?: Chart<'doughnut'>;
 
   // Subs / timer
   private subscriptions = new Subscription();
@@ -164,7 +113,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   lastUpdatedRel: string = 'hace 0 s';
   private rtf = new Intl.RelativeTimeFormat('es-ES', { numeric: 'auto' });
 
-  // Captions Donuts
+  // KPIs de resumen (sin donuts)
   energyPeakTime = '--:--';
   energyPeakKwh  = 0;
   tempStateLabel = 'Estable';
@@ -181,8 +130,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Ciclo de vida ----------
   ngOnInit(): void {
-    Chart.register(centerTextPlugin);
-
     // Tema guardado o preferencia del SO
     const stored = localStorage.getItem('theme');
     if (stored === 'light' || stored === 'dark') {
@@ -233,8 +180,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.temperatureChart?.destroy();
     this.energyChart?.destroy();
-    this.energyDonut?.destroy();
-    this.tempDonut?.destroy();
   }
 
   // ---------- Tema ----------
@@ -291,27 +236,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     restyle(this.temperatureChart);
     restyle(this.energyChart);
-
-    const applyDonutTheme = (donut?: Chart<'doughnut'>) => {
-      if (!donut) return;
-      if (donut.options?.plugins?.centerText) {
-        donut.options.plugins.centerText.color = this.isDark ? '#e2e8f0' : '#0f172a';
-        donut.options.plugins.centerText.subtitleColor = this.isDark ? '#94a3b8' : '#64748b';
-      }
-      const ds = donut.data.datasets?.[0];
-      if (ds) ds.borderColor = this.isDark ? '#0f172a' : '#ffffff';
-      if (donut.options?.plugins?.tooltip) {
-        donut.options.plugins.tooltip.backgroundColor = t.tooltipBg as any;
-        donut.options.plugins.tooltip.titleColor = t.tooltipTitle as any;
-        donut.options.plugins.tooltip.bodyColor = t.tooltipBody as any;
-        donut.options.plugins.tooltip.borderColor = t.tooltipBorder as any;
-      }
-      donut.update('none');
-    };
-
-    applyDonutTheme(this.energyDonut);
-    applyDonutTheme(this.tempDonut);
-
     this.drawSparklines();
   }
 
@@ -422,133 +346,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         },
       },
     });
-
-    // Donuts (si sigues usándolos)
-    if (this.energyDonutRef?.nativeElement) {
-      const donutOpts: ChartOptions<'doughnut'> = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: t.tooltipBg as any,
-            titleColor: t.tooltipTitle as any,
-            bodyColor: t.tooltipBody as any,
-            borderColor: t.tooltipBorder as any,
-            borderWidth: 1,
-            cornerRadius: 8,
-            padding: 12,
-            callbacks: {
-              label: (context) => {
-                const label = context.label || '';
-                const value = typeof context.parsed === 'number' ? context.parsed : 0;
-                return `${label}: ${this.nfEnergy.format(value)} kWh`;
-              }
-            }
-          },
-          centerText: {
-            display: true,
-            text: '--:--',
-            subtitle: 'pico producción',
-            fontSize: 32,
-            subtitleFontSize: 13,
-            color: this.isDark ? '#e2e8f0' : '#0f172a',
-            subtitleColor: this.isDark ? '#94a3b8' : '#64748b',
-            fontFamily: 'inherit'
-          }
-        },
-        cutout: '72%',
-      };
-
-      this.energyDonut = new Chart<'doughnut'>(this.energyDonutRef.nativeElement, {
-        type: 'doughnut',
-        data: {
-          labels: ['Madrugada', 'Mañana', 'Tarde', 'Noche'],
-          datasets: [{
-            data: [0, 0, 0, 0],
-            backgroundColor: [
-              'rgba(30, 58, 138, 0.7)',
-              'rgba(59, 130, 246, 0.7)',
-              'rgba(251, 191, 36, 0.7)',
-              'rgba(49, 46, 129, 0.7)'
-            ],
-            borderColor: this.isDark ? '#0f172a' : '#ffffff',
-            borderWidth: 3,
-            hoverBackgroundColor: [
-              'rgba(30, 64, 175, 0.85)',
-              'rgba(96, 165, 250, 0.85)',
-              'rgba(252, 211, 77, 0.85)',
-              'rgba(67, 56, 202, 0.85)'
-            ]
-          }]
-        },
-        options: donutOpts
-      });
-    }
-
-    if (this.tempDonutRef?.nativeElement) {
-      const donutOpts2: ChartOptions<'doughnut'> = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            backgroundColor: t.tooltipBg as any,
-            titleColor: t.tooltipTitle as any,
-            bodyColor: t.tooltipBody as any,
-            borderColor: t.tooltipBorder as any,
-            borderWidth: 1,
-            cornerRadius: 8,
-            padding: 12,
-            callbacks: {
-              label: (context) => {
-                const label = context.label || '';
-                const value = typeof context.parsed === 'number' ? context.parsed : 0;
-                const total = (context.dataset.data as number[]).reduce((a, b) => a + b, 0);
-                const pct = total ? ((value / total) * 100) : 0;
-                return `${label}: ${value} mediciones (${pct.toFixed(1)}%)`;
-              }
-            }
-          },
-          centerText: {
-            display: true,
-            text: 'Estable',
-            subtitle: '±0.0°C',
-            fontSize: 28,
-            subtitleFontSize: 13,
-            color: this.isDark ? '#e2e8f0' : '#0f172a',
-            subtitleColor: this.isDark ? '#94a3b8' : '#64748b',
-            fontFamily: 'inherit'
-          }
-        },
-        cutout: '72%',
-      };
-
-      this.tempDonut = new Chart<'doughnut'>(this.tempDonutRef.nativeElement, {
-        type: 'doughnut',
-        data: {
-          labels: ['< 10°C', '10-20°C', '20-30°C', '≥ 30°C'],
-          datasets: [{
-            data: [0, 0, 0, 0],
-            backgroundColor: [
-              'rgba(59, 130, 246, 0.7)',
-              'rgba(34, 197, 94, 0.7)',
-              'rgba(251, 191, 36, 0.7)',
-              'rgba(239, 68, 68, 0.7)'
-            ],
-            borderColor: this.isDark ? '#0f172a' : '#ffffff',
-            borderWidth: 3,
-            hoverBackgroundColor: [
-              'rgba(96, 165, 250, 0.85)',
-              'rgba(74, 222, 128, 0.85)',
-              'rgba(252, 211, 77, 0.85)',
-              'rgba(248, 113, 113, 0.85)'
-            ]
-          }]
-        },
-        options: donutOpts2
-      });
-    }
   }
 
   // ---------- Animación de valores numéricos ----------
@@ -623,7 +420,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.add(
       this.weatherStream.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
         this.updateCharts(history);
-        this.updateDonuts(history);
+        this.updateSummary(history); // ← KPIs de resumen sin donuts
         this.updateStats(history);
         this.drawSparklines(history);
       })
@@ -644,7 +441,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /* >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-     NUEVO: % de progreso de la ventana activa (0–100)
+     % de progreso de la ventana activa (0–100)
      <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< */
   get windowProgressPct(): number {
     const total = this.windowPoints();
@@ -711,71 +508,47 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private updateDonuts(history: WeatherDataPoint[]): void {
-    if (!history?.length) return;
+  // KPIs de resumen SIN donuts (solo cálculos)
+  private updateSummary(history: WeatherDataPoint[]): void {
+    if (!history?.length) {
+      this.energyPeakTime = '--:--';
+      this.energyPeakKwh = 0;
+      this.tempStateLabel = 'Estable';
+      this.tempVariationLabel = '±0.0°C';
+      return;
+    }
 
-    const energyBuckets = [0, 0, 0, 0];
-    let maxEnergy = 0;
+    // Pico de energía (valor máximo y su hora)
+    let maxEnergy = -Infinity;
     let peakTime = '--:--';
-
     for (const p of history) {
-      const h = parseInt(p.time.slice(0, 2), 10) || 0;
-      const idx = (h < 6) ? 0 : (h < 12) ? 1 : (h < 18) ? 2 : 3;
-      energyBuckets[idx] += p.energy;
-
       if (p.energy > maxEnergy) {
         maxEnergy = p.energy;
         peakTime = p.time.slice(0, 5);
       }
     }
-
-    if (this.energyDonut) {
-      (this.energyDonut.data.datasets[0].data as number[]) = energyBuckets.map(v => Number(v.toFixed(2)));
-      if (this.energyDonut.config.options?.plugins?.centerText) {
-        this.energyDonut.config.options.plugins.centerText.text = peakTime;
-        this.energyDonut.config.options.plugins.centerText.subtitle = `${maxEnergy.toFixed(2)} kWh`;
-      }
-      this.energyDonut.update('none');
-    }
     this.energyPeakTime = peakTime;
-    this.energyPeakKwh  = Number(maxEnergy.toFixed(2));
+    this.energyPeakKwh  = Number((maxEnergy === -Infinity ? 0 : maxEnergy).toFixed(2));
 
-    const tempCounts = [0, 0, 0, 0];
-    const tempValues: number[] = [];
-
-    for (const p of history) {
-      const t = p.temperature;
-      tempValues.push(t);
-      if (t < 10) tempCounts[0]++; else if (t < 20) tempCounts[1]++;
-      else if (t < 30) tempCounts[2]++; else tempCounts[3]++;
-    }
-
-    let tempState = 'Estable';
-    let tempVariation = '±0.0°C';
-
-    if (tempValues.length > 0) {
-      const minTemp = Math.min(...tempValues);
-      const maxTemp = Math.max(...tempValues);
+    // Estado térmico y variación
+    const temps = history.map(h => h.temperature);
+    if (temps.length) {
+      const minTemp = Math.min(...temps);
+      const maxTemp = Math.max(...temps);
       const range = maxTemp - minTemp;
 
+      let tempState = 'Estable';
       if (range < 2) tempState = 'Muy estable';
       else if (range < 5) tempState = 'Estable';
       else if (range < 10) tempState = 'Variable';
       else tempState = 'Muy variable';
 
-      tempVariation = `±${(range / 2).toFixed(1)}°C`;
+      this.tempStateLabel = tempState;
+      this.tempVariationLabel = `±${(range / 2).toFixed(1)}°C`;
+    } else {
+      this.tempStateLabel = 'Estable';
+      this.tempVariationLabel = '±0.0°C';
     }
-
-    if (this.tempDonut) {
-      (this.tempDonut.data.datasets[0].data as number[]) = tempCounts;
-      if (this.tempDonut.config.options?.plugins?.centerText) {
-        this.tempDonut.config.options.plugins.centerText.text = tempState;
-        this.tempDonut.config.options.plugins.centerText.subtitle = tempVariation;
-      }
-      this.tempDonut.update('none');
-    }
-    this.tempStateLabel = tempState;
-    this.tempVariationLabel = tempVariation;
   }
 
   private updateStats(history: WeatherDataPoint[]): void {

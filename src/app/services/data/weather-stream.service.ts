@@ -32,6 +32,12 @@ export class WeatherStreamService {
   private readonly HISTORY_PRELOAD = 60;    // Precargar 60 puntos (5 min)
   private readonly MAX_HISTORY = 200;       // Límite de historial en memoria
 
+  // Derivados
+  private get expectedPointsPerDay(): number {
+    // 24h * 3600 s / intervalo(s)
+    return Math.floor((24 * 3600) / (this.STEP_INTERVAL_MS / 1000));
+  }
+
   constructor(private dataLoader: WeatherDataLoaderService) {}
 
   /**
@@ -43,48 +49,69 @@ export class WeatherStreamService {
    * 
    * @param path Ruta al archivo YAML
    */
- async startStreaming(path: string): Promise<void> {
-  try {
-    // 1. Cargar datos
-    this.allData = await lastValueFrom(this.dataLoader.loadWeatherData(path));
+  async startStreaming(path: string): Promise<void> {
+    try {
+      // 1) Cargar datos
+      this.allData = await lastValueFrom(this.dataLoader.loadWeatherData(path));
 
-    // 2. Validar
-    if (!this.dataLoader.validateData(this.allData)) {
-      throw new Error('Datos inválidos');
+      // 2) Validar
+      if (!this.dataLoader.validateData(this.allData)) {
+        throw new Error('Datos inválidos o vacíos tras el parseo');
+      }
+
+      // 2.1) Aviso si no cubre 24h
+      if (this.allData.length < this.expectedPointsPerDay) {
+        console.warn(
+          `ℹ️ Dataset incompleto: ${this.allData.length} puntos, ` +
+          `pero se esperan ~${this.expectedPointsPerDay} puntos para 24h a ${this.STEP_INTERVAL_MS / 1000}s.`
+        );
+      }
+
+      // 3) Calcular índice inicial según hora actual (con clamp)
+      this.currentIndex = this.calculateCurrentIndex();
+
+      // 4) Precargar historial (últimos N puntos antes del índice actual)
+      this.preloadHistory();
+
+      // 5) Emitir punto actual inmediatamente (si existe)
+      const current = this.allData[this.currentIndex];
+      if (current) this.currentDataSubject.next(current);
+
+      // 6) Iniciar streaming
+      this.startStreamingTimer();
+
+      console.log(
+        `✅ Streaming iniciado. Índice actual: ${this.currentIndex}/${this.allData.length} ` +
+        `(intervalo=${this.STEP_INTERVAL_MS}ms, historial precargado=${this.dataHistory.length})`
+      );
+    } catch (error) {
+      console.error('❌ Error iniciando streaming:', error);
+      // No relanzamos para no romper la UI; si prefieres, puedes throw error;
+      throw error;
     }
-
-    // 3. Calcular índice inicial según hora actual
-    this.currentIndex = this.calculateCurrentIndex();
-
-    // 4. Precargar historial (últimos 60 puntos ≈ 5 min)
-    this.preloadHistory();
-
-    // 5. Emitir punto actual inmediatamente
-    if (this.allData[this.currentIndex]) {
-      this.currentDataSubject.next(this.allData[this.currentIndex]);
-    }
-
-    // 6. Iniciar streaming
-    this.startStreamingTimer();
-
-    console.log(`✅ Streaming iniciado desde índice ${this.currentIndex}/${this.allData.length}`);
-  } catch (error) {
-    console.error('❌ Error iniciando streaming:', error);
-    throw error;
   }
-}
 
   /**
    * Calcula el índice actual basándose en la hora del día.
    * Asume que los datos comienzan a medianoche con intervalos de 5s.
+   * Aplica clamp si el índice resultante excede el tamaño real del dataset.
    */
   private calculateCurrentIndex(): number {
+    if (!this.allData.length) return 0;
+
     const now = new Date();
     const midnight = new Date(now);
     midnight.setHours(0, 0, 0, 0);
 
     const elapsedMs = now.getTime() - midnight.getTime();
     const stepsSinceMidnight = Math.floor(elapsedMs / this.STEP_INTERVAL_MS);
+
+    if (stepsSinceMidnight >= this.allData.length) {
+      console.warn(
+        `ℹ️ Índice calculado (${stepsSinceMidnight}) supera el tamaño del dataset (${this.allData.length}). ` +
+        `Se aplicará clamp al último índice disponible.`
+      );
+    }
 
     return Math.min(
       Math.max(stepsSinceMidnight, 0),
@@ -105,12 +132,11 @@ export class WeatherStreamService {
    * Inicia el timer que emite datos cada 5 segundos.
    */
   private startStreamingTimer(): void {
-    if (this.isStreaming) {
-      return;
-    }
+    if (this.isStreaming) return;
 
     this.isStreaming = true;
 
+    // Primer tick tras STEP_INTERVAL_MS (ya emitimos inmediatamente en startStreaming)
     this.streamSub = timer(this.STEP_INTERVAL_MS, this.STEP_INTERVAL_MS).subscribe(() => {
       this.emitNextDataPoint();
     });
@@ -118,11 +144,23 @@ export class WeatherStreamService {
 
   /**
    * Emite el siguiente punto de datos y actualiza el historial.
+   * Al finalizar el array (fin del "día"), rota a índice 0, precarga historial y emite punto 0 sin esperar al siguiente tick.
    */
   private emitNextDataPoint(): void {
+    if (!this.allData.length) return;
+
+    // Si hemos llegado al final, rotamos a 0 y reprecargamos historial
     if (this.currentIndex >= this.allData.length) {
-      // Reiniciar al finalizar el día
       this.currentIndex = 0;
+      this.preloadHistory();
+      const rotated = this.allData[this.currentIndex];
+      if (rotated) {
+        this.currentDataSubject.next(rotated);
+        this.dataHistory.push(rotated);
+        if (this.dataHistory.length > this.MAX_HISTORY) this.dataHistory.shift();
+        this.dataHistorySubject.next([...this.dataHistory]);
+      }
+      this.currentIndex++;
       return;
     }
 
@@ -161,7 +199,6 @@ export class WeatherStreamService {
     this.dataHistory = [];
     this.dataHistorySubject.next([]);
     this.allData = [];
-
   }
 
   // ========== Observables públicos ==========
