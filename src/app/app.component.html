@@ -80,7 +80,7 @@
     } @else {
       <div class="cards">
         <!-- KPI Temperatura -->
-        <div class="card kpi" role="group" aria-label="Temperatura media">
+        <div class="card kpi" tabindex="0" role="group" aria-label="Temperatura media">
           <div class="kpi-head">
             <div class="kpi-title">
               <iconify-icon icon="ph:thermometer-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
@@ -101,11 +101,52 @@
               {{ tempDisplay }}<span class="unit">°C</span>
             </div>
             <canvas #sparkTemp class="sparkline" aria-hidden="true"></canvas>
+
+            <!-- Hovercard minimalista (solo datos) -->
+           <div class="kpi-hovercard" role="dialog" aria-label="Resumen temperatura">
+  <div class="hovercard-head">
+    <iconify-icon icon="ph:thermometer-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+    <span>Temperatura · {{ activeRangeLabel }}</span>
+    <span class="pill-count">{{ overlayTempSummary.count }} pts</span>
+  </div>
+
+  <div class="hovercard-body">
+    <div class="hover-row">
+      <span class="hover-label">Último</span>
+      <span class="hover-value">
+        {{ overlayTempSummary.last | number:'1.1-2' }}<span class="hover-unit">°C</span>
+      </span>
+    </div>
+
+    <div class="hover-row">
+      <span class="hover-label">% vs mitad anterior</span>
+      <span class="hover-value">
+        <span class="delta-pill-mini" [class.up]="overlayTempSummary.pctHalf! > 0" [class.down]="overlayTempSummary.pctHalf! < 0">
+          {{ overlayTempSummary.pctHalf | number:'1.0-1' }}%
+          <iconify-icon
+            [icon]="overlayTempSummary.pctHalf! > 0 ? 'ph:arrow-up-right-duotone' : overlayTempSummary.pctHalf! < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
+            width="14" height="14" aria-hidden="true">
+          </iconify-icon>
+        </span>
+      </span>
+    </div>
+
+    <div class="hover-divider"></div>
+
+    <div class="hover-row">
+      <span class="hover-label">Rango</span>
+      <span class="hover-value range">
+        {{ overlayTempSummary.min | number:'1.1-2' }} – {{ overlayTempSummary.max | number:'1.1-2' }}<span class="hover-unit">°C</span>
+      </span>
+    </div>
+  </div>
+</div>
+
           </div>
         </div>
 
         <!-- KPI Energía -->
-        <div class="card kpi" role="group" aria-label="Energía producida">
+        <div class="card kpi" tabindex="0" role="group" aria-label="Energía producida">
           <div class="kpi-head">
             <div class="kpi-title">
               <iconify-icon icon="ph:lightning-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
@@ -128,6 +169,47 @@
               {{ energyDisplay }}<span class="unit">kWh</span>
             </div>
             <canvas #sparkEnergy class="sparkline" aria-hidden="true"></canvas>
+
+            <!-- Hovercard minimalista (solo datos) -->
+           <div class="kpi-hovercard" role="dialog" aria-label="Resumen energía">
+  <div class="hovercard-head">
+    <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+    <span>Energía · {{ activeRangeLabel }}</span>
+    <span class="pill-count">{{ overlayEnergySummary.count }} pts</span>
+  </div>
+
+  <div class="hovercard-body">
+    <div class="hover-row">
+      <span class="hover-label">Último</span>
+      <span class="hover-value">
+        {{ overlayEnergySummary.last | number:'1.2-2' }}<span class="hover-unit">kWh</span>
+      </span>
+    </div>
+
+    <div class="hover-row">
+      <span class="hover-label">% vs mitad anterior</span>
+      <span class="hover-value">
+        <span class="delta-pill-mini" [class.up]="overlayEnergySummary.pctHalf! > 0" [class.down]="overlayEnergySummary.pctHalf! < 0">
+          {{ overlayEnergySummary.pctHalf | number:'1.0-1' }}%
+          <iconify-icon
+            [icon]="overlayEnergySummary.pctHalf! > 0 ? 'ph:arrow-up-right-duotone' : overlayEnergySummary.pctHalf! < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
+            width="14" height="14" aria-hidden="true">
+          </iconify-icon>
+        </span>
+      </span>
+    </div>
+
+    <div class="hover-divider"></div>
+
+    <div class="hover-row">
+      <span class="hover-label">Rango</span>
+      <span class="hover-value range">
+        {{ overlayEnergySummary.min | number:'1.2-2' }} – {{ overlayEnergySummary.max | number:'1.2-2' }}<span class="hover-unit">kWh</span>
+      </span>
+    </div>
+  </div>
+</div>
+
           </div>
         </div>
       </div>
@@ -168,106 +250,105 @@
   </section>
 
   <!-- Estadísticas -->
-<section class="statistics card-surface">
-  <div class="stats-header">
-    <h2 class="section-title">Estadísticas</h2>
-    <div class="muted">Ventana: {{ activeRangeLabel }}</div>
-  </div>
-
-  <div class="stats-grid">
-
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:database-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Datos procesados
-      </span>
-      <span class="stat-value">{{ processedDisplay }}</span>
+  <section class="statistics card-surface">
+    <div class="stats-header">
+      <h2 class="section-title">Estadísticas</h2>
+      <div class="muted">Ventana: {{ activeRangeLabel }}</div>
     </div>
 
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:arrows-left-right-duotone" width="16" height="16"></iconify-icon>
-        Cambio Temp. media
-      </span>
-      <span class="stat-value">
-        <span class="delta"
-              [class.up]="deltas.tempAvgPct > 0"
-              [class.down]="deltas.tempAvgPct < 0"
-              [attr.title]="'Cambio vs ventana anterior: ' + (deltas.tempAvgPct | number:'1.0-1') + '%'">
-          {{ (deltas.tempAvgPct || 0) | number:'1.0-1' }}%
-          <iconify-icon
-            [icon]="deltas.tempAvgPct > 0 ? 'ph:arrow-up-right-duotone' : deltas.tempAvgPct < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
-            width="14" height="14"></iconify-icon>
+    <div class="stats-grid">
+
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:database-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Datos procesados
         </span>
-      </span>
-    </div>
-
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:flame-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Máx. temperatura
-      </span>
-      <span class="stat-value">{{ stats.tempMax.toFixed(1) }} °C</span>
-    </div>
-
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Energía acumulada
-      </span>
-      <span class="stat-value">{{ stats.energySum.toFixed(2) }} kWh</span>
-    </div>
-
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:clock-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Intervalo de actualización
-      </span>
-      <span class="stat-value">5 s</span>
-    </div>
-
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:hourglass-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Tiempo transcurrido
-      </span>
-      <span class="stat-value">{{ elapsedTime }}</span>
-    </div>
-
-    <div class="stat stat--with-progress">
-      <span class="stat-label">
-        <iconify-icon icon="ph:activity-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Progreso de la ventana
-      </span>
-      <span class="stat-value">{{ windowProgressPct }}%</span>
-      <div class="progress">
-        <div class="progress__bar" [style.width.%]="windowProgressPct"></div>
+        <span class="stat-value">{{ processedDisplay }}</span>
       </div>
-    </div>
 
-    <div class="stat">
-      <span class="stat-label">
-        <iconify-icon icon="ph:arrows-left-right-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        Cambio Energía
-      </span>
-      <span class="stat-value">
-        <span class="delta"
-              [class.up]="deltas.energySumPct > 0"
-              [class.down]="deltas.energySumPct < 0"
-              [attr.title]="'Cambio vs ventana anterior: ' + (deltas.energySumPct|number:'1.0-1') + '%'">
-          {{ (deltas.energySumPct || 0) | number:'1.0-1' }}%
-          <iconify-icon
-            [icon]="deltas.energySumPct > 0 ? 'ph:arrow-up-right-duotone' : deltas.energySumPct < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
-            width="14" height="14" aria-hidden="true"></iconify-icon>
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:arrows-left-right-duotone" width="16" height="16"></iconify-icon>
+          Cambio Temp. media
         </span>
-      </span>
+        <span class="stat-value">
+          <span class="delta"
+                [class.up]="deltas.tempAvgPct > 0"
+                [class.down]="deltas.tempAvgPct < 0"
+                [attr.title]="'Cambio vs ventana anterior: ' + (deltas.tempAvgPct | number:'1.0-1') + '%'">
+            {{ (deltas.tempAvgPct || 0) | number:'1.0-1' }}%
+            <iconify-icon
+              [icon]="deltas.tempAvgPct > 0 ? 'ph:arrow-up-right-duotone' : deltas.tempAvgPct < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
+              width="14" height="14"></iconify-icon>
+          </span>
+        </span>
+      </div>
+
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:flame-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Máx. temperatura
+        </span>
+        <span class="stat-value">{{ stats.tempMax.toFixed(1) }} °C</span>
+      </div>
+
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Energía acumulada
+        </span>
+        <span class="stat-value">{{ stats.energySum.toFixed(2) }} kWh</span>
+      </div>
+
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:clock-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Intervalo de actualización
+        </span>
+        <span class="stat-value">5 s</span>
+      </div>
+
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:hourglass-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Tiempo transcurrido
+        </span>
+        <span class="stat-value">{{ elapsedTime }}</span>
+      </div>
+
+      <div class="stat stat--with-progress">
+        <span class="stat-label">
+          <iconify-icon icon="ph:activity-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Progreso de la ventana
+        </span>
+        <span class="stat-value">{{ windowProgressPct }}%</span>
+        <div class="progress">
+          <div class="progress__bar" [style.width.%]="windowProgressPct"></div>
+        </div>
+      </div>
+
+      <div class="stat">
+        <span class="stat-label">
+          <iconify-icon icon="ph:arrows-left-right-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Cambio Energía
+        </span>
+        <span class="stat-value">
+          <span class="delta"
+                [class.up]="deltas.energySumPct > 0"
+                [class.down]="deltas.energySumPct < 0"
+                [attr.title]="'Cambio vs ventana anterior: ' + (deltas.energySumPct|number:'1.0-1') + '%'">
+            {{ (deltas.energySumPct || 0) | number:'1.0-1' }}%
+            <iconify-icon
+              [icon]="deltas.energySumPct > 0 ? 'ph:arrow-up-right-duotone' : deltas.energySumPct < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
+              width="14" height="14" aria-hidden="true"></iconify-icon>
+          </span>
+        </span>
+      </div>
+
     </div>
+  </section>
 
-  </div>
-</section>
-
-
-  <!-- Resumen del periodo (sin donuts) -->
+  <!-- Resumen del periodo -->
   <section class="summary-kpis card-surface" style="margin-top:16px;">
     <div class="kpis-header">
       <h2 class="section-title">Resumen del periodo</h2>

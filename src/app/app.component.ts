@@ -33,6 +33,14 @@ type ThemeTokens = {
 type ThemeChoice = 'light' | 'dark';
 type RangeKey = '5m' | '15m' | '60m' | '24h';
 
+type OverlaySummary = {
+  min: number;
+  max: number;
+  last: number;
+  pctHalf?: number; // % de la 2ª mitad vs 1ª mitad (si hay datos)
+  count: number;
+};
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -72,7 +80,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   get activeRangeLabel(): string {
     const item = this.ranges.find(r => r.key === this.activeRangeKey);
     return item ? item.label : '';
-    }
+  }
 
   // Mostrar/ocultar series
   showTemp = true;
@@ -112,7 +120,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   // Estadísticas simples
   stats = { tempAvg: 0, tempMax: 0, energySum: 0, points: 0 };
 
-  // Para calcular variaciones vs ventana anterior (usado por el HTML)
+  // Para variaciones vs ventana anterior
   prevStats: { tempAvg: number; energySum: number } = { tempAvg: 0, energySum: 0 };
   deltas: { tempAvgPct: number; energySumPct: number } = { tempAvgPct: 0, energySumPct: 0 };
 
@@ -121,11 +129,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   lastUpdatedRel: string = 'hace 0 s';
   private rtf = new Intl.RelativeTimeFormat('es-ES', { numeric: 'auto' });
 
-  // KPIs de resumen (sin donuts)
+  // KPIs de resumen
   energyPeakTime = '--:--';
   energyPeakKwh  = 0;
   tempStateLabel = 'Estable';
   tempVariationLabel = '±0.0°C';
+
+  // Resumen para hovercards (texto, no gráfico)
+overlayTempSummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
+overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
 
   // Control de animaciones de contador
   private tempAnimationFrame?: number;
@@ -430,9 +442,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.subscriptions.add(
       this.weatherStream.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
         this.updateCharts(history);
-        this.updateSummary(history); // KPIs de resumen sin donuts
+        this.updateSummary(history);
         this.updateStats(history);
         this.drawSparklines(history);
+        this.updateOverlaySummaries(history); // << alimenta hovercards numéricas
       })
     );
   }
@@ -560,65 +573,85 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private updateStats(history: WeatherDataPoint[]): void {
-  if (!history?.length) {
-    this.stats = { tempAvg: 0, tempMax: 0, energySum: 0, points: 0 };
-    this.prevStats = { tempAvg: 0, energySum: 0 };
-    this.deltas = { tempAvgPct: 0, energySumPct: 0 };
-    return;
-  }
+    if (!history?.length) {
+      this.stats = { tempAvg: 0, tempMax: 0, energySum: 0, points: 0 };
+      this.prevStats = { tempAvg: 0, energySum: 0 };
+      this.deltas = { tempAvgPct: 0, energySumPct: 0 };
+      return;
+    }
 
-  const points = history.length;
-  let tempSum = 0;
-  let tempMax = Number.NEGATIVE_INFINITY;
-  let energySum = 0;
+    const points = history.length;
+    let tempSum = 0;
+    let tempMax = Number.NEGATIVE_INFINITY;
+    let energySum = 0;
 
-  for (const p of history) {
-    tempSum += p.temperature;
-    if (p.temperature > tempMax) tempMax = p.temperature;
-    energySum += p.energy;
-  }
+    for (const p of history) {
+      tempSum += p.temperature;
+      if (p.temperature > tempMax) tempMax = p.temperature;
+      energySum += p.energy;
+    }
 
-  const currTempAvg = tempSum / points;
-  const currEnergySum = energySum;
+    const currTempAvg = tempSum / points;
+    const currEnergySum = energySum;
 
-  // Intento 1: ventana anterior real (mismo tamaño N)
-  const N = this.windowPoints();
-  const lastN = history.slice(-N);
-  let prevSlice: WeatherDataPoint[] = [];
-  if (history.length >= 2 * N) {
-    prevSlice = history.slice(-2 * N, -N);
-  }
+    // Intento 1: ventana anterior real (mismo tamaño N)
+    const N = this.windowPoints();
+    const lastN = history.slice(-N);
+    let prevSlice: WeatherDataPoint[] = [];
+    if (history.length >= 2 * N) {
+      prevSlice = history.slice(-2 * N, -N);
+    }
 
-  // Fallback: si no hay ventana anterior real, divide la ventana actual en dos mitades
-  let prevTempAvg = currTempAvg;
-  let prevEnergySum = currEnergySum;
+    // Fallback: si no hay ventana anterior real, divide la ventana actual en dos mitades
+    let prevTempAvg = currTempAvg;
+    let prevEnergySum = currEnergySum;
 
-  if (prevSlice.length === N) {
-    // Comparación clásica: anterior vs actual
-    let tSum = 0, eSum = 0;
-    for (const p of prevSlice) { tSum += p.temperature; eSum += p.energy; }
-    prevTempAvg = tSum / prevSlice.length;
-    prevEnergySum = eSum;
-  } else if (lastN.length >= 6) { // pide al menos algunos puntos para que tenga sentido
-    const mid = Math.floor(lastN.length / 2);
-    const firstHalf = lastN.slice(0, mid);
-    const secondHalf = lastN.slice(mid);
+    if (prevSlice.length === N) {
+      // Comparación clásica: anterior vs actual
+      let tSum = 0, eSum = 0;
+      for (const p of prevSlice) { tSum += p.temperature; eSum += p.energy; }
+      prevTempAvg = tSum / prevSlice.length;
+      prevEnergySum = eSum;
+    } else if (lastN.length >= 6) { // pide al menos algunos puntos para que tenga sentido
+      const mid = Math.floor(lastN.length / 2);
+      const firstHalf = lastN.slice(0, mid);
+      const secondHalf = lastN.slice(mid);
 
-    const avg = (arr: WeatherDataPoint[], sel: 'temperature' | 'energy') =>
-      arr.reduce((a, b) => a + b[sel], 0) / arr.length;
+      const avg = (arr: WeatherDataPoint[], sel: 'temperature' | 'energy') =>
+        arr.reduce((a, b) => a + b[sel], 0) / arr.length;
 
-    const sum = (arr: WeatherDataPoint[], sel: 'energy' | 'temperature') =>
-      arr.reduce((a, b) => a + b[sel], 0);
+      const sum = (arr: WeatherDataPoint[], sel: 'energy' | 'temperature') =>
+        arr.reduce((a, b) => a + b[sel], 0);
 
-    prevTempAvg = avg(firstHalf, 'temperature');
-    prevEnergySum = sum(firstHalf, 'energy');
+      prevTempAvg = avg(firstHalf, 'temperature');
+      prevEnergySum = sum(firstHalf, 'energy');
 
-    // Recalcula “actual” con la segunda mitad para que el delta sea mitad2 vs mitad1
-    const currTempAvgHalf = avg(secondHalf, 'temperature');
-    const currEnergySumHalf = sum(secondHalf, 'energy');
+      // Recalcula “actual” con la segunda mitad para que el delta sea mitad2 vs mitad1
+      const currTempAvgHalf = avg(secondHalf, 'temperature');
+      const currEnergySumHalf = sum(secondHalf, 'energy');
 
-    // Sobrescribe los "curr" usados para delta (los KPIs principales se quedan con toda la ventana)
-    // pero los mostramos redondeados al final igualmente.
+      const pct = (curr: number, prev: number) =>
+        !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
+
+      this.prevStats = {
+        tempAvg: Number(prevTempAvg.toFixed(1)),
+        energySum: Number(prevEnergySum.toFixed(2)),
+      };
+      this.deltas = {
+        tempAvgPct: Number(pct(currTempAvgHalf, prevTempAvg).toFixed(1)),
+        energySumPct: Number(pct(currEnergySumHalf, prevEnergySum).toFixed(1)),
+      };
+
+      this.stats = {
+        tempAvg: Number(currTempAvg.toFixed(1)),
+        tempMax: Number(tempMax.toFixed(1)),
+        energySum: Number(currEnergySum.toFixed(2)),
+        points,
+      };
+      return;
+    }
+
+    // Caso normal (sí hay ventana anterior real)
     const pct = (curr: number, prev: number) =>
       !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
 
@@ -626,40 +659,70 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       tempAvg: Number(prevTempAvg.toFixed(1)),
       energySum: Number(prevEnergySum.toFixed(2)),
     };
+
     this.deltas = {
-      tempAvgPct: Number(pct(currTempAvgHalf, prevTempAvg).toFixed(1)),
-      energySumPct: Number(pct(currEnergySumHalf, prevEnergySum).toFixed(1)),
+      tempAvgPct: Number(pct(currTempAvg, prevTempAvg).toFixed(1)),
+      energySumPct: Number(pct(currEnergySum, prevEnergySum).toFixed(1)),
     };
 
-    // KPIs de la tarjeta “Estadísticas” siguen usando toda la ventana:
     this.stats = {
       tempAvg: Number(currTempAvg.toFixed(1)),
       tempMax: Number(tempMax.toFixed(1)),
       energySum: Number(currEnergySum.toFixed(2)),
       points,
     };
+  }
+
+ private updateOverlaySummaries(history: WeatherDataPoint[]): void {
+  const N = this.windowPoints();
+  const last = history.slice(-N);
+  if (!last.length) {
+    this.overlayTempSummary  = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
+    this.overlayEnergySummary= { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
     return;
   }
 
-  // Caso normal (sí hay ventana anterior real)
   const pct = (curr: number, prev: number) =>
     !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
 
-  this.prevStats = {
-    tempAvg: Number(prevTempAvg.toFixed(1)),
-    energySum: Number(prevEnergySum.toFixed(2)),
+  // ---- Temperatura
+  const temps = last.map(d => d.temperature);
+  const tMin = Math.min(...temps);
+  const tMax = Math.max(...temps);
+  const tLast = temps[temps.length - 1];
+  let tPctHalf: number | undefined;
+  if (temps.length >= 6) {
+    const mid = Math.floor(temps.length / 2);
+    const m1 = temps.slice(0, mid).reduce((a,b)=>a+b,0) / mid;
+    const m2 = temps.slice(mid).reduce((a,b)=>a+b,0) / (temps.length - mid);
+    tPctHalf = pct(m2, m1);
+  }
+  this.overlayTempSummary = {
+    min: Number(tMin.toFixed(2)),
+    max: Number(tMax.toFixed(2)),
+    last: Number(tLast.toFixed(2)),
+    pctHalf: tPctHalf !== undefined ? Number(tPctHalf.toFixed(1)) : undefined,
+    count: temps.length,
   };
 
-  this.deltas = {
-    tempAvgPct: Number(pct(currTempAvg, prevTempAvg).toFixed(1)),
-    energySumPct: Number(pct(currEnergySum, prevEnergySum).toFixed(1)),
-  };
-
-  this.stats = {
-    tempAvg: Number(currTempAvg.toFixed(1)),
-    tempMax: Number(tempMax.toFixed(1)),
-    energySum: Number(currEnergySum.toFixed(2)),
-    points,
+  // ---- Energía
+  const eners = last.map(d => d.energy);
+  const eMin = Math.min(...eners);
+  const eMax = Math.max(...eners);
+  const eLast = eners[eners.length - 1];
+  let ePctHalf: number | undefined;
+  if (eners.length >= 6) {
+    const mid = Math.floor(eners.length / 2);
+    const s1 = eners.slice(0, mid).reduce((a,b)=>a+b,0);
+    const s2 = eners.slice(mid).reduce((a,b)=>a+b,0);
+    ePctHalf = pct(s2, s1);
+  }
+  this.overlayEnergySummary = {
+    min: Number(eMin.toFixed(2)),
+    max: Number(eMax.toFixed(2)),
+    last: Number(eLast.toFixed(2)),
+    pctHalf: ePctHalf !== undefined ? Number(ePctHalf.toFixed(1)) : undefined,
+    count: eners.length,
   };
 }
 
