@@ -19,17 +19,15 @@ export class WeatherConverterService {
    * 
    * Ejemplo: 2931.5 dK → 20.0 °C
    */
-  convertDecikelvinToCelsius(decikelvin: number): number {
-    if (!Number.isFinite(decikelvin)) {
-      console.warn('⚠️ Valor inválido para decikelvin:', decikelvin);
-      return 0;
-    }
-    
-    const kelvin = decikelvin / 10;
-    const celsius = kelvin - 273.15;
-    
-    return Number(celsius.toFixed(2));
+ convertDecikelvinToCelsius(decikelvin: number): number {
+  if (!Number.isFinite(decikelvin)) {    return 0;
   }
+  
+  const kelvin = decikelvin / 10;
+  const celsius = kelvin - 273.15;
+  
+  return celsius;  // ← QUITA el toFixed(2), deja el número completo
+}
 
   /**
    * Convierte megavatios (MW) a kilovatios-hora (kWh) para un intervalo de tiempo.
@@ -46,13 +44,11 @@ export class WeatherConverterService {
     intervalSeconds: number = 5
   ): number {
     if (!Number.isFinite(megawatts) || megawatts < 0) {
-      console.warn('⚠️ Valor inválido para megawatts:', megawatts);
       return 0;
     }
 
     if (!Number.isFinite(intervalSeconds) || intervalSeconds <= 0) {
-      console.warn('⚠️ Intervalo inválido:', intervalSeconds);
-      return 0;
+            return 0;
     }
 
     const kilowatts = megawatts * 1000;

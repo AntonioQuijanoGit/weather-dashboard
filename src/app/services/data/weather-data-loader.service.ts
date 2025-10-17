@@ -65,14 +65,18 @@ export class WeatherDataLoaderService {
    * Carga y procesa datos meteorológicos desde un archivo YAML.
    * Convierte las unidades raw (dK, MW) a unidades finales (°C, kWh).
    * 
-   * @param path Ruta al archivo YAML
-   * @returns Observable con array de puntos de datos procesados
-   */
-  loadWeatherData(path: string): Observable<WeatherDataPoint[]> {
-    return this.loadYAMLFile<YAMLRawData>(path).pipe(
-      map(rawData => this.processRawData(rawData))
-    );
-  }
+   /**
+ * Carga y procesa datos meteorológicos desde un archivo YAML.
+ * Convierte las unidades raw (dK, MW) a unidades finales (°C, kWh).
+ * 
+ * @param path Ruta al archivo YAML
+ * @returns Observable con array de puntos de datos procesados
+ */
+loadWeatherData(path: string): Observable<WeatherDataPoint[]> {
+  return this.loadYAMLFile<YAMLRawData>(path).pipe(
+    map(rawData => this.processRawData(rawData))
+  );
+}
 
   /**
    * Procesa los datos raw del YAML y los convierte a WeatherDataPoint[].
@@ -83,42 +87,62 @@ export class WeatherDataLoaderService {
    * @param rawData Datos raw del YAML
    * @returns Array de puntos procesados
    */
-  private processRawData(rawData: YAMLRawData): WeatherDataPoint[] {
-    if (!rawData?.temperature?.values || !rawData?.power?.values) {
-      console.warn('⚠️ YAML sin estructura esperada');
-      return [];
-    }
-
-    // Crear mapa de potencia por timestamp para acceso O(1)
-    const powerMap = new Map<string, number>();
-    for (const item of rawData.power.values) {
-      const powerMW = this.converter.sanitizeNumericValue(item.value, 0);
-      powerMap.set(item.time, powerMW);
-    }
-
-    // Procesar cada punto de temperatura
-    return rawData.temperature.values.map(tempItem => {
-      // Convertir temperatura: dK → °C
-      const temperatureCelsius = this.converter.convertDecikelvinToCelsius(
-        tempItem.value
-      );
-
-      // Obtener potencia correspondiente
-      const powerMW = powerMap.get(tempItem.time) ?? 0;
-
-      // Convertir potencia: MW → kWh (intervalo 5s)
-      const energyKwh = this.converter.convertMegawattsToKilowattHours(
-        powerMW,
-        5 // intervalo en segundos
-      );
-
-      return {
-        time: tempItem.time,
-        temperature: temperatureCelsius,
-        energy: energyKwh
-      };
-    });
+ /**
+ * Procesa los datos raw del YAML y los convierte a WeatherDataPoint[].
+ * - Combina temperatura y potencia por timestamp
+ * - Convierte dK → °C
+ * - Convierte MW → kWh (intervalo 5s)
+ * 
+ * @param rawData Datos raw del YAML
+ * @returns Array de puntos procesados
+ */
+private processRawData(rawData: YAMLRawData): WeatherDataPoint[] {
+  if (!rawData?.temperature?.values || !rawData?.power?.values) {
+    console.warn('⚠️ YAML sin estructura esperada');
+    return [];
   }
+
+  // Crear mapa de potencia por timestamp para acceso O(1)
+  const powerMap = new Map<string, number>();
+  for (const item of rawData.power.values) {
+    const powerMW = this.converter.sanitizeNumericValue(item.value, 0);
+    powerMap.set(item.time, powerMW);
+  }
+
+  // Procesar cada punto de temperatura
+  return rawData.temperature.values.map(tempItem => {
+    // Convertir temperatura: dK → °C
+    const temperatureCelsius = this.converter.convertDecikelvinToCelsius(
+      tempItem.value
+    );
+
+    // Obtener potencia correspondiente
+    const powerMW = powerMap.get(tempItem.time) ?? 0;
+
+    // Convertir potencia: MW → kWh (intervalo 5s)
+    const energyKwh = this.converter.convertMegawattsToKilowattHours(
+      powerMW,
+      5 // intervalo en segundos
+    );
+
+    return {
+      time: tempItem.time,
+      temperature: temperatureCelsius,
+      energy: energyKwh
+    };
+  });
+}
+
+/**
+ * Convierte un timestamp HH:MM:SS a segundos desde medianoche
+ */
+private timeToSeconds(time: string): number {
+  const parts = time.split(':');
+  const hours = parseInt(parts[0], 10) || 0;
+  const minutes = parseInt(parts[1], 10) || 0;
+  const seconds = parseInt(parts[2], 10) || 0;
+  return hours * 3600 + minutes * 60 + seconds;
+}
 
   /**
    * Valida que los datos cargados sean correctos.
@@ -138,7 +162,6 @@ export class WeatherDataLoaderService {
       return false;
     }
 
-    console.log(`✅ Datos cargados: ${data.length} puntos`);
     return true;
   }
 }

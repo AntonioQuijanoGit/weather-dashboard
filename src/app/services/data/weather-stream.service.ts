@@ -43,36 +43,36 @@ export class WeatherStreamService {
    * 
    * @param path Ruta al archivo YAML
    */
-  async startStreaming(path: string): Promise<void> {
-    try {
-      // 1. Cargar datos
-      this.allData = await lastValueFrom(this.dataLoader.loadWeatherData(path));
+ async startStreaming(path: string): Promise<void> {
+  try {
+    // 1. Cargar datos
+    this.allData = await lastValueFrom(this.dataLoader.loadWeatherData(path));
 
-      // 2. Validar
-      if (!this.dataLoader.validateData(this.allData)) {
-        throw new Error('Datos inválidos');
-      }
-
-      // 3. Calcular índice inicial según hora actual
-      this.currentIndex = this.calculateCurrentIndex();
-
-      // 4. Precargar historial (últimos 60 puntos ≈ 5 min)
-      this.preloadHistory();
-
-      // 5. Emitir punto actual inmediatamente
-      if (this.allData[this.currentIndex]) {
-        this.currentDataSubject.next(this.allData[this.currentIndex]);
-      }
-
-      // 6. Iniciar streaming
-      this.startStreamingTimer();
-
-      console.log(`✅ Streaming iniciado desde índice ${this.currentIndex}/${this.allData.length}`);
-    } catch (error) {
-      console.error('❌ Error iniciando streaming:', error);
-      throw error;
+    // 2. Validar
+    if (!this.dataLoader.validateData(this.allData)) {
+      throw new Error('Datos inválidos');
     }
+
+    // 3. Calcular índice inicial según hora actual
+    this.currentIndex = this.calculateCurrentIndex();
+
+    // 4. Precargar historial (últimos 60 puntos ≈ 5 min)
+    this.preloadHistory();
+
+    // 5. Emitir punto actual inmediatamente
+    if (this.allData[this.currentIndex]) {
+      this.currentDataSubject.next(this.allData[this.currentIndex]);
+    }
+
+    // 6. Iniciar streaming
+    this.startStreamingTimer();
+
+    console.log(`✅ Streaming iniciado desde índice ${this.currentIndex}/${this.allData.length}`);
+  } catch (error) {
+    console.error('❌ Error iniciando streaming:', error);
+    throw error;
   }
+}
 
   /**
    * Calcula el índice actual basándose en la hora del día.
@@ -99,8 +99,6 @@ export class WeatherStreamService {
     const start = Math.max(0, this.currentIndex - this.HISTORY_PRELOAD);
     this.dataHistory = this.allData.slice(start, this.currentIndex);
     this.dataHistorySubject.next([...this.dataHistory]);
-
-    console.log(`📊 Historial precargado: ${this.dataHistory.length} puntos`);
   }
 
   /**
@@ -108,7 +106,6 @@ export class WeatherStreamService {
    */
   private startStreamingTimer(): void {
     if (this.isStreaming) {
-      console.warn('⚠️ Streaming ya está activo');
       return;
     }
 
@@ -125,7 +122,6 @@ export class WeatherStreamService {
   private emitNextDataPoint(): void {
     if (this.currentIndex >= this.allData.length) {
       // Reiniciar al finalizar el día
-      console.log('🔄 Reiniciando streaming desde el inicio');
       this.currentIndex = 0;
       return;
     }
@@ -154,8 +150,6 @@ export class WeatherStreamService {
     this.streamSub?.unsubscribe();
     this.streamSub = undefined;
     this.isStreaming = false;
-
-    console.log('⏸️ Streaming detenido');
   }
 
   /**
@@ -168,7 +162,6 @@ export class WeatherStreamService {
     this.dataHistorySubject.next([]);
     this.allData = [];
 
-    console.log('🔄 Streaming reiniciado');
   }
 
   // ========== Observables públicos ==========

@@ -6,7 +6,8 @@ import {
   AfterViewInit,
   ViewChild,
   ElementRef,
-  CUSTOM_ELEMENTS_SCHEMA
+  CUSTOM_ELEMENTS_SCHEMA,
+  ChangeDetectorRef  // ← AÑADIDO
 } from '@angular/core';
 import {
   Chart,
@@ -144,12 +145,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private slate = '#475569';
 
   // Formateadores
-  nfTemp   = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-  nfEnergy = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  nfInt    = new Intl.NumberFormat('es-ES');
-  get tempDisplay(): string   { return this.nfTemp.format(this.currentTemperature); }
-  get energyDisplay(): string { return this.nfEnergy.format(this.currentEnergy); }
-  get processedDisplay(): string { return this.nfInt.format(this.dataPointsProcessed); }
+  // Formateadores
+nfTemp   = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });  // ← CAMBIAR aquí
+nfEnergy = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+nfInt    = new Intl.NumberFormat('es-ES');
+get tempDisplay(): string   { return this.nfTemp.format(this.currentTemperature); }
+get energyDisplay(): string { return this.nfEnergy.format(this.currentEnergy); }
+get processedDisplay(): string { return this.nfInt.format(this.dataPointsProcessed); }
 
   // Tendencias
   trendTemp:   'up' | 'down' | 'flat' = 'flat';
@@ -175,48 +177,51 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private tempAnimationFrame?: number;
   private energyAnimationFrame?: number;
 
-  constructor(private weatherStream: WeatherStreamService) {}
+  constructor(
+    private weatherStream: WeatherStreamService,
+    private cdr: ChangeDetectorRef  // ← AÑADIDO
+  ) {}
 
   // ---------- Ciclo de vida ----------
-  ngOnInit(): void {
-    Chart.register(centerTextPlugin);
+ngOnInit(): void {
+  Chart.register(centerTextPlugin);
 
-    // Tema guardado o preferencia del SO
-    const stored = localStorage.getItem('theme');
-    if (stored === 'light' || stored === 'dark') {
-      this.themeChoice = stored;
-    } else {
-      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-      this.themeChoice = prefersDark ? 'dark' : 'light';
-      localStorage.setItem('theme', this.themeChoice);
-    }
-    this.applyThemeFromChoice();
-
-    // Suscripciones a datos
-    this.subscribeToData();
-
-    // Arranque de streaming (YAML en assets)
-    this.weatherStream
-      .startStreaming('assets/data.yml')
-      .then(() => {
-        this.isStreaming = true;
-        this.startTimer();
-      })
-      .catch((err: unknown) => console.error('Error cargando assets/data.yml:', err));
-
-    // Redibujar sparklines on resize
-    this.resizeSub = fromEvent(window, 'resize').subscribe(() => this.drawSparklines());
-
-    // Atajo teclado: 't' alterna tema
-    this.subscriptions.add(
-      fromEvent<KeyboardEvent>(window, 'keydown').subscribe((ev) => {
-        if (ev.key.toLowerCase() === 't') {
-          this.setTheme(this.themeChoice === 'dark' ? 'light' : 'dark');
-          queueMicrotask(() => this.themeToggleEl?.nativeElement?.focus());
-        }
-      })
-    );
+  // Tema guardado o preferencia del SO
+  const stored = localStorage.getItem('theme');
+  if (stored === 'light' || stored === 'dark') {
+    this.themeChoice = stored;
+  } else {
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+    this.themeChoice = prefersDark ? 'dark' : 'light';
+    localStorage.setItem('theme', this.themeChoice);
   }
+  this.applyThemeFromChoice();
+
+  // Suscripciones a datos
+  this.subscribeToData();
+
+  // Arranque de streaming (YAML en assets)
+  this.weatherStream
+    .startStreaming('assets/data.yml')
+    .then(() => {
+      this.isStreaming = true;
+      this.startTimer();
+    })
+    .catch((err: unknown) => console.error('Error cargando assets/data.yml:', err));
+
+  // Redibujar sparklines on resize
+  this.resizeSub = fromEvent(window, 'resize').subscribe(() => this.drawSparklines());
+
+  // Atajo teclado: 't' alterna tema
+  this.subscriptions.add(
+    fromEvent<KeyboardEvent>(window, 'keydown').subscribe((ev) => {
+      if (ev.key.toLowerCase() === 't') {
+        this.setTheme(this.themeChoice === 'dark' ? 'light' : 'dark');
+        queueMicrotask(() => this.themeToggleEl?.nativeElement?.focus());
+      }
+    })
+  );
+}
 
   ngAfterViewInit(): void {
     this.initializeCharts();
@@ -565,110 +570,111 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // ---------- Animación de valores numéricos ----------
-  private animateValue(
-    start: number,
-    end: number,
-    duration: number,
-    onUpdate: (value: number) => void,
-    onComplete?: () => void
-  ): number {
-    const startTime = performance.now();
-    const delta = end - start;
+private animateValue(
+  start: number,
+  end: number,
+  duration: number,
+  onUpdate: (value: number) => void,
+  onComplete?: () => void
+): number {
+  const startTime = performance.now();
+  const delta = end - start;
 
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      // Easing function: easeOutCubic
-      const eased = 1 - Math.pow(1 - progress, 3);
-      
-      const currentValue = start + delta * eased;
-      onUpdate(currentValue);
+  const animate = (currentTime: number) => {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    
+    const eased = 1 - Math.pow(1 - progress, 3);
+    const currentValue = start + delta * eased;
+    
+    onUpdate(currentValue);
+    this.cdr.markForCheck();
 
-      if (progress < 1) {
-        return requestAnimationFrame(animate);
-      } else {
-        onUpdate(end);
-        if (onComplete) onComplete();
-        return 0;
-      }
-    };
+    if (progress < 1) {
+      return requestAnimationFrame(animate);
+    } else {
+      onUpdate(end);
+      this.cdr.markForCheck();
+      if (onComplete) onComplete();
+      return 0;
+    }
+  };
 
-    return requestAnimationFrame(animate);
-  }
+  return requestAnimationFrame(animate);
+}
 
   // ---------- Datos ----------
   private subscribeToData(): void {
-    // Dato actual
-    this.subscriptions.add(
-      this.weatherStream.getCurrentData().subscribe((d: WeatherDataPoint) => {
-        const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
-        const newTrendEnergy = this.compareTrend(this.currentEnergy, d.energy);
+  // Dato actual
+  this.subscriptions.add(
+    this.weatherStream.getCurrentData().subscribe((d: WeatherDataPoint) => {
+      const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
+      const newTrendEnergy = this.compareTrend(this.currentEnergy, d.energy);
 
-        if (newTrendTemp !== 'flat') { 
-          this.lastRealTrendTemp = newTrendTemp; 
-          this.trendTemp = newTrendTemp; 
-        } else { 
-          this.trendTemp = this.lastRealTrendTemp; 
+      if (newTrendTemp !== 'flat') { 
+        this.lastRealTrendTemp = newTrendTemp; 
+        this.trendTemp = newTrendTemp; 
+      } else { 
+        this.trendTemp = this.lastRealTrendTemp; 
+      }
+
+      if (newTrendEnergy !== 'flat') { 
+        this.lastRealTrendEnergy = newTrendEnergy; 
+        this.trendEnergy = newTrendEnergy; 
+      } else { 
+        this.trendEnergy = this.lastRealTrendEnergy; 
+      }
+
+      // ANIMACIÓN: Temperatura
+      if (this.tempAnimationFrame) {
+        cancelAnimationFrame(this.tempAnimationFrame);
+      }
+      
+      this.tempAnimationFrame = this.animateValue(
+        this.currentTemperature,
+        d.temperature,
+        400,
+        (value) => {
+          this.currentTemperature = value;
         }
+      );
 
-        if (newTrendEnergy !== 'flat') { 
-          this.lastRealTrendEnergy = newTrendEnergy; 
-          this.trendEnergy = newTrendEnergy; 
-        } else { 
-          this.trendEnergy = this.lastRealTrendEnergy; 
+      // ANIMACIÓN: Energía
+      if (this.energyAnimationFrame) {
+        cancelAnimationFrame(this.energyAnimationFrame);
+      }
+      
+      this.energyAnimationFrame = this.animateValue(
+        this.currentEnergy,
+        d.energy,
+        400,
+        (value) => {
+          this.currentEnergy = value;
         }
+      );
 
-        // ANIMACIÓN: Temperatura
-        if (this.tempAnimationFrame) {
-          cancelAnimationFrame(this.tempAnimationFrame);
-        }
-        
-        this.tempAnimationFrame = this.animateValue(
-          this.currentTemperature,
-          d.temperature,
-          400,
-          (value) => {
-            this.currentTemperature = value;
-          }
-        );
+      // Tiempo actual
+      const now = new Date();
+      this.currentTime =
+        `${String(now.getHours()).padStart(2,'0')}:` +
+        `${String(now.getMinutes()).padStart(2,'0')}:` +
+        `${String(now.getSeconds()).padStart(2,'0')}`;
 
-        // ANIMACIÓN: Energía
-        if (this.energyAnimationFrame) {
-          cancelAnimationFrame(this.energyAnimationFrame);
-        }
-        
-        this.energyAnimationFrame = this.animateValue(
-          this.currentEnergy,
-          d.energy,
-          400,
-          (value) => {
-            this.currentEnergy = value;
-          }
-        );
+      this.dataPointsProcessed = this.weatherStream.getProcessedDataCount();
+      this.lastUpdatedAt = Date.now();
+    })
+  );
 
-        // Tiempo actual
-        const now = new Date();
-        this.currentTime =
-          `${String(now.getHours()).padStart(2,'0')}:` +
-          `${String(now.getMinutes()).padStart(2,'0')}:` +
-          `${String(now.getSeconds()).padStart(2,'0')}`;
-
-        this.dataPointsProcessed = this.weatherStream.getProcessedDataCount();
-        this.lastUpdatedAt = Date.now();
-      })
-    );
-
-    // Historial
-    this.subscriptions.add(
-      this.weatherStream.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
-        this.updateCharts(history);
-        this.updateDonuts(history);
-        this.updateStats(history);
-        this.drawSparklines(history);
-      })
-    );
-  }
+  // Historial
+  this.subscriptions.add(
+    this.weatherStream.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
+      this.updateCharts(history);
+      this.updateDonuts(history);
+      this.updateStats(history);
+      this.drawSparklines(history);
+    })
+  );
+}
 
   private compareTrend(prev: number, next: number): 'up' | 'down' | 'flat' {
     const delta = next - prev;
@@ -769,7 +775,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     this.energyPeakTime = peakTime;
     this.energyPeakKwh  = Number(maxEnergy.toFixed(2));
-
+    
     // Temperatura por rangos + estado
     const tempCounts = [0, 0, 0, 0];
     const tempValues: number[] = [];
