@@ -208,3 +208,36 @@ body.theme-dark .progress {
   background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #22d3ee));
   transition: width 0.35s ease;
 }
+
+/* ===== Animación KPI: flash y bounce (Temperatura) ===== */
+@keyframes kpiFlashUp   { 0%{ background: rgba(16,185,129,.18) } 100%{ background: transparent } }
+@keyframes kpiFlashDown { 0%{ background: rgba(239,68,68,.18) }  100%{ background: transparent } }
+
+.kpi-flash-up   { animation: kpiFlashUp .5s ease-out;  border-radius: 8px; padding-inline: 4px; }
+.kpi-flash-down { animation: kpiFlashDown .5s ease-out; border-radius: 8px; padding-inline: 4px; }
+
+@keyframes kpiBounce {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.025); }
+  100% { transform: scale(1); }
+}
+
+.kpi-bounce { animation: kpiBounce .38s ease-out; transform-origin: left center; }
+
+/* ===== Animación flecha de tendencia (slide) ===== */
+@keyframes trendSlideUp   { 0% { transform: translateY(4px);   opacity: .6; } 100% { transform: translateY(0);   opacity: 1; } }
+@keyframes trendSlideDown { 0% { transform: translateY(-4px);  opacity: .6; } 100% { transform: translateY(0);   opacity: 1; } }
+
+.trend-slide-up   { animation: trendSlideUp .35s ease-out; }
+.trend-slide-down { animation: trendSlideDown .35s ease-out; }
+
+/* Respeto a usuarios con reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .kpi-flash-up,
+  .kpi-flash-down,
+  .kpi-bounce,
+  .trend-slide-up,
+  .trend-slide-down {
+    animation: none !important;
+  }
+}

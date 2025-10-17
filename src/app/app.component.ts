@@ -102,6 +102,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   // Tendencias
   trendTemp:   'up' | 'down' | 'flat' = 'flat';
   trendEnergy: 'up' | 'down' | 'flat' = 'flat';
+  tempPulse = false;
+  energyPulse = false;
+
+
   private lastRealTrendTemp:   'up' | 'down' = 'down';
   private lastRealTrendEnergy: 'up' | 'down' = 'down';
 
@@ -399,11 +403,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.tempAnimationFrame = this.animateValue(this.currentTemperature, d.temperature, 400, (value) => {
           this.currentTemperature = value;
         });
+        this.tempPulse = !this.tempPulse
 
         if (this.energyAnimationFrame) cancelAnimationFrame(this.energyAnimationFrame);
         this.energyAnimationFrame = this.animateValue(this.currentEnergy, d.energy, 400, (value) => {
           this.currentEnergy = value;
         });
+          this.energyPulse = !this.energyPulse; 
+
 
         const now = new Date();
         this.currentTime =
