@@ -76,35 +76,34 @@ La aplicación se recargará automáticamente si realizas cambios en los archivo
 
 ## 📊 Funcionamiento de la Aplicación
 
-### Flujo de Datos
+1. **Carga de datos**: El servicio WeatherDataLoaderService lee y parsea el archivo YAML, transformando su contenido en un formato adecuado para la aplicación.
 
-1. **Generación de Datos**: El servicio `WeatherDataService` genera datos simulados para 24 horas con intervalos de 5 segundos (17,280 puntos de datos totales).
+2. **Streaming progresivo**: El servicio WeatherStreamService emite cada 5 segundos el siguiente punto de datos contenido en el archivo, reproduciendo el comportamiento de un flujo en tiempo real.
 
-2. **Streaming Progresivo**: Cada 5 segundos, el servicio emite el siguiente punto de datos simulando una lectura en tiempo real del archivo YAML.
+3. **Actualización de la UI**: El componente principal se suscribe a los observables de los servicios y actualiza dinámicamente:
 
-3. **Actualización de UI**: El componente se suscribe a los observables del servicio y actualiza:
-   - Valores actuales (tarjetas superiores)
-   - Gráficos históricos (últimos 60 puntos)
-   - Estadísticas de procesamiento
+        - Valores actuales (tarjetas superiores)
+        - Gráficos históricos (últimos 60 puntos)
+        - Estadísticas de procesamiento
 
 ### Servicios y componentes
 
-### WeatherDataLoaderService
+### 1. WeatherDataLoaderService
 -Carga y parsea el archivo YAML.
 -Expone los datos listos para emitir en el streaming.
 
-### WeatherStreamService
+### 2. WeatherStreamService
 -Emite cada 5 segundos el siguiente punto de datos.
 -Simula el comportamiento de una fuente en tiempo real.
 -Mantiene un buffer con el historial de datos recientes.
 
-### WeatherConverterService
+### 3. WeatherConverterService
 -Convierte unidades meteorológicas a formatos legibles:
 -Temperatura: dK → °C
 -Energía: Wh → kWh
 -Garantiza consistencia de datos para la visualización.
 
-### AppComponent
+### 4.AppComponent
 -Renderiza el dashboard completo.
 -Gestiona las suscripciones a los servicios.
 -Controla el ciclo de vida de los gráficos y la UI.
