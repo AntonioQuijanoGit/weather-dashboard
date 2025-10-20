@@ -2,7 +2,7 @@
 
 ## 📋 Descripción del Proyecto
 
-Aplicación web desarrollada en **Angular 17** que visualiza datos de predicción meteorológica en tiempo real. La aplicación simula el streaming progresivo de datos cada 5 segundos, mostrando temperatura media y energía producida con gráficos interactivos.
+Aplicación web desarrollada en **Angular** que visualiza datos de predicción meteorológica en tiempo real. La aplicación simula el streaming progresivo de datos cada 5 segundos, mostrando temperatura media y energía producida con gráficos interactivos.
 
 ## ✨ Características Principales
 
@@ -17,7 +17,7 @@ Aplicación web desarrollada en **Angular 17** que visualiza datos de predicció
 
 ## 🛠️ Tecnologías Utilizadas
 
-- **Framework**: Angular 17 (standalone components)
+- **Framework**: Angular (standalone components)
 - **Lenguaje**: TypeScript
 - **Gráficos**: Chart.js 4.4.0
 - **Procesamiento de datos**: js-yaml (para archivos YAML)
@@ -30,17 +30,20 @@ Aplicación web desarrollada en **Angular 17** que visualiza datos de predicció
 weather-dashboard/
 ├── src/
 │   ├── app/
-│   │   ├── app.component.ts       # Componente principal
-│   │   ├── app.component.html     # Template del dashboard
-│   │   ├── app.component.css      # Estilos del componente
-│   │   ├── weather-data.service.ts # Servicio de datos
-│   │   └── app.config.ts          # Configuración de la app
-│   ├── styles.css                 # Estilos globales
-│   └── index.html                 # HTML principal
-├── package.json                   # Dependencias del proyecto
-├── angular.json                   # Configuración de Angular
-├── tsconfig.json                  # Configuración de TypeScript
-└── README.md                      # Este archivo
+│   │   ├── app.component.ts             # Componente principal del dashboard
+│   │   ├── app.component.html           # Template del dashboard
+│   │   ├── app.component.css            # Estilos del componente
+│   │   ├── services/
+│   │   │   ├── weather-data-loader.service.ts   # Carga y parseo del archivo YAML
+│   │   │   ├── weather-converter.service.ts     # Conversión de unidades (dK → °C, kWh, etc.)
+│   │   │   └── weather-stream.service.ts        # Streaming progresivo y emisión de datos
+│   │   └── app.config.ts                # Configuración global de la aplicación
+│   ├── styles.css                       # Estilos globales
+│   └── index.html                       # HTML principal
+├── package.json                         # Dependencias del proyecto
+├── angular.json                         # Configuración de Angular
+├── tsconfig.json                        # Configuración de TypeScript
+└── README.md                            # Este archivo
 ```
 
 ## 🚀 Instalación y Ejecución
@@ -84,36 +87,48 @@ La aplicación se recargará automáticamente si realizas cambios en los archivo
    - Gráficos históricos (últimos 60 puntos)
    - Estadísticas de procesamiento
 
-### Componentes Principales
+### Servicios y componentes
 
-#### WeatherDataService
-- Gestiona el streaming de datos
-- Implementa BehaviorSubject para emisión de valores actuales
-- Mantiene historial de datos para visualización
-- Convierte unidades (dK → °C)
-- Simula datos realistas con variación horaria
+### WeatherDataLoaderService
+-Carga y parsea el archivo YAML.
+-Expone los datos listos para emitir en el streaming.
 
-#### AppComponent
-- Renderiza el dashboard completo
-- Inicializa y actualiza gráficos de Chart.js
-- Gestiona subscripciones a observables
-- Controla el ciclo de vida de los componentes
-- Maneja el temporizador de tiempo transcurrido
+### WeatherStreamService
+-Emite cada 5 segundos el siguiente punto de datos.
+-Simula el comportamiento de una fuente en tiempo real.
+-Mantiene un buffer con el historial de datos recientes.
+
+### WeatherConverterService
+-Convierte unidades meteorológicas a formatos legibles:
+-Temperatura: dK → °C
+-Energía: Wh → kWh
+-Garantiza consistencia de datos para la visualización.
+
+### AppComponent
+-Renderiza el dashboard completo.
+-Gestiona las suscripciones a los servicios.
+-Controla el ciclo de vida de los gráficos y la UI.
 
 ## 🎨 Diseño y UX
 
 ### Paleta de Colores
-- **Header**: Gradiente púrpura (#667eea → #764ba2)
-- **Temperatura**: Rojo (#e74c3c)
-- **Energía**: Azul (#3498db)
-- **Fondo**: Gris claro (#ecf0f1)
+- **Acento (var(--accent))**: `#0EA5A2` (turquesa)  
+- **Serie Temperatura (línea + sparkline)**: `#0EA5A2`  
+- **Serie Energía (línea discontinua + sparkline)**: `#475569` (slate)  
+- **Tendencia**: ↑ `#16a34a` · ↓ `#ef4444`  
+- **Estado activo (dot / pill)**: `#10b981`  
+- **Superficie / fondos**: `var(--surface)` (claro/oscuro según tema)  
+- **Bordes**: `var(--border)` / hover `var(--border-hover)`  
+- **Texto secundario**: `var(--text-2)`
+
+> Nota: el **tema claro/oscuro** se aplica con `body.theme-dark`; el interruptor de tema usa el mismo set de tokens.
 
 ### Características de Diseño
-- Animaciones suaves en tarjetas (hover effects)
-- Indicador de estado con animación de pulso
-- Sombras y profundidad para jerarquía visual
-- Tipografía clara y legible
-- Layout responsivo con CSS Grid
+- Layout limpio con **cards** (bordes suaves y sombras sutiles)  
+- **Sparklines** en canvas, nítidas desde el inicio (DPR-aware)  
+- **Microinteracciones**: hover en iconos/títulos, pill con pulso en estado  
+- **Accesibilidad**: focus visible, labels ARIA en gráficos  
+- **Responsivo**: grids que colapsan a 1 columna en móviles
 
 ## 📈 Optimizaciones Implementadas
 
@@ -132,15 +147,13 @@ La aplicación se recargará automáticamente si realizas cambios en los archivo
 - Imports selectivos de Chart.js
 - CSS optimizado con variables para facilitar mantenimiento
 
-## 🧪 Posibles Extensiones
+## 📝 Requisitos de la Prueba Técnica
 
-1. **Lectura de archivo YAML real**: Sustituir los datos simulados por la lectura del archivo proporcionado
-2. **Exportación de datos**: Permitir descargar los datos en CSV o Excel
-3. **Filtros temporales**: Añadir controles para seleccionar rangos de tiempo
-4. **Alertas**: Notificaciones cuando los valores superen umbrales
-5. **Comparación histórica**: Visualizar datos de múltiples días
-
-## 📝 Notas Técnicas
+- ✅ Streaming progresivo cada 5 s  
+- ✅ Visualización en tiempo real del último valor  
+- ✅ Gráficos con intervalos minutales  
+- ✅ Conversión de unidades dK → °C  
+- ✅ Diseño responsive con modo claro/oscuro
 
 ### Conversión de Unidades
 La aplicación incluye la función `convertDKToCelsius()` para convertir deciKelvins a Celsius:
@@ -164,8 +177,8 @@ temperature:
       value: 2921
 ```
 
-## 👤 Autor
+## 👤 ANTONIO QUIJANO BERNEDO
 
 Dashboard desarrollado como prueba de selección para Meteologica.
 
-**Tecnologías principales**: Angular 17, TypeScript, Chart.js, RxJS
+**Tecnologías principales**: Angular, TypeScript, Chart.js, RxJS
