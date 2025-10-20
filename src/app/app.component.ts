@@ -1,4 +1,3 @@
-// src/app/app.component.ts
 import {
   Component,
   OnInit,
@@ -37,7 +36,7 @@ type OverlaySummary = {
   min: number;
   max: number;
   last: number;
-  pctHalf?: number; // % de la 2ª mitad vs 1ª mitad (si hay datos)
+  pctHalf?: number;
   count: number;
 };
 
@@ -96,7 +95,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private timerInterval?: any;
   private resizeSub?: any;
 
-  // ✅ Observador para redibujar los sparklines cuando cambien de tamaño
+  // Observador para redibujar los sparklines
   private sparkResizeObs?: ResizeObserver;
 
   // Paleta series
@@ -111,7 +110,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   get energyDisplay(): string { return this.nfEnergy.format(this.currentEnergy); }
   get processedDisplay(): string { return this.nfInt.format(this.dataPointsProcessed); }
 
-  // Tendencias y pulses (animaciones sutiles en KPIs)
+  // Tendencias y pulses
   trendTemp:   'up' | 'down' | 'flat' = 'flat';
   trendEnergy: 'up' | 'down' | 'flat' = 'flat';
   tempPulse = false;
@@ -138,7 +137,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   tempStateLabel = 'Estable';
   tempVariationLabel = '±0.0°C';
 
-  // Resumen para hovercards (texto, no gráfico)
+  // Resumen para hovercards
   overlayTempSummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
   overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
 
@@ -173,6 +172,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       .then(() => {
         this.isStreaming = true;
         this.startTimer();
+        // Forzar un repintado inicial por si el canvas ya está montado
+        queueMicrotask(() => this.drawSparklines());
       })
       .catch((err: unknown) => console.error('Error cargando assets/data.yml:', err));
 
@@ -193,12 +194,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ngAfterViewInit(): void {
     this.initializeCharts();
 
-    // ✅ Observa los dos canvas de sparkline y repinta cuando cambie su tamaño (hover, responsive, etc.)
+    // Observa los canvas de sparkline y repinta cuando cambie su tamaño
     if (this.sparkTempRef?.nativeElement && this.sparkEnergyRef?.nativeElement && 'ResizeObserver' in window) {
       this.sparkResizeObs = new ResizeObserver(() => this.drawSparklines());
       this.sparkResizeObs.observe(this.sparkTempRef.nativeElement);
       this.sparkResizeObs.observe(this.sparkEnergyRef.nativeElement);
     }
+
+    // Dibujo inicial inmediato (antes del primer tick)
+    this.drawSparklines();
   }
 
   ngOnDestroy(): void {
@@ -211,7 +215,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.temperatureChart?.destroy();
     this.energyChart?.destroy();
 
-    // ✅ Limpieza del observador
     this.sparkResizeObs?.disconnect();
   }
 
@@ -458,7 +461,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.updateSummary(history);
         this.updateStats(history);
         this.drawSparklines(history);
-        this.updateOverlaySummaries(history); // << alimenta hovercards numéricas
+        this.updateOverlaySummaries(history);
       })
     );
   }
@@ -542,7 +545,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // KPIs de resumen SIN donuts (solo cálculos)
   private updateSummary(history: WeatherDataPoint[]): void {
     if (!history?.length) {
       this.energyPeakTime = '--:--';
@@ -625,7 +627,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       for (const p of prevSlice) { tSum += p.temperature; eSum += p.energy; }
       prevTempAvg = tSum / prevSlice.length;
       prevEnergySum = eSum;
-    } else if (lastN.length >= 6) { // pide al menos algunos puntos para que tenga sentido
+    } else if (lastN.length >= 6) {
       const mid = Math.floor(lastN.length / 2);
       const firstHalf = lastN.slice(0, mid);
       const secondHalf = lastN.slice(mid);
@@ -744,13 +746,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const data = history ?? [];
     const last = data.slice(-N);
 
-    // 🔧 Dibujo crisp con DPR + alineación a píxel
+    // 🔧 Dibujo crisp con DPR + desactivar suavizado
     const draw = (canvas: HTMLCanvasElement | undefined, values: number[], stroke: string) => {
       if (!canvas || values.length < 2) return;
 
       const ctx = canvas.getContext('2d')!;
+      ctx.imageSmoothingEnabled = false;
+
       const cssW = canvas.clientWidth;
-      const cssH = canvas.clientHeight;
+      const cssH = canvas.clientHeight; // 34px por CSS
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width  = Math.round(cssW * dpr);

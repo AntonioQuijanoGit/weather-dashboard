@@ -1,6 +1,5 @@
 /* =========================================================
-   Weather Dashboard · app.component.css  (versión simplificada)
-   Mantiene el diseño, quita paréntesis en tendencias y evita blur
+   Weather Dashboard · app.component.css (sparkline nítida, visible desde inicio)
    ========================================================= */
 
 /* =============== Layout base =============== */
@@ -117,8 +116,7 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
 }
 .card:hover,
 .card:focus-within {
-  /* anti-blur: NO scale */
-  transform: translateY(-2px);
+  transform: translateY(-2px); /* NO scale para evitar blur */
   box-shadow: 0 8px 28px rgba(2, 6, 23, 0.10);
 }
 .theme-dark .card:hover,
@@ -139,47 +137,49 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
 .kpi-value .unit { font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); margin-left: 4px; }
 .muted { font-size: var(--fs-sm); color: var(--text-2); }
 
-/* Tendencia: texto + icono a la derecha (sin paréntesis) */
+/* Tendencia */
 .kpi-trend {
   display: inline-flex;
   align-items: center;
-  gap: 6px;              /* espacio entre el texto y la flecha */
+  gap: 6px;
   font-size: 0.85rem;
   font-weight: 500;
   line-height: 1.2;
 }
 .kpi-trend.up   { color: #16a34a; }
 .kpi-trend.down { color: #ef4444; }
-
-/* Oculta cualquier paréntesis del HTML si existiera */
 .kpi-trend__paren { display: none !important; }
+.kpi-trend__icon { width: 16px; height: 16px; vertical-align: -2px; display: inline-block; }
 
-/* Icono alineado a la línea base del texto */
-.kpi-trend__icon {
-  width: 16px;
-  height: 16px;
-  vertical-align: -2px;
-  display: inline-block;
+/* ===== Sparkline (canvas SIEMPRE visible y nítida) ===== */
+.sparkline-wrap {
+  height: 34px;                /* altura total desde el inicio */
+  overflow: hidden;
+  margin-top: 4px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: none;            /* evita el salto inicial */
 }
 
-/* Sparklines (mini-gráficas) */
 .sparkline {
   width: 100%;
-  height: 22px;
+  height: 34px !important;     /* lienzo fijo */
   display: block;
-  margin-top: 4px;
-  transition: height 180ms ease, opacity 180ms ease, filter 180ms ease;
-  opacity: 0.7;
-}
-.kpi:hover .sparkline,
-.kpi:focus-within .sparkline {
-  height: 34px;           /* más alto, sin escalar contenedor */
   opacity: 0.95;
+  transition: opacity 180ms ease, filter 180ms ease;
   filter: contrast(105%);
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-/* KPIs: micro realce de valor en hover */
-.kpi:hover .kpi-value, .kpi:focus-within .kpi-value { text-shadow: 0 0 1px rgba(15, 23, 42, 0.08); }
+.card.kpi:hover .sparkline,
+.card.kpi:focus-within .sparkline {
+  opacity: 1;
+  filter: contrast(110%);
+}
 
 /* =============== Charts =============== */
 .charts { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -201,7 +201,7 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
   display: block;
   border-radius: 10px;
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid var(--border); /* solo las charts grandes llevan borde */
 }
 
 /* =============== Estadísticas =============== */
@@ -225,7 +225,7 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
 .stat-label { font-size: var(--fs-xs); color: var(--text-2); letter-spacing: .02em; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
 .stat-value { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; justify-self: end; }
 
-/* Barra de progreso (stat especial) */
+/* Barra de progreso */
 .stat.stat--with-progress { row-gap: 8px; }
 .progress {
   grid-column: 1 / -1;
@@ -245,13 +245,13 @@ body.theme-dark .progress { background: rgba(255, 255, 255, 0.06); }
   background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #22d3ee));
 }
 
-/* Deltas (flecha de cambio en stats) */
+/* Deltas */
 .delta { color: inherit; }
 .delta iconify-icon { transition: color .3s ease; vertical-align: -2px; }
 .delta.up   iconify-icon { color: #16a34a; }
 .delta.down iconify-icon { color: #dc2626; }
 
-/* =============== Hovercards (resumen mini) =============== */
+/* =============== Hovercards =============== */
 .card.kpi { position: relative; overflow: visible; }
 .kpi-hovercard {
   position: absolute;
@@ -353,4 +353,14 @@ body.theme-dark .progress { background: rgba(255, 255, 255, 0.06); }
   transform: translateY(-1px) rotate(-3deg);
   filter: brightness(1.06);
   opacity: 0.95;
+}
+
+/* Texto "alza/baja/estable" aún más sutil */
+.kpi-trend .muted {
+  color: #a1a1aa !important; /* gris claro */
+  opacity: 0.9;
+}
+
+body.theme-dark .kpi-trend .muted {
+  color: #9ca3af !important; /* gris claro en dark */
 }

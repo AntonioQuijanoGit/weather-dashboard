@@ -1,4 +1,3 @@
-// src/app/services/data/weather-stream.service.ts
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subscription, timer, lastValueFrom } from 'rxjs';
 import { WeatherDataLoaderService, WeatherDataPoint } from './weather-data-loader.service';
@@ -46,8 +45,6 @@ export class WeatherStreamService {
    * - Calcula el índice inicial basado en la hora actual
    * - Precarga historial para tener datos desde el inicio
    * - Inicia el streaming automático
-   * 
-   * @param path Ruta al archivo YAML
    */
   async startStreaming(path: string): Promise<void> {
     try {
@@ -73,9 +70,10 @@ export class WeatherStreamService {
       // 4) Precargar historial (últimos N puntos antes del índice actual)
       this.preloadHistory();
 
-      // 5) Emitir punto actual inmediatamente (si existe)
+      // 5) Emitir inmediatamente: punto actual + historial ✅
       const current = this.allData[this.currentIndex];
       if (current) this.currentDataSubject.next(current);
+      this.dataHistorySubject.next([...this.dataHistory]);
 
       // 6) Iniciar streaming
       this.startStreamingTimer();
@@ -86,16 +84,10 @@ export class WeatherStreamService {
       );
     } catch (error) {
       console.error('❌ Error iniciando streaming:', error);
-      // No relanzamos para no romper la UI; si prefieres, puedes throw error;
       throw error;
     }
   }
 
-  /**
-   * Calcula el índice actual basándose en la hora del día.
-   * Asume que los datos comienzan a medianoche con intervalos de 5s.
-   * Aplica clamp si el índice resultante excede el tamaño real del dataset.
-   */
   private calculateCurrentIndex(): number {
     if (!this.allData.length) return 0;
 
@@ -119,18 +111,12 @@ export class WeatherStreamService {
     );
   }
 
-  /**
-   * Precarga el historial con los últimos N puntos antes del índice actual.
-   */
   private preloadHistory(): void {
     const start = Math.max(0, this.currentIndex - this.HISTORY_PRELOAD);
     this.dataHistory = this.allData.slice(start, this.currentIndex);
-    this.dataHistorySubject.next([...this.dataHistory]);
+    this.dataHistorySubject.next([...this.dataHistory]); // mantiene en sincronía si se reusa fuera
   }
 
-  /**
-   * Inicia el timer que emite datos cada 5 segundos.
-   */
   private startStreamingTimer(): void {
     if (this.isStreaming) return;
 
@@ -142,10 +128,6 @@ export class WeatherStreamService {
     });
   }
 
-  /**
-   * Emite el siguiente punto de datos y actualiza el historial.
-   * Al finalizar el array (fin del "día"), rota a índice 0, precarga historial y emite punto 0 sin esperar al siguiente tick.
-   */
   private emitNextDataPoint(): void {
     if (!this.allData.length) return;
 
@@ -179,20 +161,13 @@ export class WeatherStreamService {
     this.currentIndex++;
   }
 
-  /**
-   * Detiene el streaming.
-   */
   stopStreaming(): void {
     if (!this.isStreaming) return;
-
     this.streamSub?.unsubscribe();
     this.streamSub = undefined;
     this.isStreaming = false;
   }
 
-  /**
-   * Reinicia completamente el streaming.
-   */
   resetStreaming(): void {
     this.stopStreaming();
     this.currentIndex = 0;
@@ -202,40 +177,23 @@ export class WeatherStreamService {
   }
 
   // ========== Observables públicos ==========
-
-  /**
-   * Observable del dato actual (último emitido).
-   */
   getCurrentData(): Observable<WeatherDataPoint> {
     return this.currentDataSubject.asObservable();
   }
 
-  /**
-   * Observable del historial de datos.
-   */
   getDataHistory(): Observable<WeatherDataPoint[]> {
     return this.dataHistorySubject.asObservable();
   }
 
   // ========== Getters ==========
-
-  /**
-   * Obtiene el número de puntos procesados.
-   */
   getProcessedDataCount(): number {
     return this.currentIndex;
   }
 
-  /**
-   * Indica si el streaming está activo.
-   */
   isStreamingActive(): boolean {
     return this.isStreaming;
   }
 
-  /**
-   * Obtiene el total de puntos de datos disponibles.
-   */
   getTotalDataPoints(): number {
     return this.allData.length;
   }
