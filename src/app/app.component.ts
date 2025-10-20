@@ -146,7 +146,11 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   energyPeakTime = '--:--';
   energyPeakKwh  = 0;
   tempStateLabel = 'Estable';
-  tempVariationLabel = '±0.0°C';
+  tempVariationLabel = '±0.0%';
+
+  // NUEVO: variación térmica en número y dirección para flecha/colores
+  tempVariationDeltaPct = 0;
+  tempDeltaDir: 'up' | 'down' | 'flat' = 'flat';
 
   // Hovercards
   overlayTempSummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
@@ -543,74 +547,76 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-private updateSummary(history: WeatherDataPoint[]): void {
-  // Valores por defecto si no hay historial
-  if (!history?.length) {
-    this.energyPeakTime = '--:--';
-    this.energyPeakKwh  = 0;
-    this.tempStateLabel = 'Estable';
-    this.tempVariationLabel = '±0.0%';
-    return;
-  }
-
-  // --- Pico de energía (valor máximo y su hora) ---
-  let maxEnergy = -Infinity;
-  let peakTime = '--:--';
-  for (const p of history) {
-    if (p.energy > maxEnergy) {
-      maxEnergy = p.energy;
-      // El YAML suele traer HH:mm:ss -> nos quedamos con HH:mm
-      peakTime = (p.time || '').slice(0, 5);
+  private updateSummary(history: WeatherDataPoint[]): void {
+    // Valores por defecto si no hay historial
+    if (!history?.length) {
+      this.energyPeakTime = '--:--';
+      this.energyPeakKwh  = 0;
+      this.tempStateLabel = 'Estable';
+      this.tempVariationLabel = '±0.0%';
+      this.tempVariationDeltaPct = 0;
+      this.tempDeltaDir = 'flat';
+      return;
     }
+
+    // --- Pico de energía (valor máximo y su hora) ---
+    let maxEnergy = -Infinity;
+    let peakTime = '--:--';
+    for (const p of history) {
+      if (p.energy > maxEnergy) {
+        maxEnergy = p.energy;
+        peakTime = (p.time || '').slice(0, 5); // HH:mm
+      }
+    }
+    this.energyPeakTime = peakTime || '--:--';
+    this.energyPeakKwh  = Number((maxEnergy === -Infinity ? 0 : maxEnergy).toFixed(2));
+
+    // --- Estado térmico y variación ---
+    const temps = history.map(h => h.temperature);
+    if (!temps.length) {
+      this.tempStateLabel = 'Estable';
+      this.tempVariationLabel = '±0.0%';
+      this.tempVariationDeltaPct = 0;
+      this.tempDeltaDir = 'flat';
+      return;
+    }
+
+    // Rango de la ventana para clasificar el “estado”
+    const minTemp = Math.min(...temps);
+    const maxTemp = Math.max(...temps);
+    const range   = maxTemp - minTemp;
+
+    let state = 'Estable';
+    if (range < 2)       state = 'Muy estable';
+    else if (range < 5)  state = 'Estable';
+    else if (range < 10) state = 'Variable';
+    else                 state = 'Muy variable';
+    this.tempStateLabel = state;
+
+    // Variación térmica (% vs mitad anterior): media 1ª mitad vs 2ª mitad
+    let deltaPct = 0;
+    if (temps.length >= 6) {
+      const mid = Math.floor(temps.length / 2);
+      const first  = temps.slice(0, mid);
+      const second = temps.slice(mid);
+
+      const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
+      const m1 = avg(first);
+      const m2 = avg(second);
+
+      deltaPct = (!Number.isFinite(m1) || Math.abs(m1) < 1e-9)
+        ? 0
+        : ((m2 - m1) / m1) * 100;
+    }
+
+    // Guardamos número y dirección para la UI
+    this.tempVariationDeltaPct = Number(deltaPct.toFixed(1));
+    this.tempDeltaDir = Math.abs(deltaPct) < 0.05 ? 'flat' : (deltaPct > 0 ? 'up' : 'down');
+
+    // Etiqueta “bonita” con signo
+    const sign = deltaPct >= 0 ? '+' : '−';
+    this.tempVariationLabel = `${sign}${Math.abs(deltaPct).toFixed(1)}%`;
   }
-  this.energyPeakTime = peakTime || '--:--';
-  this.energyPeakKwh  = Number((maxEnergy === -Infinity ? 0 : maxEnergy).toFixed(2));
-
-  // --- Estado térmico y variación ---
-  const temps = history.map(h => h.temperature);
-  if (!temps.length) {
-    this.tempStateLabel = 'Estable';
-    this.tempVariationLabel = '±0.0%';
-    return;
-  }
-
-  // Rango de la ventana para clasificar el “estado”
-  const minTemp = Math.min(...temps);
-  const maxTemp = Math.max(...temps);
-  const range   = maxTemp - minTemp;
-
-  let state = 'Estable';
-  if (range < 2)       state = 'Muy estable';
-  else if (range < 5)  state = 'Estable';
-  else if (range < 10) state = 'Variable';
-  else                 state = 'Muy variable';
-  this.tempStateLabel = state;
-
-  // Variación térmica (% vs mitad anterior)
-  // Comparamos la media de la 1ª mitad vs la 2ª mitad de la ventana activa
-  let deltaPct = 0; // % a mostrar
-  if (temps.length >= 6) {
-    const mid = Math.floor(temps.length / 2);
-    const first  = temps.slice(0, mid);
-    const second = temps.slice(mid);
-
-    const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
-    const m1 = avg(first);
-    const m2 = avg(second);
-
-    // % vs mitad anterior, con protección por cero/casi cero
-    deltaPct = (!Number.isFinite(m1) || Math.abs(m1) < 1e-9)
-      ? 0
-      : ((m2 - m1) / m1) * 100;
-  }
-
-  // Presentación UX: solo porcentaje con signo
-  // (la coma la puedes forzar en plantilla si quieres -> replace('.', ','))
-  const sign = deltaPct >= 0 ? '+' : '−';
-  this.tempVariationLabel = `${sign}${Math.abs(deltaPct).toFixed(1)}%`;
-}
-
-
 
   private updateStats(history: WeatherDataPoint[]): void {
     if (!history?.length) {
@@ -783,6 +789,9 @@ private updateSummary(history: WeatherDataPoint[]): void {
   private drawSparklines(history?: WeatherDataPoint[]): void {
     const N = 60;
     const data = history ?? [];
+    theLast: {
+      // (helper label to quickly find block)
+    }
     const last = data.slice(-N);
 
     const draw = (canvas: HTMLCanvasElement | undefined, values: number[], stroke: string) => {
