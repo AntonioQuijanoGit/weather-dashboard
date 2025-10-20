@@ -543,47 +543,74 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  private updateSummary(history: WeatherDataPoint[]): void {
-    if (!history?.length) {
-      this.energyPeakTime = '--:--';
-      this.energyPeakKwh = 0;
-      this.tempStateLabel = 'Estable';
-      this.tempVariationLabel = '±0.0°C';
-      return;
-    }
+private updateSummary(history: WeatherDataPoint[]): void {
+  // Valores por defecto si no hay historial
+  if (!history?.length) {
+    this.energyPeakTime = '--:--';
+    this.energyPeakKwh  = 0;
+    this.tempStateLabel = 'Estable';
+    this.tempVariationLabel = '±0.0%';
+    return;
+  }
 
-    // Pico de energía (valor máximo y su hora)
-    let maxEnergy = -Infinity;
-    let peakTime = '--:--';
-    for (const p of history) {
-      if (p.energy > maxEnergy) {
-        maxEnergy = p.energy;
-        peakTime = p.time.slice(0, 5);
-      }
-    }
-    this.energyPeakTime = peakTime;
-    this.energyPeakKwh  = Number((maxEnergy === -Infinity ? 0 : maxEnergy).toFixed(2));
-
-    // Estado térmico y variación
-    const temps = history.map(h => h.temperature);
-    if (temps.length) {
-      const minTemp = Math.min(...temps);
-      const maxTemp = Math.max(...temps);
-      const range = maxTemp - minTemp;
-
-      let tempState = 'Estable';
-      if (range < 2) tempState = 'Muy estable';
-      else if (range < 5) tempState = 'Estable';
-      else if (range < 10) tempState = 'Variable';
-      else tempState = 'Muy variable';
-
-      this.tempStateLabel = tempState;
-      this.tempVariationLabel = `±${(range / 2).toFixed(1)}°C`;
-    } else {
-      this.tempStateLabel = 'Estable';
-      this.tempVariationLabel = '±0.0°C';
+  // --- Pico de energía (valor máximo y su hora) ---
+  let maxEnergy = -Infinity;
+  let peakTime = '--:--';
+  for (const p of history) {
+    if (p.energy > maxEnergy) {
+      maxEnergy = p.energy;
+      // El YAML suele traer HH:mm:ss -> nos quedamos con HH:mm
+      peakTime = (p.time || '').slice(0, 5);
     }
   }
+  this.energyPeakTime = peakTime || '--:--';
+  this.energyPeakKwh  = Number((maxEnergy === -Infinity ? 0 : maxEnergy).toFixed(2));
+
+  // --- Estado térmico y variación ---
+  const temps = history.map(h => h.temperature);
+  if (!temps.length) {
+    this.tempStateLabel = 'Estable';
+    this.tempVariationLabel = '±0.0%';
+    return;
+  }
+
+  // Rango de la ventana para clasificar el “estado”
+  const minTemp = Math.min(...temps);
+  const maxTemp = Math.max(...temps);
+  const range   = maxTemp - minTemp;
+
+  let state = 'Estable';
+  if (range < 2)       state = 'Muy estable';
+  else if (range < 5)  state = 'Estable';
+  else if (range < 10) state = 'Variable';
+  else                 state = 'Muy variable';
+  this.tempStateLabel = state;
+
+  // Variación térmica (% vs mitad anterior)
+  // Comparamos la media de la 1ª mitad vs la 2ª mitad de la ventana activa
+  let deltaPct = 0; // % a mostrar
+  if (temps.length >= 6) {
+    const mid = Math.floor(temps.length / 2);
+    const first  = temps.slice(0, mid);
+    const second = temps.slice(mid);
+
+    const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
+    const m1 = avg(first);
+    const m2 = avg(second);
+
+    // % vs mitad anterior, con protección por cero/casi cero
+    deltaPct = (!Number.isFinite(m1) || Math.abs(m1) < 1e-9)
+      ? 0
+      : ((m2 - m1) / m1) * 100;
+  }
+
+  // Presentación UX: solo porcentaje con signo
+  // (la coma la puedes forzar en plantilla si quieres -> replace('.', ','))
+  const sign = deltaPct >= 0 ? '+' : '−';
+  this.tempVariationLabel = `${sign}${Math.abs(deltaPct).toFixed(1)}%`;
+}
+
+
 
   private updateStats(history: WeatherDataPoint[]): void {
     if (!history?.length) {
