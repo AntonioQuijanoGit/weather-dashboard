@@ -388,3 +388,16 @@ body.theme-dark .progress-bar {
   background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #22d3ee));
   border-radius: 999px;
 }
+
+/* --- Ajuste visual para el header de la tarjeta hover --- */
+.hovercard-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;              /* 👈 separa texto y elementos */
+}
+
+.pill-count {
+  margin-left: 8px;      /* 👈 aire entre "15 min" y "102 pts" */
+  white-space: nowrap;   /* 👈 evita que se parta en dos líneas */
+  flex-shrink: 0;
+}
