@@ -6,13 +6,9 @@ import {
   ViewChild,
   ElementRef,
   CUSTOM_ELEMENTS_SCHEMA,
-  ChangeDetectorRef
+  ChangeDetectorRef,
 } from '@angular/core';
-import {
-  Chart,
-  ChartConfiguration,
-  registerables
-} from 'chart.js';
+import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { WeatherStreamService } from './services/data/weather-stream.service';
 import { CommonModule } from '@angular/common';
 import { WeatherDataPoint } from './services/data/weather-data-loader.service';
@@ -49,7 +45,8 @@ type OverlaySummary = {
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
 })
 export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
-  @ViewChild('temperatureChart') temperatureChartRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('temperatureChart')
+  temperatureChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('energyChart') energyChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('sparkTemp') sparkTempRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('sparkEnergy') sparkEnergyRef!: ElementRef<HTMLCanvasElement>;
@@ -70,18 +67,20 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Rango de tiempo
   ranges = [
-    { key: '5m',  label: '5 min',  minutes: 5 },
+    { key: '5m', label: '5 min', minutes: 5 },
     { key: '15m', label: '15 min', minutes: 15 },
     { key: '60m', label: '60 min', minutes: 60 },
-    { key: '24h', label: '24 h',   minutes: 24 * 60 },
+    { key: '24h', label: '24 h', minutes: 24 * 60 },
   ] as { key: RangeKey; label: string; minutes: number }[];
   activeRangeKey: RangeKey = '15m';
   get activeRangeLabel(): string {
-    const item = this.ranges.find(r => r.key === this.activeRangeKey);
+    const item = this.ranges.find((r) => r.key === this.activeRangeKey);
     return item ? item.label : '';
   }
   get activeRangeMinutes(): number {
-    return this.ranges.find(r => r.key === this.activeRangeKey)?.minutes ?? 15;
+    return (
+      this.ranges.find((r) => r.key === this.activeRangeKey)?.minutes ?? 15
+    );
   }
 
   // Mostrar/ocultar series
@@ -102,24 +101,36 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private sparkResizeObs?: ResizeObserver;
 
   // Paleta series
-  private teal  = '#0EA5A2';
+  private teal = '#0EA5A2';
   private slate = '#475569';
 
   // Formateadores
-  nfTemp   = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  nfEnergy = new Intl.NumberFormat('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  nfInt    = new Intl.NumberFormat('es-ES');
-  get tempDisplay(): string   { return this.nfTemp.format(this.currentTemperature); }
-  get energyDisplay(): string { return this.nfEnergy.format(this.currentEnergy); }
-  get processedDisplay(): string { return this.nfInt.format(this.dataPointsProcessed); }
+  nfTemp = new Intl.NumberFormat('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  nfEnergy = new Intl.NumberFormat('es-ES', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  nfInt = new Intl.NumberFormat('es-ES');
+  get tempDisplay(): string {
+    return this.nfTemp.format(this.currentTemperature);
+  }
+  get energyDisplay(): string {
+    return this.nfEnergy.format(this.currentEnergy);
+  }
+  get processedDisplay(): string {
+    return this.nfInt.format(this.dataPointsProcessed);
+  }
 
   // Tendencias y pulses (mantienen último estado hasta que cambie)
-  trendTemp:   'up' | 'down' | 'flat' = 'flat';
+  trendTemp: 'up' | 'down' | 'flat' = 'flat';
   trendEnergy: 'up' | 'down' | 'flat' = 'flat';
   tempPulse = false;
   energyPulse = false;
 
-  private lastRealTrendTemp:   'up' | 'down' = 'down';
+  private lastRealTrendTemp: 'up' | 'down' = 'down';
   private lastRealTrendEnergy: 'up' | 'down' = 'down';
 
   // Estadísticas
@@ -128,14 +139,20 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     tempMax: 0,
     energySum: 0,
     points: 0,
-    prodAvgPerMin: 0,   // kWh/min
-    prodAvgPerHour: 0,  // kWh/h
-    utilizationPct: 0,  // % actual vs pico
+    prodAvgPerMin: 0,
+    prodAvgPerHour: 0,
+    utilizationPct: 0,
   };
 
   // Para variaciones vs ventana anterior
-  prevStats: { tempAvg: number; energySum: number } = { tempAvg: 0, energySum: 0 };
-  deltas: { tempAvgPct: number; energySumPct: number } = { tempAvgPct: 0, energySumPct: 0 };
+  prevStats: { tempAvg: number; energySum: number } = {
+    tempAvg: 0,
+    energySum: 0,
+  };
+  deltas: { tempAvgPct: number; energySumPct: number } = {
+    tempAvgPct: 0,
+    energySumPct: 0,
+  };
 
   // "Actualizado hace …"
   lastUpdatedAt: number = Date.now();
@@ -144,17 +161,29 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // KPIs de resumen
   energyPeakTime = '--:--';
-  energyPeakKwh  = 0;
+  energyPeakKwh = 0;
   tempStateLabel = 'Estable';
   tempVariationLabel = '±0.0%';
 
-  // NUEVO: variación térmica en número y dirección para flecha/colores
+  // Variación térmica en número y dirección para flecha/colores
   tempVariationDeltaPct = 0;
   tempDeltaDir: 'up' | 'down' | 'flat' = 'flat';
 
   // Hovercards
-  overlayTempSummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
-  overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
+  overlayTempSummary: OverlaySummary = {
+    min: 0,
+    max: 0,
+    last: 0,
+    count: 0,
+    pctHalf: undefined,
+  };
+  overlayEnergySummary: OverlaySummary = {
+    min: 0,
+    max: 0,
+    last: 0,
+    count: 0,
+    pctHalf: undefined,
+  };
 
   // Control de animaciones de contador
   private tempAnimationFrame?: number;
@@ -171,16 +200,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     if (stored === 'light' || stored === 'dark') {
       this.themeChoice = stored;
     } else {
-      const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
+      const prefersDark =
+        window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
       this.themeChoice = prefersDark ? 'dark' : 'light';
       localStorage.setItem('theme', this.themeChoice);
     }
     this.applyThemeFromChoice();
 
-    // Suscripciones a datos
     this.subscribeToData();
 
-    // Arranque streaming
     this.weatherStream
       .startStreaming('assets/data.yml')
       .then(() => {
@@ -188,12 +216,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         this.startTimer();
         queueMicrotask(() => this.drawSparklines());
       })
-      .catch((err: unknown) => console.error('Error cargando assets/data.yml:', err));
+      .catch((err: unknown) =>
+        console.error('Error cargando assets/data.yml:', err)
+      );
 
-    // Redibujar sparklines on resize
-    this.resizeSub = fromEvent(window, 'resize').subscribe(() => this.drawSparklines());
+    this.resizeSub = fromEvent(window, 'resize').subscribe(() =>
+      this.drawSparklines()
+    );
 
-    // Atajo teclado: 't'
     this.subscriptions.add(
       fromEvent<KeyboardEvent>(window, 'keydown').subscribe((ev) => {
         if (ev.key.toLowerCase() === 't') {
@@ -207,8 +237,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ngAfterViewInit(): void {
     this.initializeCharts();
 
-    if (this.sparkTempRef?.nativeElement && this.sparkEnergyRef?.nativeElement && 'ResizeObserver' in window) {
-      this.sparkResizeObs = new ResizeObserver((): void => this.drawSparklines());
+    if (
+      this.sparkTempRef?.nativeElement &&
+      this.sparkEnergyRef?.nativeElement &&
+      'ResizeObserver' in window
+    ) {
+      this.sparkResizeObs = new ResizeObserver((): void =>
+        this.drawSparklines()
+      );
       this.sparkResizeObs.observe(this.sparkTempRef.nativeElement);
       this.sparkResizeObs.observe(this.sparkEnergyRef.nativeElement);
     }
@@ -218,7 +254,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy(): void {
     if (this.tempAnimationFrame) cancelAnimationFrame(this.tempAnimationFrame);
-    if (this.energyAnimationFrame) cancelAnimationFrame(this.energyAnimationFrame);
+    if (this.energyAnimationFrame)
+      cancelAnimationFrame(this.energyAnimationFrame);
 
     this.subscriptions.unsubscribe();
     this.resizeSub?.unsubscribe?.();
@@ -268,9 +305,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const restyle = (chart?: Chart) => {
       if (!chart) return;
       const o = chart.options!;
-      if ((o.scales as any)?.x?.grid)  (o.scales as any).x.grid.color  = t.grid;
+      if ((o.scales as any)?.x?.grid) (o.scales as any).x.grid.color = t.grid;
       if ((o.scales as any)?.x?.ticks) (o.scales as any).x.ticks.color = t.tick;
-      if ((o.scales as any)?.y?.grid)  (o.scales as any).y.grid.color  = t.grid;
+      if ((o.scales as any)?.y?.grid) (o.scales as any).y.grid.color = t.grid;
       if ((o.scales as any)?.y?.ticks) (o.scales as any).y.ticks.color = t.tick;
       if (o.plugins?.tooltip) {
         o.plugins.tooltip.backgroundColor = t.tooltipBg as any;
@@ -288,7 +325,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Charts ----------
   private initializeCharts(): void {
-    if (!this.temperatureChartRef?.nativeElement || !this.energyChartRef?.nativeElement) {
+    if (
+      !this.temperatureChartRef?.nativeElement ||
+      !this.energyChartRef?.nativeElement
+    ) {
       queueMicrotask(() => this.initializeCharts());
       return;
     }
@@ -297,6 +337,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const commonOptions: ChartConfiguration['options'] = {
       responsive: true,
       maintainAspectRatio: false,
+      devicePixelRatio: window.devicePixelRatio || 2,
       animation: { duration: 220 },
       layout: { padding: 4 },
       interaction: { intersect: false, mode: 'index' },
@@ -319,7 +360,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       scales: {
         x: {
           grid: { color: t.grid },
-          ticks: { color: t.tick, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 },
+          ticks: {
+            color: t.tick,
+            maxRotation: 0,
+            autoSkip: true,
+            maxTicksLimit: 6,
+          },
           border: { display: false },
         },
         y: {
@@ -333,17 +379,22 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.temperatureChart = new Chart(this.temperatureChartRef.nativeElement, {
       type: 'line',
-      data: { labels: [], datasets: [{
-        label: 'Temperatura (°C)',
-        data: [],
-        borderColor: this.teal,
-        backgroundColor: 'transparent',
-        tension: 0.25,
-        fill: false,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        borderWidth: 1.75,
-      }]},
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Temperatura (°C)',
+            data: [],
+            borderColor: this.teal,
+            backgroundColor: 'transparent',
+            tension: 0.25,
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            borderWidth: 1.75,
+          },
+        ],
+      },
       options: {
         ...commonOptions,
         plugins: {
@@ -351,9 +402,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           tooltip: {
             ...commonOptions.plugins!.tooltip!,
             callbacks: {
-              title: (items) => (items?.[0]?.label ?? ''),
-              label: (item) => {
-                const val = typeof item.parsed?.y === 'number' ? item.parsed.y : 0;
+              title: (items: any[]) => items?.[0]?.label ?? '',
+              label: (item: any) => {
+                const val =
+                  typeof item.parsed?.y === 'number' ? item.parsed.y : 0;
                 return `${this.nfTemp.format(val)} °C`;
               },
             },
@@ -364,18 +416,23 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.energyChart = new Chart(this.energyChartRef.nativeElement, {
       type: 'line',
-      data: { labels: [], datasets: [{
-        label: 'Energía (kWh)',
-        data: [],
-        borderColor: this.slate,
-        backgroundColor: 'transparent',
-        tension: 0.25,
-        fill: false,
-        pointRadius: 0,
-        pointHoverRadius: 0,
-        borderWidth: 1.75,
-        borderDash: [4, 3],
-      }]},
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: 'Energía (kWh)',
+            data: [],
+            borderColor: this.slate,
+            backgroundColor: 'transparent',
+            tension: 0.25,
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            borderWidth: 1.75,
+            borderDash: [4, 3],
+          },
+        ],
+      },
       options: {
         ...commonOptions,
         plugins: {
@@ -383,9 +440,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           tooltip: {
             ...commonOptions.plugins!.tooltip!,
             callbacks: {
-              title: (items) => (items?.[0]?.label ?? ''),
-              label: (item) => {
-                const val = typeof item.parsed?.y === 'number' ? item.parsed.y : 0;
+              title: (items: any[]) => items?.[0]?.label ?? '',
+              label: (item: any) => {
+                const val =
+                  typeof item.parsed?.y === 'number' ? item.parsed.y : 0;
                 return `${this.nfEnergy.format(val)} kWh`;
               },
             },
@@ -395,7 +453,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // ---------- Animación de valores numéricos (mantiene el último hasta nuevo tick) ----------
+  // ---------- Animación de valores numéricos ----------
   private animateValue(
     start: number,
     end: number,
@@ -430,50 +488,73 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Datos ----------
   private subscribeToData(): void {
-    // Dato actual (KPI se queda con el último valor hasta el siguiente tick)
     this.subscriptions.add(
       this.weatherStream.getCurrentData().subscribe((d: WeatherDataPoint) => {
-        const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
+        const newTrendTemp = this.compareTrend(
+          this.currentTemperature,
+          d.temperature
+        );
         const newTrendEnergy = this.compareTrend(this.currentEnergy, d.energy);
 
-        if (newTrendTemp !== 'flat') { this.lastRealTrendTemp = newTrendTemp; this.trendTemp = newTrendTemp; }
-        else { this.trendTemp = this.lastRealTrendTemp; }
+        if (newTrendTemp !== 'flat') {
+          this.lastRealTrendTemp = newTrendTemp;
+          this.trendTemp = newTrendTemp;
+        } else {
+          this.trendTemp = this.lastRealTrendTemp;
+        }
 
-        if (newTrendEnergy !== 'flat') { this.lastRealTrendEnergy = newTrendEnergy; this.trendEnergy = newTrendEnergy; }
-        else { this.trendEnergy = this.lastRealTrendEnergy; }
+        if (newTrendEnergy !== 'flat') {
+          this.lastRealTrendEnergy = newTrendEnergy;
+          this.trendEnergy = newTrendEnergy;
+        } else {
+          this.trendEnergy = this.lastRealTrendEnergy;
+        }
 
-        if (this.tempAnimationFrame) cancelAnimationFrame(this.tempAnimationFrame);
-        this.tempAnimationFrame = this.animateValue(this.currentTemperature, d.temperature, 400, (value) => {
-          this.currentTemperature = value;
-        });
+        if (this.tempAnimationFrame)
+          cancelAnimationFrame(this.tempAnimationFrame);
+        this.tempAnimationFrame = this.animateValue(
+          this.currentTemperature,
+          d.temperature,
+          400,
+          (value) => {
+            this.currentTemperature = value;
+          }
+        );
         this.tempPulse = !this.tempPulse;
 
-        if (this.energyAnimationFrame) cancelAnimationFrame(this.energyAnimationFrame);
-        this.energyAnimationFrame = this.animateValue(this.currentEnergy, d.energy, 400, (value) => {
-          this.currentEnergy = value;
-        });
+        if (this.energyAnimationFrame)
+          cancelAnimationFrame(this.energyAnimationFrame);
+        this.energyAnimationFrame = this.animateValue(
+          this.currentEnergy,
+          d.energy,
+          400,
+          (value) => {
+            this.currentEnergy = value;
+          }
+        );
         this.energyPulse = !this.energyPulse;
 
         const now = new Date();
         this.currentTime =
-          `${String(now.getHours()).padStart(2,'0')}:` +
-          `${String(now.getMinutes()).padStart(2,'0')}:` +
-          `${String(now.getSeconds()).padStart(2,'0')}`;
+          `${String(now.getHours()).padStart(2, '0')}:` +
+          `${String(now.getMinutes()).padStart(2, '0')}:` +
+          `${String(now.getSeconds()).padStart(2, '0')}`;
 
         this.dataPointsProcessed = this.weatherStream.getProcessedDataCount();
         this.lastUpdatedAt = Date.now();
       })
     );
 
-    // Historial
     this.subscriptions.add(
-      this.weatherStream.getDataHistory().subscribe((history: WeatherDataPoint[]) => {
-        this.updateCharts(history);
-        this.updateSummary(history);
-        this.updateStats(history);
-        this.drawSparklines(history);
-        this.updateOverlaySummaries(history);
-      })
+      this.weatherStream
+        .getDataHistory()
+        .subscribe((history: WeatherDataPoint[]) => {
+          this.updateCharts(history);
+          this.updateSummary(history);
+          this.updateStats(history);
+          this.drawSparklines(history);
+          this.updateOverlaySummaries(history);
+        })
     );
   }
 
@@ -486,13 +567,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private windowPoints(): number {
-    const m = this.ranges.find(r => r.key === this.activeRangeKey)?.minutes ?? 15;
+    const m =
+      this.ranges.find((r) => r.key === this.activeRangeKey)?.minutes ?? 15;
     return Math.max(12, Math.floor((m * 60) / 5));
   }
 
   onChangeRange(key: string): void {
-    const allowed: RangeKey[] = ['5m','15m','60m','24h'];
-    if (allowed.includes(key as RangeKey)) this.activeRangeKey = key as RangeKey;
+    const allowed: RangeKey[] = ['5m', '15m', '60m', '24h'];
+    if (allowed.includes(key as RangeKey))
+      this.activeRangeKey = key as RangeKey;
   }
 
   onTempCheckboxChange(checked: boolean): void {
@@ -524,14 +607,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const labels = last.map((_, index) => {
       const secondsAgo = (last.length - 1 - index) * 5;
       const timestamp = new Date(now.getTime() - secondsAgo * 1000);
-      const h = String(timestamp.getHours()).padStart(2,'0');
-      const m = String(timestamp.getMinutes()).padStart(2,'0');
-      const s = String(timestamp.getSeconds()).padStart(2,'0');
+      const h = String(timestamp.getHours()).padStart(2, '0');
+      const m = String(timestamp.getMinutes()).padStart(2, '0');
+      const s = String(timestamp.getSeconds()).padStart(2, '0');
       return `${h}:${m}:${s}`;
     });
 
-    const temperatures = last.map(d => d.temperature);
-    const energies = last.map(d => d.energy);
+    const temperatures = last.map((d) => d.temperature);
+    const energies = last.map((d) => d.energy);
 
     if (this.temperatureChart) {
       this.temperatureChart.data.labels = labels;
@@ -548,10 +631,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private updateSummary(history: WeatherDataPoint[]): void {
-    // Valores por defecto si no hay historial
     if (!history?.length) {
       this.energyPeakTime = '--:--';
-      this.energyPeakKwh  = 0;
+      this.energyPeakKwh = 0;
       this.tempStateLabel = 'Estable';
       this.tempVariationLabel = '±0.0%';
       this.tempVariationDeltaPct = 0;
@@ -559,20 +641,20 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // --- Pico de energía (valor máximo y su hora) ---
     let maxEnergy = -Infinity;
     let peakTime = '--:--';
     for (const p of history) {
       if (p.energy > maxEnergy) {
         maxEnergy = p.energy;
-        peakTime = (p.time || '').slice(0, 5); // HH:mm
+        peakTime = (p.time || '').slice(0, 5);
       }
     }
     this.energyPeakTime = peakTime || '--:--';
-    this.energyPeakKwh  = Number((maxEnergy === -Infinity ? 0 : maxEnergy).toFixed(2));
+    this.energyPeakKwh = Number(
+      (maxEnergy === -Infinity ? 0 : maxEnergy).toFixed(2)
+    );
 
-    // --- Estado térmico y variación ---
-    const temps = history.map(h => h.temperature);
+    const temps = history.map((h) => h.temperature);
     if (!temps.length) {
       this.tempStateLabel = 'Estable';
       this.tempVariationLabel = '±0.0%';
@@ -581,39 +663,38 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Rango de la ventana para clasificar el “estado”
     const minTemp = Math.min(...temps);
     const maxTemp = Math.max(...temps);
-    const range   = maxTemp - minTemp;
+    const range = maxTemp - minTemp;
 
     let state = 'Estable';
-    if (range < 2)       state = 'Muy estable';
-    else if (range < 5)  state = 'Estable';
+    if (range < 2) state = 'Muy estable';
+    else if (range < 5) state = 'Estable';
     else if (range < 10) state = 'Variable';
-    else                 state = 'Muy variable';
+    else state = 'Muy variable';
     this.tempStateLabel = state;
 
-    // Variación térmica (% vs mitad anterior): media 1ª mitad vs 2ª mitad
     let deltaPct = 0;
     if (temps.length >= 6) {
       const mid = Math.floor(temps.length / 2);
-      const first  = temps.slice(0, mid);
+      const first = temps.slice(0, mid);
       const second = temps.slice(mid);
 
-      const avg = (arr: number[]) => arr.reduce((a, b) => a + b, 0) / arr.length;
+      const avg = (arr: number[]) =>
+        arr.reduce((a, b) => a + b, 0) / arr.length;
       const m1 = avg(first);
       const m2 = avg(second);
 
-      deltaPct = (!Number.isFinite(m1) || Math.abs(m1) < 1e-9)
-        ? 0
-        : ((m2 - m1) / m1) * 100;
+      deltaPct =
+        !Number.isFinite(m1) || Math.abs(m1) < 1e-9
+          ? 0
+          : ((m2 - m1) / m1) * 100;
     }
 
-    // Guardamos número y dirección para la UI
     this.tempVariationDeltaPct = Number(deltaPct.toFixed(1));
-    this.tempDeltaDir = Math.abs(deltaPct) < 0.05 ? 'flat' : (deltaPct > 0 ? 'up' : 'down');
+    this.tempDeltaDir =
+      Math.abs(deltaPct) < 0.05 ? 'flat' : deltaPct > 0 ? 'up' : 'down';
 
-    // Etiqueta “bonita” con signo
     const sign = deltaPct >= 0 ? '+' : '−';
     this.tempVariationLabel = `${sign}${Math.abs(deltaPct).toFixed(1)}%`;
   }
@@ -621,8 +702,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private updateStats(history: WeatherDataPoint[]): void {
     if (!history?.length) {
       this.stats = {
-        tempAvg: 0, tempMax: 0, energySum: 0, points: 0,
-        prodAvgPerMin: 0, prodAvgPerHour: 0, utilizationPct: 0
+        tempAvg: 0,
+        tempMax: 0,
+        energySum: 0,
+        points: 0,
+        prodAvgPerMin: 0,
+        prodAvgPerHour: 0,
+        utilizationPct: 0,
       };
       this.prevStats = { tempAvg: 0, energySum: 0 };
       this.deltas = { tempAvgPct: 0, energySumPct: 0 };
@@ -643,16 +729,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const currTempAvg = tempSum / points;
     const currEnergySum = energySum;
 
-    // Producción media
     const minutes = Math.max(1, this.activeRangeMinutes);
     const prodAvgPerMin = currEnergySum / minutes;
     const prodAvgPerHour = prodAvgPerMin * 60;
 
-    // Nivel actual vs pico
     const currentEnergy = this.currentEnergy;
-    const utilizationPctRaw = this.energyPeakKwh > 0 ? (currentEnergy / this.energyPeakKwh) * 100 : 0;
+    const utilizationPctRaw =
+      this.energyPeakKwh > 0 ? (currentEnergy / this.energyPeakKwh) * 100 : 0;
 
-    // Ventana anterior / mitades
     const N = this.windowPoints();
     const lastN = history.slice(-N);
     let prevSlice: WeatherDataPoint[] = [];
@@ -664,8 +748,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     let prevEnergySum = currEnergySum;
 
     if (prevSlice.length === N) {
-      let tSum = 0, eSum = 0;
-      for (const p of prevSlice) { tSum += p.temperature; eSum += p.energy; }
+      let tSum = 0,
+        eSum = 0;
+      for (const p of prevSlice) {
+        tSum += p.temperature;
+        eSum += p.energy;
+      }
       prevTempAvg = tSum / prevSlice.length;
       prevEnergySum = eSum;
     } else if (lastN.length >= 6) {
@@ -686,7 +774,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       const currEnergySumHalf = sum(secondHalf, 'energy');
 
       const pct = (curr: number, prev: number) =>
-        !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
+        !Number.isFinite(prev) || Math.abs(prev) < 1e-9
+          ? 0
+          : ((curr - prev) / prev) * 100;
 
       this.prevStats = {
         tempAvg: Number(prevTempAvg.toFixed(1)),
@@ -704,13 +794,17 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         points,
         prodAvgPerMin: Number(prodAvgPerMin.toFixed(3)),
         prodAvgPerHour: Number(prodAvgPerHour.toFixed(3)),
-        utilizationPct: Number(Math.max(0, Math.min(100, utilizationPctRaw)).toFixed(1)),
+        utilizationPct: Number(
+          Math.max(0, Math.min(100, utilizationPctRaw)).toFixed(1)
+        ),
       };
       return;
     }
 
     const pct = (curr: number, prev: number) =>
-      !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
+      !Number.isFinite(prev) || Math.abs(prev) < 1e-9
+        ? 0
+        : ((curr - prev) / prev) * 100;
 
     this.prevStats = {
       tempAvg: Number(prevTempAvg.toFixed(1)),
@@ -729,7 +823,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       points,
       prodAvgPerMin: Number(prodAvgPerMin.toFixed(3)),
       prodAvgPerHour: Number(prodAvgPerHour.toFixed(3)),
-      utilizationPct: Number(Math.max(0, Math.min(100, utilizationPctRaw)).toFixed(1)),
+      utilizationPct: Number(
+        Math.max(0, Math.min(100, utilizationPctRaw)).toFixed(1)
+      ),
     };
   }
 
@@ -737,24 +833,38 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const N = this.windowPoints();
     const last = history.slice(-N);
     if (!last.length) {
-      this.overlayTempSummary  = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
-      this.overlayEnergySummary= { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
+      this.overlayTempSummary = {
+        min: 0,
+        max: 0,
+        last: 0,
+        count: 0,
+        pctHalf: undefined,
+      };
+      this.overlayEnergySummary = {
+        min: 0,
+        max: 0,
+        last: 0,
+        count: 0,
+        pctHalf: undefined,
+      };
       return;
     }
 
     const pct = (curr: number, prev: number) =>
-      !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
+      !Number.isFinite(prev) || Math.abs(prev) < 1e-9
+        ? 0
+        : ((curr - prev) / prev) * 100;
 
-    // Temperatura
-    const temps = last.map(d => d.temperature);
+    const temps = last.map((d) => d.temperature);
     const tMin = Math.min(...temps);
     const tMax = Math.max(...temps);
     const tLast = temps[temps.length - 1];
     let tPctHalf: number | undefined;
     if (temps.length >= 6) {
       const mid = Math.floor(temps.length / 2);
-      const m1 = temps.slice(0, mid).reduce((a,b)=>a+b,0) / mid;
-      const m2 = temps.slice(mid).reduce((a,b)=>a+b,0) / (temps.length - mid);
+      const m1 = temps.slice(0, mid).reduce((a, b) => a + b, 0) / mid;
+      const m2 =
+        temps.slice(mid).reduce((a, b) => a + b, 0) / (temps.length - mid);
       tPctHalf = pct(m2, m1);
     }
     this.overlayTempSummary = {
@@ -765,16 +875,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       count: temps.length,
     };
 
-    // Energía
-    const eners = last.map(d => d.energy);
+    const eners = last.map((d) => d.energy);
     const eMin = Math.min(...eners);
     const eMax = Math.max(...eners);
     const eLast = eners[eners.length - 1];
     let ePctHalf: number | undefined;
     if (eners.length >= 6) {
       const mid = Math.floor(eners.length / 2);
-      const s1 = eners.slice(0, mid).reduce((a,b)=>a+b,0);
-      const s2 = eners.slice(mid).reduce((a,b)=>a+b,0);
+      const s1 = eners.slice(0, mid).reduce((a, b) => a + b, 0);
+      const s2 = eners.slice(mid).reduce((a, b) => a + b, 0);
       ePctHalf = pct(s2, s1);
     }
     this.overlayEnergySummary = {
@@ -789,12 +898,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private drawSparklines(history?: WeatherDataPoint[]): void {
     const N = 60;
     const data = history ?? [];
-    theLast: {
-      // (helper label to quickly find block)
-    }
     const last = data.slice(-N);
 
-    const draw = (canvas: HTMLCanvasElement | undefined, values: number[], stroke: string) => {
+    const draw = (
+      canvas: HTMLCanvasElement | undefined,
+      values: number[],
+      stroke: string
+    ) => {
       if (!canvas || values.length < 2) return;
 
       const ctx = canvas.getContext('2d')!;
@@ -804,7 +914,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       const cssH = canvas.clientHeight;
 
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width  = Math.round(cssW * dpr);
+      canvas.width = Math.round(cssW * dpr);
       canvas.height = Math.round(cssH * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -822,7 +932,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       const crisp = (v: number) => Math.round(v) + 0.5;
 
       ctx.lineWidth = 1;
-      (ctx as any).strokeStyle = stroke;
+      ctx.strokeStyle = stroke;
       ctx.globalAlpha = 1;
 
       ctx.beginPath();
@@ -833,8 +943,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       ctx.stroke();
     };
 
-    const temps = last.map(d => d.temperature);
-    const eners = last.map(d => d.energy);
+    const temps = last.map((d) => d.temperature);
+    const eners = last.map((d) => d.energy);
     draw(this.sparkTempRef?.nativeElement, temps, this.teal);
     draw(this.sparkEnergyRef?.nativeElement, eners, this.slate);
   }
@@ -853,12 +963,17 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         `${String(m % 60).padStart(2, '0')}:` +
         `${String(s % 60).padStart(2, '0')}`;
 
-      const diffSec = Math.max(1, Math.round((Date.now() - (this.lastUpdatedAt || Date.now())) / 1000));
+      const diffSec = Math.max(
+        1,
+        Math.round((Date.now() - (this.lastUpdatedAt || Date.now())) / 1000)
+      );
       let rel: string;
       if (diffSec < 60) rel = this.rtf.format(-diffSec, 'second');
-      else if (diffSec < 3600) rel = this.rtf.format(-Math.round(diffSec/60), 'minute');
-      else if (diffSec < 86400) rel = this.rtf.format(-Math.round(diffSec/3600), 'hour');
-      else rel = this.rtf.format(-Math.round(diffSec/86400), 'day');
+      else if (diffSec < 3600)
+        rel = this.rtf.format(-Math.round(diffSec / 60), 'minute');
+      else if (diffSec < 86400)
+        rel = this.rtf.format(-Math.round(diffSec / 3600), 'hour');
+      else rel = this.rtf.format(-Math.round(diffSec / 86400), 'day');
       this.lastUpdatedRel = rel.replace('dentro de ', 'en ');
     }, 1000);
   }
