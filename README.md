@@ -38,7 +38,10 @@ Aplicación web desarrollada en Angular que visualiza datos de predicción meteo
 
 -Programación reactiva: RxJS (Observables, BehaviorSubject)
 
-### 📦 Estructura del Proyecto
+## 📦 Estructura del Proyecto
+
+
+
 weather-dashboard/
 ├── src/
 │   ├── app/
