@@ -80,6 +80,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const item = this.ranges.find(r => r.key === this.activeRangeKey);
     return item ? item.label : '';
   }
+  get activeRangeMinutes(): number {
+    return this.ranges.find(r => r.key === this.activeRangeKey)?.minutes ?? 15;
+  }
 
   // Mostrar/ocultar series
   showTemp = true;
@@ -95,7 +98,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private timerInterval?: any;
   private resizeSub?: any;
 
-  // Observador para redibujar los sparklines
+  // Observador sparklines
   private sparkResizeObs?: ResizeObserver;
 
   // Paleta series
@@ -119,8 +122,16 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private lastRealTrendTemp:   'up' | 'down' = 'down';
   private lastRealTrendEnergy: 'up' | 'down' = 'down';
 
-  // Estadísticas simples
-  stats = { tempAvg: 0, tempMax: 0, energySum: 0, points: 0 };
+  // Estadísticas (incluye producción media y nivel vs pico)
+  stats = {
+    tempAvg: 0,
+    tempMax: 0,
+    energySum: 0,
+    points: 0,
+    prodAvgPerMin: 0,   // kWh/min
+    prodAvgPerHour: 0,  // kWh/h
+    utilizationPct: 0,  // % actual vs pico
+  };
 
   // Para variaciones vs ventana anterior
   prevStats: { tempAvg: number; energySum: number } = { tempAvg: 0, energySum: 0 };
@@ -137,7 +148,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   tempStateLabel = 'Estable';
   tempVariationLabel = '±0.0°C';
 
-  // Resumen para hovercards
+  // Hovercards
   overlayTempSummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
   overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
 
@@ -152,7 +163,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Ciclo de vida ----------
   ngOnInit(): void {
-    // Tema guardado o preferencia del SO
     const stored = localStorage.getItem('theme');
     if (stored === 'light' || stored === 'dark') {
       this.themeChoice = stored;
@@ -166,21 +176,20 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     // Suscripciones a datos
     this.subscribeToData();
 
-    // Arranque de streaming (YAML en assets)
+    // Arranque streaming
     this.weatherStream
       .startStreaming('assets/data.yml')
       .then(() => {
         this.isStreaming = true;
         this.startTimer();
-        // Forzar un repintado inicial por si el canvas ya está montado
         queueMicrotask(() => this.drawSparklines());
       })
       .catch((err: unknown) => console.error('Error cargando assets/data.yml:', err));
 
-    // Redibujar sparklines on resize de ventana
+    // Redibujar sparklines on resize
     this.resizeSub = fromEvent(window, 'resize').subscribe(() => this.drawSparklines());
 
-    // Atajo teclado: 't' alterna tema
+    // Atajo teclado: 't'
     this.subscriptions.add(
       fromEvent<KeyboardEvent>(window, 'keydown').subscribe((ev) => {
         if (ev.key.toLowerCase() === 't') {
@@ -194,14 +203,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ngAfterViewInit(): void {
     this.initializeCharts();
 
-    // Observa los canvas de sparkline y repinta cuando cambie su tamaño
     if (this.sparkTempRef?.nativeElement && this.sparkEnergyRef?.nativeElement && 'ResizeObserver' in window) {
       this.sparkResizeObs = new ResizeObserver(() => this.drawSparklines());
       this.sparkResizeObs.observe(this.sparkTempRef.nativeElement);
       this.sparkResizeObs.observe(this.sparkEnergyRef.nativeElement);
     }
 
-    // Dibujo inicial inmediato (antes del primer tick)
     this.drawSparklines();
   }
 
@@ -479,15 +486,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     return Math.max(12, Math.floor((m * 60) / 5));
   }
 
-  /* % de progreso de la ventana activa (0–100) */
-  get windowProgressPct(): number {
-    const total = this.windowPoints();
-    const points = this.stats?.points ?? 0;
-    if (!total || !Number.isFinite(points)) return 0;
-    const pct = (points / total) * 100;
-    return Math.max(0, Math.min(100, Math.round(pct)));
-  }
-
   onChangeRange(key: string): void {
     const allowed: RangeKey[] = ['5m','15m','60m','24h'];
     if (allowed.includes(key as RangeKey)) this.activeRangeKey = key as RangeKey;
@@ -589,7 +587,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private updateStats(history: WeatherDataPoint[]): void {
     if (!history?.length) {
-      this.stats = { tempAvg: 0, tempMax: 0, energySum: 0, points: 0 };
+      this.stats = {
+        tempAvg: 0, tempMax: 0, energySum: 0, points: 0,
+        prodAvgPerMin: 0, prodAvgPerHour: 0, utilizationPct: 0
+      };
       this.prevStats = { tempAvg: 0, energySum: 0 };
       this.deltas = { tempAvgPct: 0, energySumPct: 0 };
       return;
@@ -609,7 +610,16 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const currTempAvg = tempSum / points;
     const currEnergySum = energySum;
 
-    // Intento 1: ventana anterior real (mismo tamaño N)
+    // Producción media
+    const minutes = Math.max(1, this.activeRangeMinutes);
+    const prodAvgPerMin = currEnergySum / minutes;
+    const prodAvgPerHour = prodAvgPerMin * 60;
+
+    // Nivel actual vs pico (usa energyPeakKwh calculado en updateSummary)
+    const currentEnergy = this.currentEnergy;
+    const utilizationPctRaw = this.energyPeakKwh > 0 ? (currentEnergy / this.energyPeakKwh) * 100 : 0;
+
+    // Ventana anterior / mitades
     const N = this.windowPoints();
     const lastN = history.slice(-N);
     let prevSlice: WeatherDataPoint[] = [];
@@ -617,12 +627,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       prevSlice = history.slice(-2 * N, -N);
     }
 
-    // Fallback: si no hay ventana anterior real, divide la ventana actual en dos mitades
     let prevTempAvg = currTempAvg;
     let prevEnergySum = currEnergySum;
 
     if (prevSlice.length === N) {
-      // Comparación clásica: anterior vs actual
       let tSum = 0, eSum = 0;
       for (const p of prevSlice) { tSum += p.temperature; eSum += p.energy; }
       prevTempAvg = tSum / prevSlice.length;
@@ -641,7 +649,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       prevTempAvg = avg(firstHalf, 'temperature');
       prevEnergySum = sum(firstHalf, 'energy');
 
-      // Recalcula “actual” con la segunda mitad para que el delta sea mitad2 vs mitad1
       const currTempAvgHalf = avg(secondHalf, 'temperature');
       const currEnergySumHalf = sum(secondHalf, 'energy');
 
@@ -662,11 +669,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         tempMax: Number(tempMax.toFixed(1)),
         energySum: Number(currEnergySum.toFixed(2)),
         points,
+        prodAvgPerMin: Number(prodAvgPerMin.toFixed(3)),
+        prodAvgPerHour: Number(prodAvgPerHour.toFixed(3)),
+        utilizationPct: Number(Math.max(0, Math.min(100, utilizationPctRaw)).toFixed(1)),
       };
       return;
     }
 
-    // Caso normal (sí hay ventana anterior real)
     const pct = (curr: number, prev: number) =>
       !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
 
@@ -685,6 +694,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       tempMax: Number(tempMax.toFixed(1)),
       energySum: Number(currEnergySum.toFixed(2)),
       points,
+      prodAvgPerMin: Number(prodAvgPerMin.toFixed(3)),
+      prodAvgPerHour: Number(prodAvgPerHour.toFixed(3)),
+      utilizationPct: Number(Math.max(0, Math.min(100, utilizationPctRaw)).toFixed(1)),
     };
   }
 
@@ -700,7 +712,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const pct = (curr: number, prev: number) =>
       !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
 
-    // ---- Temperatura
+    // Temperatura
     const temps = last.map(d => d.temperature);
     const tMin = Math.min(...temps);
     const tMax = Math.max(...temps);
@@ -720,7 +732,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       count: temps.length,
     };
 
-    // ---- Energía
+    // Energía
     const eners = last.map(d => d.energy);
     const eMin = Math.min(...eners);
     const eMax = Math.max(...eners);
@@ -742,55 +754,55 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private drawSparklines(history?: WeatherDataPoint[]): void {
-    const N = 60;
-    const data = history ?? [];
-    const last = data.slice(-N);
+  const N = 60;
+  const data = history ?? [];
+  const last = data.slice(-N);
 
-    // 🔧 Dibujo crisp con DPR + desactivar suavizado
-    const draw = (canvas: HTMLCanvasElement | undefined, values: number[], stroke: string) => {
-      if (!canvas || values.length < 2) return;
+  const draw = (canvas: HTMLCanvasElement | undefined, values: number[], stroke: string) => {
+    if (!canvas || values.length < 2) return;
 
-      const ctx = canvas.getContext('2d')!;
-      ctx.imageSmoothingEnabled = false;
+    const ctx = canvas.getContext('2d')!;
+    ctx.imageSmoothingEnabled = false;
 
-      const cssW = canvas.clientWidth;
-      const cssH = canvas.clientHeight; // 34px por CSS
+    const cssW = canvas.clientWidth;
+    const cssH = canvas.clientHeight; // controlado por CSS (34px en nuestro caso)
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width  = Math.round(cssW * dpr);
-      canvas.height = Math.round(cssH * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      ctx.clearRect(0, 0, cssW, cssH);
+    ctx.clearRect(0, 0, cssW, cssH);
 
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      const scaleX = (i: number) => (i / (values.length - 1)) * (cssW - 2) + 1;
-      const scaleY = (v: number) => {
-        if (max === min) return cssH / 2;
-        const t = (v - min) / (max - min);
-        return cssH - t * (cssH - 2) - 1;
-      };
-
-      const crisp = (v: number) => Math.round(v) + 0.5;
-
-      ctx.lineWidth = 1;
-      (ctx as any).strokeStyle = stroke;
-      ctx.globalAlpha = 1;
-
-      ctx.beginPath();
-      ctx.moveTo(crisp(scaleX(0)), crisp(scaleY(values[0])));
-      for (let i = 1; i < values.length; i++) {
-        ctx.lineTo(crisp(scaleX(i)), crisp(scaleY(values[i])));
-      }
-      ctx.stroke();
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const scaleX = (i: number) => (i / (values.length - 1)) * (cssW - 2) + 1;
+    const scaleY = (v: number) => {
+      if (max === min) return cssH / 2;
+      const t = (v - min) / (max - min);
+      return cssH - t * (cssH - 2) - 1;
     };
 
-    const temps = last.map((d) => d.temperature);
-    const eners = last.map((d) => d.energy);
-    draw(this.sparkTempRef?.nativeElement, temps, this.teal);
-    draw(this.sparkEnergyRef?.nativeElement, eners, this.slate);
-  }
+    const crisp = (v: number) => Math.round(v) + 0.5;
+
+    ctx.lineWidth = 1;
+    (ctx as any).strokeStyle = stroke;
+    ctx.globalAlpha = 1;
+
+    ctx.beginPath();
+    ctx.moveTo(crisp(scaleX(0)), crisp(scaleY(values[0])));
+    for (let i = 1; i < values.length; i++) {
+      ctx.lineTo(crisp(scaleX(i)), crisp(scaleY(values[i])));
+    }
+    ctx.stroke();
+  };
+
+  const temps = last.map(d => d.temperature);
+  const eners = last.map(d => d.energy);
+  draw(this.sparkTempRef?.nativeElement, temps, this.teal);
+  draw(this.sparkEnergyRef?.nativeElement, eners, this.slate);
+}
+
 
   private startTimer(): void {
     this.startTime = new Date();
@@ -806,7 +818,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         `${String(m % 60).padStart(2, '0')}:` +
         `${String(s % 60).padStart(2, '0')}`;
 
-      // "Actualizado hace …"
       const diffSec = Math.max(1, Math.round((Date.now() - (this.lastUpdatedAt || Date.now())) / 1000));
       let rel: string;
       if (diffSec < 60) rel = this.rtf.format(-diffSec, 'second');

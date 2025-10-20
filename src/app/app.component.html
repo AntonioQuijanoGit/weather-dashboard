@@ -10,7 +10,6 @@
   </div>
 
   <div class="header-actions">
-    <!-- Switch Claro/Oscuro con Iconify -->
     <div class="theme-switch" aria-label="Cambiar tema">
       <input
         #themeToggle
@@ -39,7 +38,7 @@
 </header>
 
 <main class="container">
-  <!-- Controles -->
+  <!-- Toolbar -->
   <section class="toolbar card-surface">
     <div class="series-group" role="group" aria-label="Series">
       <span class="label">Series:</span>
@@ -88,13 +87,11 @@
             </div>
             <div class="kpi-trend" [class.up]="trendTemp==='up'" [class.down]="trendTemp==='down'">
               <span class="muted">{{ trendTemp==='flat' ? 'estable' : (trendTemp==='up' ? 'alza' : 'baja') }}</span>
-              <span class="kpi-trend__paren" aria-hidden="true">(</span>
               <iconify-icon
                 class="kpi-trend__icon"
                 [icon]="trendTemp==='up' ? 'ph:trend-up-duotone' : trendTemp==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
                 width="16" height="16" aria-hidden="true">
               </iconify-icon>
-              <span class="kpi-trend__paren" aria-hidden="true">)</span>
             </div>
           </div>
 
@@ -104,13 +101,11 @@
                  [class.kpi-bounce]="tempPulse">
               {{ tempDisplay }}<span class="unit">°C</span>
             </div>
-
-            <!-- Sparkline: canvas fijo a 34px; el wrapper cambia de 22→34px en hover -->
-            <div class="sparkline-wrap" aria-hidden="true">
-              <canvas #sparkTemp class="sparkline"></canvas>
+            <div class="sparkline-wrap">
+              <canvas #sparkTemp class="sparkline" aria-hidden="true"></canvas>
             </div>
 
-            <!-- Hovercard minimalista (solo datos) -->
+            <!-- Hovercard numérica -->
             <div class="kpi-hovercard" role="dialog" aria-label="Resumen temperatura">
               <div class="hovercard-head">
                 <iconify-icon icon="ph:thermometer-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -162,13 +157,11 @@
             </div>
             <div class="kpi-trend" [class.up]="trendEnergy==='up'" [class.down]="trendEnergy==='down'">
               <span class="muted">{{ trendEnergy==='flat' ? 'estable' : (trendEnergy==='up' ? 'alza' : 'baja') }}</span>
-              <span class="kpi-trend__paren" aria-hidden="true">(</span>
               <iconify-icon
                 class="kpi-trend__icon"
                 [icon]="trendEnergy==='up' ? 'ph:trend-up-duotone' : trendEnergy==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
                 width="16" height="16" aria-hidden="true">
               </iconify-icon>
-              <span class="kpi-trend__paren" aria-hidden="true">)</span>
             </div>
           </div>
 
@@ -178,13 +171,11 @@
                  [class.kpi-bounce]="energyPulse">
               {{ energyDisplay }}<span class="unit">kWh</span>
             </div>
-
-            <!-- Sparkline: canvas fijo a 34px; el wrapper cambia de 22→34px en hover -->
-            <div class="sparkline-wrap" aria-hidden="true">
-              <canvas #sparkEnergy class="sparkline"></canvas>
+            <div class="sparkline-wrap">
+              <canvas #sparkEnergy class="sparkline" aria-hidden="true"></canvas>
             </div>
 
-            <!-- Hovercard minimalista (solo datos) -->
+            <!-- Hovercard numérica -->
             <div class="kpi-hovercard" role="dialog" aria-label="Resumen energía">
               <div class="hovercard-head">
                 <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
@@ -330,15 +321,13 @@
         <span class="stat-value">{{ elapsedTime }}</span>
       </div>
 
-      <div class="stat stat--with-progress">
+      <!-- Producción media (nueva) -->
+      <div class="stat">
         <span class="stat-label">
-          <iconify-icon icon="ph:activity-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Progreso de la ventana
+          <iconify-icon icon="ph:speedometer-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Producción media
         </span>
-        <span class="stat-value">{{ windowProgressPct }}%</span>
-        <div class="progress">
-          <div class="progress__bar" [style.width.%]="windowProgressPct"></div>
-        </div>
+        <span class="stat-value">{{ stats.prodAvgPerMin.toFixed(3) }} kWh/min</span>
       </div>
 
       <div class="stat">
@@ -359,6 +348,19 @@
         </span>
       </div>
 
+      <!-- Nueva: Nivel actual vs pico (con barra) -->
+      <div class="stat stat--with-progress">
+        <span class="stat-label">
+          <iconify-icon icon="ph:rocket-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+          Nivel actual vs pico
+        </span>
+        <span class="stat-value">{{ stats.utilizationPct }}%</span>
+        <div class="progress-bar">
+          <div class="progress-fill" [style.width.%]="stats.utilizationPct"></div>
+        </div>
+        <small class="muted">Producción actual respecto al máximo del periodo</small>
+      </div>
+
     </div>
   </section>
 
@@ -370,7 +372,6 @@
     </div>
 
     <div class="cards kpi-quad">
-      <!-- 1) Pico de energía -->
       <div class="card kpi" role="group" aria-label="Pico de energía">
         <div class="kpi-head">
           <div class="kpi-title">
@@ -384,7 +385,6 @@
         </div>
       </div>
 
-      <!-- 2) Temperatura media -->
       <div class="card kpi" role="group" aria-label="Temperatura media (ventana)">
         <div class="kpi-head">
           <div class="kpi-title">
@@ -398,7 +398,6 @@
         </div>
       </div>
 
-      <!-- 3) Variación térmica -->
       <div class="card kpi" role="group" aria-label="Variación térmica">
         <div class="kpi-head">
           <div class="kpi-title">
@@ -412,7 +411,6 @@
         </div>
       </div>
 
-      <!-- 4) Energía acumulada -->
       <div class="card kpi" role="group" aria-label="Energía acumulada (ventana)">
         <div class="kpi-head">
           <div class="kpi-title">
@@ -432,7 +430,7 @@
 
 <footer class="footer">
   <div class="footer-content">
-    <p>© {{ currentYear }} Meteologica — Plataforma de análisis meteorológico en tiempo real</p>
+    <p>© {{ currentYear }} Meteológica — Plataforma de análisis meteorológico en tiempo real</p>
     <p class="tech-info">Desarrollado por <strong>Antonio Quijano</strong> en <strong>Angular/Chart.js</strong></p>
   </div>
 </footer>
