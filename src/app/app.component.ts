@@ -334,10 +334,26 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     const t = this.themeTokens();
 
+    // Obtener DPR del dispositivo
+    const dpr = window.devicePixelRatio || 1;
+
+    // Función para configurar canvas con DPR correcto
+    const configureCanvas = (canvas: HTMLCanvasElement) => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.height * dpr);
+      canvas.style.width = rect.width + 'px';
+      canvas.style.height = rect.height + 'px';
+    };
+
+    // Configurar ambos canvas ANTES de crear las gráficas
+    configureCanvas(this.temperatureChartRef.nativeElement);
+    configureCanvas(this.energyChartRef.nativeElement);
+
     const commonOptions: ChartConfiguration['options'] = {
       responsive: true,
       maintainAspectRatio: false,
-      devicePixelRatio: window.devicePixelRatio || 2,
+      devicePixelRatio: dpr,
       animation: { duration: 220 },
       layout: { padding: 4 },
       interaction: { intersect: false, mode: 'index' },
@@ -450,6 +466,18 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           },
         },
       },
+    });
+
+    // Reconfigurar canvas cuando cambie el tamaño de la ventana
+    window.addEventListener('resize', () => {
+      if (this.temperatureChartRef?.nativeElement) {
+        configureCanvas(this.temperatureChartRef.nativeElement);
+        this.temperatureChart?.resize();
+      }
+      if (this.energyChartRef?.nativeElement) {
+        configureCanvas(this.energyChartRef.nativeElement);
+        this.energyChart?.resize();
+      }
     });
   }
 
