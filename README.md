@@ -277,7 +277,8 @@ temperature:
 
 ### 👤 Autor
 
-Antonio Quijano Bernedo
-Dashboard desarrollado como prueba técnica para Meteologica.
+### Antonio Quijano Bernedo
 
-Tecnologías: Angular · TypeScript · Chart.js · RxJS · Docker
+### Dashboard desarrollado como prueba técnica para Meteologica.
+
+### Tecnologías: Angular · TypeScript · Chart.js · RxJS · Docker
