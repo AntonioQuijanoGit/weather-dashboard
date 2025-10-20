@@ -40,7 +40,7 @@ Aplicación web desarrollada en Angular que visualiza datos de predicción meteo
 
 ## 📦 Estructura del Proyecto
 
-
+```
 
 weather-dashboard/
 ├── src/
@@ -59,7 +59,7 @@ weather-dashboard/
 ├── angular.json                         # Configuración Angular
 ├── tsconfig.json                        # Configuración TypeScript
 └── README.md                            # Este archivo
-
+```
 ### 🚀 Instalación y Ejecución
 ### ✅ Prerrequisitos
 
