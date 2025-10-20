@@ -1,5 +1,9 @@
 # Dashboard Meteorológico - Meteologica
 
+
+## Vista de la aplicación
+![Dashboard Meteorológico](./docs/screenshot.png)
+
 ## 📋 Descripción del Proyecto
 
 Aplicación web desarrollada en **Angular** que visualiza datos de predicción meteorológica en tiempo real. La aplicación simula el streaming progresivo de datos cada 5 segundos, mostrando temperatura media y energía producida con gráficos interactivos.
