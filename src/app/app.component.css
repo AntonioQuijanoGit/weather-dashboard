@@ -1,11 +1,27 @@
-/* ===== Layout local del componente ===== */
-.container { max-width: 1120px; margin: 20px auto; padding: 0 16px 32px; }
+/* =========================================================
+   Weather Dashboard · app.component.css  (versión simplificada)
+   Mantiene el diseño, quita paréntesis en tendencias y evita blur
+   ========================================================= */
 
-/* ===== Header ===== */
+/* =============== Layout base =============== */
+.container {
+  max-width: 1120px;
+  margin: 20px auto;
+  padding: 0 16px 32px;
+}
+
+/* =============== Header =============== */
 .header {
-  position: sticky; top: 0; z-index: 10;
-  display: flex; align-items: center; justify-content: space-between; gap: 20px;
-  padding: 14px 20px; background: var(--surface); border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 20px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   transition: border-color .2s ease, background-color .2s ease;
 }
 .header:hover { border-color: var(--border-hover); }
@@ -18,7 +34,7 @@
 .header-actions { display: flex; align-items: center; gap: 32px; }
 @media (max-width: 768px) { .header-actions { gap: 16px; } }
 
-/* ===== Theme switch ===== */
+/* =============== Theme switch =============== */
 .theme-switch__input { position: absolute; opacity: 0; pointer-events: none; }
 .theme-switch__label { display: inline-flex; align-items: center; gap: .75rem; cursor: pointer; user-select: none; line-height: 1; }
 .theme-switch__icon { opacity: .75; transition: opacity .2s ease; line-height: 1; }
@@ -33,11 +49,14 @@
   transition: background-position .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 body.theme-dark .theme-switch__track { border-color: #0f172a; background: #374151; }
-.theme-switch__track::after { content: ""; position: absolute; top: 5px; bottom: 5px; left: 6px; right: 26px; border-radius: 999px; background: rgba(0,0,0,.06); transition: left .25s ease, right .25s ease, background .25s ease; }
+.theme-switch__track::after {
+  content: ""; position: absolute; top: 5px; bottom: 5px; left: 6px; right: 26px;
+  border-radius: 999px; background: rgba(0,0,0,.06); transition: left .25s ease, right .25s ease, background .25s ease;
+}
 .theme-switch__thumb {
   position: absolute; left: 3px; top: 50%; transform: translate(0, -50%);
-  width: 22px; height: 22px; border-radius: 50%; background: #ffffff; border: 1.5px solid #d1d5db; box-shadow: 0 2px 4px rgba(0,0,0,.18);
-  transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
+  width: 22px; height: 22px; border-radius: 50%; background: #ffffff; border: 1.5px solid #d1d5db;
+  box-shadow: 0 2px 4px rgba(0,0,0,.18); transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
 }
 body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #111827; }
 .theme-switch__input:checked + .theme-switch__label .theme-switch__track { background-position: right center; }
@@ -45,7 +64,7 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
 .theme-switch__input:checked + .theme-switch__label .theme-switch__thumb { transform: translate(24px, -50%); }
 .theme-switch__label:hover .theme-switch__track { box-shadow: 0 0 0 3px var(--accent-subtle); }
 
-/* ===== Toolbar & toggles ===== */
+/* =============== Toolbar & toggles =============== */
 .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; }
 .series-group { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .series-group .label { color: var(--text-2); font-size: var(--fs-sm); }
@@ -59,7 +78,7 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
 .toggle:active { transform: translateY(1px); }
 .toggle input { accent-color: var(--accent); }
 
-/* ===== Estado (pill) ===== */
+/* =============== Estado (pill) =============== */
 .status {
   display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
   border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--text-2);
@@ -74,407 +93,166 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
 @keyframes pulse-ring { 0% { transform: scale(1); opacity: .6; } 70%,100% { transform: scale(1.8); opacity: 0; } }
 @media (max-width: 480px) { .status span:not(.status-indicator) { display: none; } }
 
-/* ===== Secciones / títulos ===== */
+/* =============== Secciones / títulos =============== */
 .section-title { font-size: var(--fs-sm); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text-2); margin: 0 0 8px; }
 
-/* ===== Grids locales ===== */
+/* =============== Grids locales =============== */
 .cards { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0,1fr)); }
 @media (max-width: 820px) { .cards { grid-template-columns: 1fr; } }
 
-/* ===== KPIs (cabecera con microcopy) ===== */
-.kpis-header { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 12px 0 12px; }
-.microcopy { display: inline-flex; align-items: center; gap: 8px; }
-.dot { width: 6px; height: 6px; border-radius: 50%; background: #9ca3af; display: inline-block; }
-.dot.on { background: #10b981; }
-
-/* ===== Estadísticas ===== */
-.statistics { padding: 8px 12px 12px; margin-top: 12px; transition: border-color .2s ease, background-color .2s ease; }
-.stats-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 12px 0 12px; }
-.stats-grid { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0,1fr)); }
-@media (max-width: 820px) { .stats-grid { grid-template-columns: 1fr; } }
-
-.stat {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-  padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-  transition: border-color .2s ease, background-color .2s ease;
+/* =============== Cards genéricas =============== */
+.card-surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.03);
+  padding: 16px;
 }
-.stat:hover { border-color: var(--border-hover); }
-.stat-label { font-size: var(--fs-xs); color: var(--text-2); letter-spacing: .02em; white-space: nowrap; }
-.stat-value { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
-
-/* ===== Sparklines ===== */
-.sparkline { width: 100%; height: 34px; display: block; margin-top: 4px; transition: border-color .2s ease, background-color .2s ease; }
-
-/* ===== Footer ===== */
-.footer { margin-top: 24px; padding: 16px; background: var(--surface); border-top: 1px solid var(--border); }
-.footer-content { max-width: 1120px; margin: 0 auto; text-align: center; color: var(--text-2); }
-.footer .tech-info { margin-top: 4px; }
-
-/* ===== Accesibilidad (foco visible en elementos clave) ===== */
-.toggle:focus-visible,
-.theme-switch__label:focus-visible,
-.card-surface:focus-within,
-.card.kpi:focus-within,
-.stat:focus-within,
-.header:focus-within {
-  outline: 2px solid color-mix(in oklab, var(--accent) 55%, transparent);
-  outline-offset: 2px;
-  border-color: color-mix(in oklab, var(--accent) 35%, var(--border));
-}
-
-/* ===== Animaciones de entrada ===== */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.header         { animation: fadeInUp 0.6s ease-out 0s   backwards; }
-.toolbar        { animation: fadeInUp 0.6s ease-out 0.1s backwards; }
-.current-values { animation: fadeInUp 0.6s ease-out 0.2s backwards; }
-.charts .chart-container:nth-child(1) { animation: fadeInUp 0.6s ease-out 0.5s backwards; }
-.charts .chart-container:nth-child(2) { animation: fadeInUp 0.6s ease-out 0.6s backwards; }
-.statistics     { animation: fadeInUp 0.6s ease-out 0.7s backwards; }
-.footer         { animation: fadeInUp 0.6s ease-out 0.8s backwards; }
-
-@media (prefers-reduced-motion: reduce) {
-  .header, .toolbar, .current-values, .card.kpi, .chart-container, .statistics, .footer { animation: none !important; }
-}
-
-/* ===== Microinteracciones (hover lift) ===== */
-.card.kpi {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.03), 0 1px 3px rgba(0,0,0,0.06);
-}
-.card.kpi:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.03), 0 4px 12px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
-}
-.chart-container {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.04);
-}
-.chart-container:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.03), 0 3px 8px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04);
-}
-.statistics {
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.04);
-}
-.statistics:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.03), 0 3px 8px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.04);
-}
-
-/* ===== Bounce de iconos de tendencia (si los usas) ===== */
-@keyframes trendBounce {
-  0%, 100% { transform: scale(1) translateY(0); }
-  25% { transform: scale(1.2) translateY(-2px); }
-  50% { transform: scale(1.1) translateY(-1px); }
-}
-.kpi-trend { animation: trendBounce 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
-.kpi-trend.up { color: #16a34a; }
-.kpi-trend.down { color: #ef4444; }
-@media (prefers-reduced-motion: reduce) { .kpi-trend { animation: none !important; } }
-
-/* ===============================
-   Mejora visual: iconos + barra de progreso
-   =============================== */
-
-/* Icono en cada label */
-.stat .stat-label iconify-icon {
-  margin-right: 8px;
-  color: var(--text-2);
-  opacity: 0.9;
-  vertical-align: -2px;
-}
-
-/* Barra de progreso */
-/* 📊 Barra de progreso — Limpia y sin el "palito" molesto */
-.progress {
-  grid-column: 1 / -1;
-  margin-top: 8px;
-  height: 6px;
-  background: rgba(2, 6, 23, 0.06);
-  border-radius: 999px;
-  overflow: hidden;
-
-  /* ✅ Quita cualquier borde fantasma */
-  border: 0;
-  box-shadow: none;
-}
-
-body.theme-dark .progress {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.progress__bar {
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    var(--accent),
-    color-mix(in oklab, var(--accent) 70%, #22d3ee)
-  );
-  transition: width 0.35s ease;
-
-  /* ✅ Aseguramos que la barra tampoco tenga borde */
-  border: 0;
-  box-shadow: none;
-}
-
-/* 🛠️ Refuerzo por si hay estilos globales heredados */
-.progress,
-.progress__bar {
-  border: 0 !important;
-  box-shadow: none !important;
-}
-
-
-/* ===== Animación KPI: flash y bounce (Temperatura) ===== */
-@keyframes kpiFlashUp   { 0%{ background: rgba(16,185,129,.18) } 100%{ background: transparent } }
-@keyframes kpiFlashDown { 0%{ background: rgba(239,68,68,.18) }  100%{ background: transparent } }
-
-.kpi-flash-up   { animation: kpiFlashUp .5s ease-out;  border-radius: 8px; padding-inline: 4px; }
-.kpi-flash-down { animation: kpiFlashDown .5s ease-out; border-radius: 8px; padding-inline: 4px; }
-
-@keyframes kpiBounce {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.025); }
-  100% { transform: scale(1); }
-}
-
-.kpi-bounce { animation: kpiBounce .38s ease-out; transform-origin: left center; }
-
-/* ===== Animación flecha de tendencia (slide) ===== */
-@keyframes trendSlideUp   { 0% { transform: translateY(4px);   opacity: .6; } 100% { transform: translateY(0);   opacity: 1; } }
-@keyframes trendSlideDown { 0% { transform: translateY(-4px);  opacity: .6; } 100% { transform: translateY(0);   opacity: 1; } }
-
-.trend-slide-up   { animation: trendSlideUp .35s ease-out; }
-.trend-slide-down { animation: trendSlideDown .35s ease-out; }
-
-/* Respeto a usuarios con reduce motion */
-@media (prefers-reduced-motion: reduce) {
-  .kpi-flash-up,
-  .kpi-flash-down,
-  .kpi-bounce,
-  .trend-slide-up,
-  .trend-slide-down {
-    animation: none !important;
-  }
-}
-
-.delta-pill{
-  display:inline-flex; align-items:center; gap:6px;
-  margin-left:8px; padding:2px 8px; border-radius:999px;
-  font-size:12px; font-weight:600; line-height:1;
-  border:1px solid var(--border); color:var(--text-2);
-  background: color-mix(in oklab, var(--accent) 6%, transparent);
-}
-.delta-pill.up   { border-color: rgba(16,185,129,.35); background: rgba(16,185,129,.10); color:#065f46; }
-.delta-pill.down { border-color: rgba(239,68,68,.35);  background: rgba(239,68,68,.10);  color:#7f1d1d; }
-body.theme-dark .delta-pill.up   { color: #86efac; }
-body.theme-dark .delta-pill.down { color: #fca5a5; }
-
-/* Entrada sutil */
-@keyframes fadeSlideIn { from { opacity:0; transform: translateY(-2px); } to { opacity:1; transform:none; } }
-.delta-pill { animation: fadeSlideIn .25s ease-out; }
-
-.stat-value {
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.stat-value::after,
-.stat-value::before {
-  content: none !important;
-}
-
-/* Estilo especial para el stat con barra de progreso */
-.stat.stat--with-progress {
-  display: grid;
-  grid-template-columns: 1fr auto; /* Label a la izquierda, valor a la derecha */
-  row-gap: 8px;
-  align-items: baseline;
-}
-
-.stat.stat--with-progress .stat-label {
-  grid-column: 1 / 2;
-}
-
-.stat.stat--with-progress .stat-value {
-  grid-column: 2 / 3;
-  justify-self: end;
-  text-align: right;
-}
-
-.stat.stat--with-progress .progress {
-  grid-column: 1 / -1; /* La barra ocupa todo el ancho debajo */
-}
-/* ----- Flechas y porcentaje de cambio (Temp. y Energía) ----- */
-/* ----- Flechas de cambio (Temp. y Energía) ----- */
-/* --- Solo la flecha cambia de color --- */
-.delta iconify-icon {
-  transition: color 0.3s ease;
-}
-
-.delta.up iconify-icon {
-  color: #16a34a; /* Verde cuando sube */
-}
-
-.delta.down iconify-icon {
-  color: #dc2626; /* Rojo cuando baja */
-}
-
-/* El número mantiene el color por defecto */
-.delta {
-  color: inherit;
-}
-
-/* --- Hover: elevación sutil en tarjetas --- */
 .card {
-  transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease, border-color .2s ease;
   will-change: transform, box-shadow;
 }
-
 .card:hover,
 .card:focus-within {
-  transform: translateY(-2px) scale(1.01);
+  /* anti-blur: NO scale */
+  transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(2, 6, 23, 0.10);
 }
-
 .theme-dark .card:hover,
 .theme-dark .card:focus-within {
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
-/* Sutileza: un ligerísimo highlight en hover */
-.card:hover .section-title,
-.card:focus-within .section-title {
-  opacity: 0.95;
+/* =============== KPIs =============== */
+.kpis-header { display: flex; justify-content: space-between; align-items: baseline; padding: 12px 12px 0 12px; }
+.microcopy { display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #9ca3af; display: inline-block; }
+.dot.on { background: #10b981; }
+
+.card.kpi { display: flex; flex-direction: column; justify-content: space-between; padding: 16px; }
+.kpi-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.kpi-title { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: var(--fs-sm); color: var(--text-2); }
+.kpi-value { font-size: var(--fs-kpi); font-weight: 700; line-height: var(--lh-tight); color: var(--text); }
+.kpi-value .unit { font-size: var(--fs-sm); font-weight: 500; color: var(--text-2); margin-left: 4px; }
+.muted { font-size: var(--fs-sm); color: var(--text-2); }
+
+/* Tendencia: texto + icono a la derecha (sin paréntesis) */
+.kpi-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;              /* espacio entre el texto y la flecha */
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.kpi-trend.up   { color: #16a34a; }
+.kpi-trend.down { color: #ef4444; }
+
+/* Oculta cualquier paréntesis del HTML si existiera */
+.kpi-trend__paren { display: none !important; }
+
+/* Icono alineado a la línea base del texto */
+.kpi-trend__icon {
+  width: 16px;
+  height: 16px;
+  vertical-align: -2px;
+  display: inline-block;
 }
 
-/* --- Sparklines más protagonistas al hover --- */
-.kpi .kpi-body .sparkline {
+/* Sparklines (mini-gráficas) */
+.sparkline {
+  width: 100%;
   height: 22px;
-  opacity: 0.55;
-  transition: height 180ms ease, opacity 180ms ease, filter 180ms ease;
   display: block;
+  margin-top: 4px;
+  transition: height 180ms ease, opacity 180ms ease, filter 180ms ease;
+  opacity: 0.7;
 }
-
-.kpi:hover .kpi-body .sparkline,
-.kpi:focus-within .kpi-body .sparkline {
-  height: 34px;
+.kpi:hover .sparkline,
+.kpi:focus-within .sparkline {
+  height: 34px;           /* más alto, sin escalar contenedor */
   opacity: 0.95;
   filter: contrast(105%);
 }
 
-/* Sutileza extra: el valor gana un pelín de énfasis */
-.kpi:hover .kpi-value,
-.kpi:focus-within .kpi-value {
-  text-shadow: 0 0 1px rgba(15, 23, 42, 0.08);
-}
+/* KPIs: micro realce de valor en hover */
+.kpi:hover .kpi-value, .kpi:focus-within .kpi-value { text-shadow: 0 0 1px rgba(15, 23, 42, 0.08); }
 
-/* --- Micro animación de iconos en títulos --- */
-.kpi .kpi-title iconify-icon,
-.stat .stat-label iconify-icon {
-  transition: transform 160ms ease, filter 160ms ease, opacity 160ms ease;
-}
+/* =============== Charts =============== */
+.charts { display: grid; gap: 12px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 1024px) { .charts { grid-template-columns: 1fr; } }
 
-.card:hover .kpi-title iconify-icon,
-.card:focus-within .kpi-title iconify-icon,
-.stat:hover .stat-label iconify-icon,
-.stat:focus-within .stat-label iconify-icon {
-  transform: translateY(-1px) rotate(-3deg);
-  filter: brightness(1.06);
-  opacity: 0.95;
-}
-
-/* --- Focus visible con la misma “energía” que el hover --- */
-.card:focus-within,
-.stat:focus-within {
-  outline: 2px solid transparent;
-}
-
-.card [tabindex]:focus-visible,
-.stat [tabindex]:focus-visible,
-.card:focus-visible,
-.stat:focus-visible {
-  outline: 2px solid rgba(59, 130, 246, 0.45);
-  outline-offset: 3px;
-  border-radius: 12px;
-}
-
-/* ===== Hovercard de mini-evolución en KPI ===== */
-.card.kpi { position: relative; overflow: visible; }
-
-.kpi-hovercard {
-  position: absolute;
-  left: 12px;
-  bottom: calc(100% + 8px);
-  width: clamp(220px, 36vw, 340px);
-  padding: 10px 12px;
-  border-radius: 12px;
+.chart-container {
+  padding: 12px;
   background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: 0 10px 30px rgba(2, 6, 23, 0.12);
-  opacity: 0;
-  transform: translateY(6px) scale(0.98);
-  pointer-events: none;
-  transition: opacity .16s ease, transform .16s ease, box-shadow .16s ease;
-  z-index: 20;
+  border-radius: var(--radius);
+  transition: border-color .2s ease, background-color .2s ease;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.04);
 }
-
-/* Flechita */
-.kpi-hovercard::after {
-  content: "";
-  position: absolute;
-  left: 18px;
-  top: 100%;
-  border-width: 7px;
-  border-style: solid;
-  border-color: var(--border) transparent transparent transparent;
-  filter: drop-shadow(0 1px 0 rgba(0,0,0,0.04));
-}
-.kpi-hovercard::before {
-  content: "";
-  position: absolute;
-  left: 18px;
-  top: calc(100% - 1px);
-  border-width: 7px;
-  border-style: solid;
-  border-color: var(--surface) transparent transparent transparent;
-}
-
-/* Mostrar al hover/focus */
-.card.kpi:hover .kpi-hovercard,
-.card.kpi:focus-within .kpi-hovercard {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-  pointer-events: auto;
-}
-
-/* Cabecera del hovercard */
-.kpi-hovercard__header {
-  display: flex; align-items: baseline; justify-content: space-between;
-  margin-bottom: 6px;
-}
-.kpi-hovercard__title { font-size: 12px; font-weight: 700; color: var(--text-1); letter-spacing: .02em; }
-.kpi-hovercard__hint  { font-size: 11px; color: var(--text-2); }
-
-/* Canvas de la overlay */
-.sparkline-overlay {
+.chart-container:hover { border-color: var(--border-hover); }
+.chart-container .section-title { margin-bottom: 8px; }
+.chart-container canvas {
+  width: 100% !important;
+  height: 260px !important;
   display: block;
-  width: 100%;
-  height: 64px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--border);
 }
 
-/* Modo reduce motion: sin animación */
-@media (prefers-reduced-motion: reduce) {
-  .kpi-hovercard { transition: none !important; }
+/* =============== Estadísticas =============== */
+.statistics { padding: 8px 12px 12px; margin-top: 12px; transition: border-color .2s ease, background-color .2s ease; box-shadow: 0 0 0 1px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.04); }
+.stats-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 12px 0 12px; }
+.stats-grid { display: grid; gap: 10px; grid-template-columns: repeat(3, minmax(0,1fr)); }
+@media (max-width: 820px) { .stats-grid { grid-template-columns: 1fr; } }
+
+.stat {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  transition: border-color .2s ease, background-color .2s ease;
+}
+.stat:hover { border-color: var(--border-hover); }
+.stat-label { font-size: var(--fs-xs); color: var(--text-2); letter-spacing: .02em; white-space: nowrap; display: inline-flex; align-items: center; gap: 8px; }
+.stat-value { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; justify-self: end; }
+
+/* Barra de progreso (stat especial) */
+.stat.stat--with-progress { row-gap: 8px; }
+.progress {
+  grid-column: 1 / -1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.06);
+  overflow: hidden;
+  border: 0;
+  box-shadow: none;
+}
+body.theme-dark .progress { background: rgba(255, 255, 255, 0.06); }
+.progress__bar {
+  height: 100%;
+  border: 0;
+  box-shadow: none;
+  transition: width 0.35s ease;
+  background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 70%, #22d3ee));
 }
 
-/* ==== Hovercards limpias y legibles ==== */
-/* ==== Hovercards compactas ==== */
-/* ==== Hovercards mini y limpias ==== */
+/* Deltas (flecha de cambio en stats) */
+.delta { color: inherit; }
+.delta iconify-icon { transition: color .3s ease; vertical-align: -2px; }
+.delta.up   iconify-icon { color: #16a34a; }
+.delta.down iconify-icon { color: #dc2626; }
+
+/* =============== Hovercards (resumen mini) =============== */
+.card.kpi { position: relative; overflow: visible; }
 .kpi-hovercard {
   position: absolute;
   left: 50%;
@@ -499,94 +277,80 @@ body.theme-dark .delta-pill.down { color: #fca5a5; }
   transform: translateX(-50%) translateY(0);
   pointer-events: auto;
 }
-
-/* Cabecera minimal */
-.hovercard-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  font-weight: 500;
-  margin-bottom: 6px;
-  letter-spacing: 0.01em;
-  color: var(--text-1);
-}
-.pill-count {
-  padding: 1px 6px;
-  font-size: 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  color: var(--text-2);
-  background: color-mix(in oklab, var(--accent) 6%, transparent);
-}
-
-/* Cuerpo con espaciado reducido */
-.hovercard-body {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Filas label / valor */
-.hover-row {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 6px;
-}
-.hover-label {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--text-2);
-  letter-spacing: .01em;
-}
-.hover-value {
-  font-weight: 600;
-  font-size: 14px;
-  letter-spacing: -0.01em;
-  font-variant-numeric: tabular-nums;
-}
-.hover-unit {
-  margin-left: 2px;
-  font-weight: 500;
-  font-size: 11px;
-  color: var(--text-2);
-}
-
-/* Delta mini */
-.delta-pill-mini {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 1px 6px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: color-mix(in oklab, var(--accent) 6%, transparent);
-  font-weight: 500;
-  font-size: 12px;
-  line-height: 1;
-}
-.delta-pill-mini.up iconify-icon { color: #16a34a; }
-.delta-pill-mini.down iconify-icon { color: #dc2626; }
-
-/* Flecha centrada */
 .kpi-hovercard::after {
   content: "";
   position: absolute;
-  left: 50%;
-  top: 100%;
-  border-width: 6px;
-  border-style: solid;
+  left: 50%; top: 100%;
+  border-width: 6px; border-style: solid;
   border-color: var(--border) transparent transparent transparent;
   transform: translateX(-50%);
 }
 .kpi-hovercard::before {
   content: "";
   position: absolute;
-  left: 50%;
-  top: calc(100% - 1px);
-  border-width: 6px;
-  border-style: solid;
+  left: 50%; top: calc(100% - 1px);
+  border-width: 6px; border-style: solid;
   border-color: var(--surface) transparent transparent transparent;
   transform: translateX(-50%);
+}
+.hovercard-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 500; margin-bottom: 6px; color: var(--text-1); }
+.pill-count { padding: 1px 6px; font-size: 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--text-2); background: color-mix(in oklab, var(--accent) 6%, transparent); }
+.hovercard-body { display: flex; flex-direction: column; gap: 4px; }
+.hover-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px; }
+.hover-label { font-size: 11px; font-weight: 400; color: var(--text-2); letter-spacing: .01em; }
+.hover-value { font-weight: 600; font-size: 14px; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.hover-unit { margin-left: 2px; font-weight: 500; font-size: 11px; color: var(--text-2); }
+.delta-pill-mini {
+  display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px;
+  border-radius: 999px; border: 1px solid var(--border);
+  background: color-mix(in oklab, var(--accent) 6%, transparent);
+  font-weight: 500; font-size: 12px; line-height: 1;
+}
+.delta-pill-mini.up iconify-icon { color: #16a34a; }
+.delta-pill-mini.down iconify-icon { color: #dc2626; }
+
+/* =============== Footer =============== */
+.footer { margin-top: 24px; padding: 16px; background: var(--surface); border-top: 1px solid var(--border); }
+.footer-content { max-width: 1120px; margin: 0 auto; text-align: center; color: var(--text-2); }
+.footer .tech-info { margin-top: 4px; }
+
+/* =============== Accesibilidad (foco visible) =============== */
+.toggle:focus-visible,
+.theme-switch__label:focus-visible,
+.card-surface:focus-within,
+.card.kpi:focus-within,
+.stat:focus-within,
+.header:focus-within {
+  outline: 2px solid color-mix(in oklab, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+  border-color: color-mix(in oklab, var(--accent) 35%, var(--border));
+}
+
+/* =============== Animaciones de entrada =============== */
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+.header         { animation: fadeInUp 0.6s ease-out 0s   backwards; }
+.toolbar        { animation: fadeInUp 0.6s ease-out 0.1s backwards; }
+.current-values { animation: fadeInUp 0.6s ease-out 0.2s backwards; }
+.charts .chart-container:nth-child(1) { animation: fadeInUp 0.6s ease-out 0.5s backwards; }
+.charts .chart-container:nth-child(2) { animation: fadeInUp 0.6s ease-out 0.6s backwards; }
+.statistics     { animation: fadeInUp 0.6s ease-out 0.7s backwards; }
+.footer         { animation: fadeInUp 0.6s ease-out 0.8s backwards; }
+
+/* =============== Reduced motion =============== */
+@media (prefers-reduced-motion: reduce) {
+  *, .kpi-hovercard { animation: none !important; transition: none !important; }
+}
+
+/* =============== Microinteracciones =============== */
+.kpi .kpi-title iconify-icon,
+.stat .stat-label iconify-icon {
+  transition: transform 160ms ease, filter 160ms ease, opacity 160ms ease;
+}
+.card:hover .kpi-title iconify-icon,
+.card:focus-within .kpi-title iconify-icon,
+.stat:hover .stat-label iconify-icon,
+.stat:focus-within .stat-label iconify-icon {
+  transform: translateY(-1px) rotate(-3deg);
+  filter: brightness(1.06);
+  opacity: 0.95;
 }

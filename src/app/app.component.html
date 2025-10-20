@@ -87,11 +87,16 @@
               <span>Temperatura media</span>
             </div>
             <div class="kpi-trend" [class.up]="trendTemp==='up'" [class.down]="trendTemp==='down'">
-              <iconify-icon
-                [icon]="trendTemp==='up' ? 'ph:trend-up-duotone' : trendTemp==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
-                width="16" height="16" aria-hidden="true"></iconify-icon>
-              <span class="muted">{{ trendTemp==='flat' ? 'estable' : (trendTemp==='up' ? 'alza' : 'baja') }}</span>
-            </div>
+  <span class="muted">{{ trendTemp==='flat' ? 'estable' : (trendTemp==='up' ? 'alza' : 'baja') }}</span>
+  <span class="kpi-trend__paren" aria-hidden="true">(</span>
+  <iconify-icon
+    class="kpi-trend__icon"
+    [icon]="trendTemp==='up' ? 'ph:trend-up-duotone' : trendTemp==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
+    width="16" height="16" aria-hidden="true">
+  </iconify-icon>
+  <span class="kpi-trend__paren" aria-hidden="true">)</span>
+</div>
+
           </div>
 
           <div class="kpi-body">
@@ -152,14 +157,17 @@
               <iconify-icon icon="ph:lightning-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
               <span>Energía producida</span>
             </div>
-            <div class="kpi-trend"
-                 [class.up]="trendEnergy==='up'"
-                 [class.down]="trendEnergy==='down'">
-              <iconify-icon
-                [icon]="trendEnergy==='up' ? 'ph:trend-up-duotone' : trendEnergy==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
-                width="16" height="16" aria-hidden="true"></iconify-icon>
-              <span class="muted">{{ trendEnergy==='flat' ? 'estable' : (trendEnergy==='up' ? 'alza' : 'baja') }}</span>
-            </div>
+           <div class="kpi-trend" [class.up]="trendEnergy==='up'" [class.down]="trendEnergy==='down'">
+  <span class="muted">{{ trendEnergy==='flat' ? 'estable' : (trendEnergy==='up' ? 'alza' : 'baja') }}</span>
+  <span class="kpi-trend__paren" aria-hidden="true">(</span>
+  <iconify-icon
+    class="kpi-trend__icon"
+    [icon]="trendEnergy==='up' ? 'ph:trend-up-duotone' : trendEnergy==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
+    width="16" height="16" aria-hidden="true">
+  </iconify-icon>
+  <span class="kpi-trend__paren" aria-hidden="true">)</span>
+</div>
+
           </div>
 
           <div class="kpi-body">

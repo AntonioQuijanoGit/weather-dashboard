@@ -96,6 +96,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private timerInterval?: any;
   private resizeSub?: any;
 
+  // ✅ Observador para redibujar los sparklines cuando cambien de tamaño
+  private sparkResizeObs?: ResizeObserver;
+
   // Paleta series
   private teal  = '#0EA5A2';
   private slate = '#475569';
@@ -136,8 +139,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   tempVariationLabel = '±0.0°C';
 
   // Resumen para hovercards (texto, no gráfico)
-overlayTempSummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
-overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
+  overlayTempSummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
+  overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
 
   // Control de animaciones de contador
   private tempAnimationFrame?: number;
@@ -173,7 +176,7 @@ overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctH
       })
       .catch((err: unknown) => console.error('Error cargando assets/data.yml:', err));
 
-    // Redibujar sparklines on resize
+    // Redibujar sparklines on resize de ventana
     this.resizeSub = fromEvent(window, 'resize').subscribe(() => this.drawSparklines());
 
     // Atajo teclado: 't' alterna tema
@@ -189,6 +192,13 @@ overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctH
 
   ngAfterViewInit(): void {
     this.initializeCharts();
+
+    // ✅ Observa los dos canvas de sparkline y repinta cuando cambie su tamaño (hover, responsive, etc.)
+    if (this.sparkTempRef?.nativeElement && this.sparkEnergyRef?.nativeElement && 'ResizeObserver' in window) {
+      this.sparkResizeObs = new ResizeObserver(() => this.drawSparklines());
+      this.sparkResizeObs.observe(this.sparkTempRef.nativeElement);
+      this.sparkResizeObs.observe(this.sparkEnergyRef.nativeElement);
+    }
   }
 
   ngOnDestroy(): void {
@@ -200,6 +210,9 @@ overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctH
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.temperatureChart?.destroy();
     this.energyChart?.destroy();
+
+    // ✅ Limpieza del observador
+    this.sparkResizeObs?.disconnect();
   }
 
   // ---------- Tema ----------
@@ -673,88 +686,99 @@ overlayEnergySummary: OverlaySummary = { min: 0, max: 0, last: 0, count: 0, pctH
     };
   }
 
- private updateOverlaySummaries(history: WeatherDataPoint[]): void {
-  const N = this.windowPoints();
-  const last = history.slice(-N);
-  if (!last.length) {
-    this.overlayTempSummary  = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
-    this.overlayEnergySummary= { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
-    return;
+  private updateOverlaySummaries(history: WeatherDataPoint[]): void {
+    const N = this.windowPoints();
+    const last = history.slice(-N);
+    if (!last.length) {
+      this.overlayTempSummary  = { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
+      this.overlayEnergySummary= { min: 0, max: 0, last: 0, count: 0, pctHalf: undefined };
+      return;
+    }
+
+    const pct = (curr: number, prev: number) =>
+      !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
+
+    // ---- Temperatura
+    const temps = last.map(d => d.temperature);
+    const tMin = Math.min(...temps);
+    const tMax = Math.max(...temps);
+    const tLast = temps[temps.length - 1];
+    let tPctHalf: number | undefined;
+    if (temps.length >= 6) {
+      const mid = Math.floor(temps.length / 2);
+      const m1 = temps.slice(0, mid).reduce((a,b)=>a+b,0) / mid;
+      const m2 = temps.slice(mid).reduce((a,b)=>a+b,0) / (temps.length - mid);
+      tPctHalf = pct(m2, m1);
+    }
+    this.overlayTempSummary = {
+      min: Number(tMin.toFixed(2)),
+      max: Number(tMax.toFixed(2)),
+      last: Number(tLast.toFixed(2)),
+      pctHalf: tPctHalf !== undefined ? Number(tPctHalf.toFixed(1)) : undefined,
+      count: temps.length,
+    };
+
+    // ---- Energía
+    const eners = last.map(d => d.energy);
+    const eMin = Math.min(...eners);
+    const eMax = Math.max(...eners);
+    const eLast = eners[eners.length - 1];
+    let ePctHalf: number | undefined;
+    if (eners.length >= 6) {
+      const mid = Math.floor(eners.length / 2);
+      const s1 = eners.slice(0, mid).reduce((a,b)=>a+b,0);
+      const s2 = eners.slice(mid).reduce((a,b)=>a+b,0);
+      ePctHalf = pct(s2, s1);
+    }
+    this.overlayEnergySummary = {
+      min: Number(eMin.toFixed(2)),
+      max: Number(eMax.toFixed(2)),
+      last: Number(eLast.toFixed(2)),
+      pctHalf: ePctHalf !== undefined ? Number(ePctHalf.toFixed(1)) : undefined,
+      count: eners.length,
+    };
   }
-
-  const pct = (curr: number, prev: number) =>
-    !Number.isFinite(prev) || Math.abs(prev) < 1e-9 ? 0 : ((curr - prev) / prev) * 100;
-
-  // ---- Temperatura
-  const temps = last.map(d => d.temperature);
-  const tMin = Math.min(...temps);
-  const tMax = Math.max(...temps);
-  const tLast = temps[temps.length - 1];
-  let tPctHalf: number | undefined;
-  if (temps.length >= 6) {
-    const mid = Math.floor(temps.length / 2);
-    const m1 = temps.slice(0, mid).reduce((a,b)=>a+b,0) / mid;
-    const m2 = temps.slice(mid).reduce((a,b)=>a+b,0) / (temps.length - mid);
-    tPctHalf = pct(m2, m1);
-  }
-  this.overlayTempSummary = {
-    min: Number(tMin.toFixed(2)),
-    max: Number(tMax.toFixed(2)),
-    last: Number(tLast.toFixed(2)),
-    pctHalf: tPctHalf !== undefined ? Number(tPctHalf.toFixed(1)) : undefined,
-    count: temps.length,
-  };
-
-  // ---- Energía
-  const eners = last.map(d => d.energy);
-  const eMin = Math.min(...eners);
-  const eMax = Math.max(...eners);
-  const eLast = eners[eners.length - 1];
-  let ePctHalf: number | undefined;
-  if (eners.length >= 6) {
-    const mid = Math.floor(eners.length / 2);
-    const s1 = eners.slice(0, mid).reduce((a,b)=>a+b,0);
-    const s2 = eners.slice(mid).reduce((a,b)=>a+b,0);
-    ePctHalf = pct(s2, s1);
-  }
-  this.overlayEnergySummary = {
-    min: Number(eMin.toFixed(2)),
-    max: Number(eMax.toFixed(2)),
-    last: Number(eLast.toFixed(2)),
-    pctHalf: ePctHalf !== undefined ? Number(ePctHalf.toFixed(1)) : undefined,
-    count: eners.length,
-  };
-}
-
 
   private drawSparklines(history?: WeatherDataPoint[]): void {
     const N = 60;
     const data = history ?? [];
     const last = data.slice(-N);
 
+    // 🔧 Dibujo crisp con DPR + alineación a píxel
     const draw = (canvas: HTMLCanvasElement | undefined, values: number[], stroke: string) => {
       if (!canvas || values.length < 2) return;
+
       const ctx = canvas.getContext('2d')!;
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      const w = (canvas.width = canvas.clientWidth * ratio);
-      const h = (canvas.height = canvas.clientHeight * ratio);
-      ctx.clearRect(0, 0, w, h);
+      const cssW = canvas.clientWidth;
+      const cssH = canvas.clientHeight;
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width  = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      ctx.clearRect(0, 0, cssW, cssH);
 
       const min = Math.min(...values);
       const max = Math.max(...values);
-      const scaleX = (i: number) => (i / (values.length - 1)) * (w - 2) + 1;
+      const scaleX = (i: number) => (i / (values.length - 1)) * (cssW - 2) + 1;
       const scaleY = (v: number) => {
-        if (max === min) return h / 2;
+        if (max === min) return cssH / 2;
         const t = (v - min) / (max - min);
-        return h - t * (h - 2) - 1;
+        return cssH - t * (cssH - 2) - 1;
       };
 
-      ctx.lineWidth = 1.5;
+      const crisp = (v: number) => Math.round(v) + 0.5;
+
+      ctx.lineWidth = 1;
       (ctx as any).strokeStyle = stroke;
-      ctx.globalAlpha = 0.95;
+      ctx.globalAlpha = 1;
+
       ctx.beginPath();
-      ctx.moveTo(scaleX(0), scaleY(values[0]));
-      for (let i = 1; i < values.length; i++) ctx.lineTo(scaleX(i), scaleY(values[i]));
+      ctx.moveTo(crisp(scaleX(0)), crisp(scaleY(values[0])));
+      for (let i = 1; i < values.length; i++) {
+        ctx.lineTo(crisp(scaleX(i)), crisp(scaleY(values[i])));
+      }
       ctx.stroke();
     };
 
