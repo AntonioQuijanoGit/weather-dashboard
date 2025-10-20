@@ -113,7 +113,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   get energyDisplay(): string { return this.nfEnergy.format(this.currentEnergy); }
   get processedDisplay(): string { return this.nfInt.format(this.dataPointsProcessed); }
 
-  // Tendencias y pulses
+  // Tendencias y pulses (mantienen último estado hasta que cambie)
   trendTemp:   'up' | 'down' | 'flat' = 'flat';
   trendEnergy: 'up' | 'down' | 'flat' = 'flat';
   tempPulse = false;
@@ -122,7 +122,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private lastRealTrendTemp:   'up' | 'down' = 'down';
   private lastRealTrendEnergy: 'up' | 'down' = 'down';
 
-  // Estadísticas (incluye producción media y nivel vs pico)
+  // Estadísticas
   stats = {
     tempAvg: 0,
     tempMax: 0,
@@ -204,7 +204,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.initializeCharts();
 
     if (this.sparkTempRef?.nativeElement && this.sparkEnergyRef?.nativeElement && 'ResizeObserver' in window) {
-      this.sparkResizeObs = new ResizeObserver(() => this.drawSparklines());
+      this.sparkResizeObs = new ResizeObserver((): void => this.drawSparklines());
       this.sparkResizeObs.observe(this.sparkTempRef.nativeElement);
       this.sparkResizeObs.observe(this.sparkEnergyRef.nativeElement);
     }
@@ -391,7 +391,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  // ---------- Animación de valores numéricos ----------
+  // ---------- Animación de valores numéricos (mantiene el último hasta nuevo tick) ----------
   private animateValue(
     start: number,
     end: number,
@@ -426,7 +426,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Datos ----------
   private subscribeToData(): void {
-    // Dato actual
+    // Dato actual (KPI se queda con el último valor hasta el siguiente tick)
     this.subscriptions.add(
       this.weatherStream.getCurrentData().subscribe((d: WeatherDataPoint) => {
         const newTrendTemp = this.compareTrend(this.currentTemperature, d.temperature);
@@ -615,7 +615,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const prodAvgPerMin = currEnergySum / minutes;
     const prodAvgPerHour = prodAvgPerMin * 60;
 
-    // Nivel actual vs pico (usa energyPeakKwh calculado en updateSummary)
+    // Nivel actual vs pico
     const currentEnergy = this.currentEnergy;
     const utilizationPctRaw = this.energyPeakKwh > 0 ? (currentEnergy / this.energyPeakKwh) * 100 : 0;
 
@@ -754,55 +754,54 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private drawSparklines(history?: WeatherDataPoint[]): void {
-  const N = 60;
-  const data = history ?? [];
-  const last = data.slice(-N);
+    const N = 60;
+    const data = history ?? [];
+    const last = data.slice(-N);
 
-  const draw = (canvas: HTMLCanvasElement | undefined, values: number[], stroke: string) => {
-    if (!canvas || values.length < 2) return;
+    const draw = (canvas: HTMLCanvasElement | undefined, values: number[], stroke: string) => {
+      if (!canvas || values.length < 2) return;
 
-    const ctx = canvas.getContext('2d')!;
-    ctx.imageSmoothingEnabled = false;
+      const ctx = canvas.getContext('2d')!;
+      ctx.imageSmoothingEnabled = false;
 
-    const cssW = canvas.clientWidth;
-    const cssH = canvas.clientHeight; // controlado por CSS (34px en nuestro caso)
+      const cssW = canvas.clientWidth;
+      const cssH = canvas.clientHeight;
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width  = Math.round(cssW * dpr);
-    canvas.height = Math.round(cssH * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width  = Math.round(cssW * dpr);
+      canvas.height = Math.round(cssH * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    ctx.clearRect(0, 0, cssW, cssH);
+      ctx.clearRect(0, 0, cssW, cssH);
 
-    const min = Math.min(...values);
-    const max = Math.max(...values);
-    const scaleX = (i: number) => (i / (values.length - 1)) * (cssW - 2) + 1;
-    const scaleY = (v: number) => {
-      if (max === min) return cssH / 2;
-      const t = (v - min) / (max - min);
-      return cssH - t * (cssH - 2) - 1;
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const scaleX = (i: number) => (i / (values.length - 1)) * (cssW - 2) + 1;
+      const scaleY = (v: number) => {
+        if (max === min) return cssH / 2;
+        const t = (v - min) / (max - min);
+        return cssH - t * (cssH - 2) - 1;
+      };
+
+      const crisp = (v: number) => Math.round(v) + 0.5;
+
+      ctx.lineWidth = 1;
+      (ctx as any).strokeStyle = stroke;
+      ctx.globalAlpha = 1;
+
+      ctx.beginPath();
+      ctx.moveTo(crisp(scaleX(0)), crisp(scaleY(values[0])));
+      for (let i = 1; i < values.length; i++) {
+        ctx.lineTo(crisp(scaleX(i)), crisp(scaleY(values[i])));
+      }
+      ctx.stroke();
     };
 
-    const crisp = (v: number) => Math.round(v) + 0.5;
-
-    ctx.lineWidth = 1;
-    (ctx as any).strokeStyle = stroke;
-    ctx.globalAlpha = 1;
-
-    ctx.beginPath();
-    ctx.moveTo(crisp(scaleX(0)), crisp(scaleY(values[0])));
-    for (let i = 1; i < values.length; i++) {
-      ctx.lineTo(crisp(scaleX(i)), crisp(scaleY(values[i])));
-    }
-    ctx.stroke();
-  };
-
-  const temps = last.map(d => d.temperature);
-  const eners = last.map(d => d.energy);
-  draw(this.sparkTempRef?.nativeElement, temps, this.teal);
-  draw(this.sparkEnergyRef?.nativeElement, eners, this.slate);
-}
-
+    const temps = last.map(d => d.temperature);
+    const eners = last.map(d => d.energy);
+    draw(this.sparkTempRef?.nativeElement, temps, this.teal);
+    draw(this.sparkEnergyRef?.nativeElement, eners, this.slate);
+  }
 
   private startTimer(): void {
     this.startTime = new Date();

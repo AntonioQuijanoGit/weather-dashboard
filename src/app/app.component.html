@@ -272,22 +272,28 @@
       </div>
 
       <div class="stat">
-        <span class="stat-label">
-          <iconify-icon icon="ph:arrows-left-right-duotone" width="16" height="16"></iconify-icon>
-          Cambio Temp. media
-        </span>
-        <span class="stat-value">
-          <span class="delta"
-                [class.up]="deltas.tempAvgPct > 0"
-                [class.down]="deltas.tempAvgPct < 0"
-                [attr.title]="'Cambio vs ventana anterior: ' + (deltas.tempAvgPct | number:'1.0-1') + '%'">
-            {{ (deltas.tempAvgPct || 0) | number:'1.0-1' }}%
-            <iconify-icon
-              [icon]="deltas.tempAvgPct > 0 ? 'ph:arrow-up-right-duotone' : deltas.tempAvgPct < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
-              width="14" height="14"></iconify-icon>
-          </span>
-        </span>
-      </div>
+  <span class="stat-label">
+    <iconify-icon icon="ph:arrows-left-right-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
+    Cambio Temp. media
+  </span>
+  <span class="stat-value">
+    <span class="delta"
+          [class.up]="deltas.tempAvgPct > 0"
+          [class.down]="deltas.tempAvgPct < 0"
+          [attr.title]="'Cambio vs ventana anterior: ' + (deltas.tempAvgPct | number:'1.0-1') + '%'">
+      {{ (deltas.tempAvgPct || 0) | number:'1.0-1' }}%
+      <iconify-icon
+        [icon]="deltas.tempAvgPct > 0
+                  ? 'ph:arrow-up-right-duotone'
+                  : (deltas.tempAvgPct < 0
+                      ? 'ph:arrow-down-right-duotone'
+                      : 'ph:minus-duotone')"
+        width="14" height="14" aria-hidden="true">
+      </iconify-icon>
+    </span>
+  </span>
+</div>
+
 
       <div class="stat">
         <span class="stat-label">
@@ -348,7 +354,7 @@
         </span>
       </div>
 
-      <!-- Nueva: Nivel actual vs pico (con barra) -->
+      <!-- Nivel actual vs pico -->
       <div class="stat stat--with-progress">
         <span class="stat-label">
           <iconify-icon icon="ph:rocket-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>

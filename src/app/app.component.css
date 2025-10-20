@@ -116,7 +116,7 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
 }
 .card:hover,
 .card:focus-within {
-  transform: translateY(-2px); /* NO scale para evitar blur */
+  transform: translateY(-2px);
   box-shadow: 0 8px 28px rgba(2, 6, 23, 0.10);
 }
 .theme-dark .card:hover,
@@ -153,18 +153,18 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
 
 /* ===== Sparkline (canvas SIEMPRE visible y nítida) ===== */
 .sparkline-wrap {
-  height: 34px;                /* altura total desde el inicio */
+  height: 34px;
   overflow: hidden;
   margin-top: 4px;
   border: 0;
   background: transparent;
   box-shadow: none;
-  transition: none;            /* evita el salto inicial */
+  transition: none;
 }
 
 .sparkline {
   width: 100%;
-  height: 34px !important;     /* lienzo fijo */
+  height: 34px !important;
   display: block;
   opacity: 0.95;
   transition: opacity 180ms ease, filter 180ms ease;
@@ -201,7 +201,7 @@ body.theme-dark .theme-switch__thumb { background: #e5e7eb; border-color: #11182
   display: block;
   border-radius: 10px;
   background: transparent;
-  border: 1px solid var(--border); /* solo las charts grandes llevan borde */
+  border: 1px solid var(--border);
 }
 
 /* =============== Estadísticas =============== */
@@ -357,12 +357,11 @@ body.theme-dark .progress { background: rgba(255, 255, 255, 0.06); }
 
 /* Texto "alza/baja/estable" aún más sutil */
 .kpi-trend .muted {
-  color: #a1a1aa !important; /* gris claro */
+  color: #a1a1aa !important;
   opacity: 0.9;
 }
-
 body.theme-dark .kpi-trend .muted {
-  color: #9ca3af !important; /* gris claro en dark */
+  color: #9ca3af !important;
 }
 
 /* ===== Barra "Nivel actual vs pico" ===== */
@@ -377,9 +376,7 @@ body.theme-dark .kpi-trend .muted {
   border: 0;
   box-shadow: none;
 }
-body.theme-dark .progress-bar {
-  background: rgba(255, 255, 255, 0.06);
-}
+body.theme-dark .progress-bar { background: rgba(255, 255, 255, 0.06); }
 .progress-fill {
   height: 100%;
   border: 0;
@@ -393,11 +390,10 @@ body.theme-dark .progress-bar {
 .hovercard-head {
   display: flex;
   align-items: center;
-  gap: 8px;              /* 👈 separa texto y elementos */
+  gap: 8px;            /* separa texto y elementos */
 }
-
 .pill-count {
-  margin-left: 8px;      /* 👈 aire entre "15 min" y "102 pts" */
-  white-space: nowrap;   /* 👈 evita que se parta en dos líneas */
+  margin-left: 8px;    /* aire entre "15 min" y "102 pts" */
+  white-space: nowrap; /* evita corte en dos líneas */
   flex-shrink: 0;
 }
