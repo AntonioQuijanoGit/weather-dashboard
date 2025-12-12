@@ -1,0 +1,44 @@
+/* =============== Footer - Enhanced 2025 =============== */
+.footer {
+  width: 100%;
+  margin: 0;
+  margin-top: var(--space-16);
+  padding: var(--space-8) var(--space-4);
+  background: color-mix(in oklab, var(--surface) 95%, transparent);
+  border-top: 1px solid var(--border);
+  box-sizing: border-box;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+  text-align: center;
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-relaxed);
+  letter-spacing: -0.005em;
+}
+
+.footer-content p {
+  margin: 0;
+  padding: 0;
+}
+
+.footer-content p:not(:last-child) {
+  margin-bottom: var(--space-2);
+}
+
+.footer .tech-info {
+  margin-top: var(--space-4);
+  font-size: var(--fs-xs);
+  color: var(--text-3);
+  letter-spacing: -0.005em;
+}
+
+.footer .tech-info strong {
+  color: var(--text-2);
+  font-weight: var(--fw-semibold);
+}

@@ -1,0 +1,45 @@
+<section class="toolbar card-surface" aria-label="Visualization controls">
+  <div class="series-group" role="group" aria-label="Data series">
+    <span class="label">Series:</span>
+
+    <label class="toggle">
+      <input
+        #tempChk
+        type="checkbox"
+        [checked]="showTemp"
+        (change)="onTempChange(tempChk.checked)"
+        aria-label="Show or hide temperature series"
+      />
+      <span>
+        <lucide-icon
+          [name]="Thermometer"
+          [size]="16"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        &nbsp;Temperature
+      </span>
+    </label>
+
+    <label class="toggle">
+      <input
+        #energyChk
+        type="checkbox"
+        [checked]="showEnergy"
+        (change)="onEnergyChange(energyChk.checked)"
+        aria-label="Show or hide energy series"
+      />
+      <span>
+        <lucide-icon
+          [name]="Zap"
+          [size]="16"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        &nbsp;Energy
+      </span>
+    </label>
+  </div>
+</section>
+
+

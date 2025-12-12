@@ -13,6 +13,40 @@ import { WeatherStreamService } from './services/data/weather-stream.service';
 import { CommonModule } from '@angular/common';
 import { WeatherDataPoint } from './services/data/weather-data-loader.service';
 import { Subscription, fromEvent } from 'rxjs';
+import { HeaderComponent } from './components/header/header.component';
+import { FooterComponent } from './components/footer/footer.component';
+import {
+  KpiCardComponent,
+  KPICardData,
+} from './components/kpi-card/kpi-card.component';
+import {
+  StatisticsComponent,
+  StatisticsData,
+} from './components/statistics/statistics.component';
+import {
+  LucideAngularModule,
+  Thermometer,
+  TrendingUp,
+  BarChart3,
+  Lightbulb,
+  HelpCircle,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Zap,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus,
+  Database,
+  Flame,
+  ArrowLeftRight,
+  Gauge,
+  Rocket,
+  Clock,
+  Hourglass,
+  Activity,
+  BatteryCharging,
+} from 'lucide-angular';
 
 Chart.register(...registerables);
 
@@ -39,7 +73,14 @@ type OverlaySummary = {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    HeaderComponent,
+    FooterComponent,
+    KpiCardComponent,
+    StatisticsComponent,
+    LucideAngularModule,
+  ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -48,9 +89,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('temperatureChart')
   temperatureChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('energyChart') energyChartRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('sparkTemp') sparkTempRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('sparkEnergy') sparkEnergyRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('themeToggle') themeToggleEl!: ElementRef<HTMLInputElement>;
+  @ViewChild('tempSparkline') tempSparklineRef!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('energySparklineCanvas') energySparklineRef!: ElementRef<HTMLCanvasElement>;
 
   // Estado UI
   currentTemperature = 0;
@@ -60,6 +100,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   dataPointsProcessed = 0;
   elapsedTime = '00:00:00';
   currentYear = new Date().getFullYear();
+  showHelp = false;
+  helpSlideIndex = 0;
 
   // Tema
   themeChoice: ThemeChoice = 'light';
@@ -97,23 +139,75 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private timerInterval?: any;
   private resizeSub?: any;
 
-  // Observador sparklines
-  private sparkResizeObs?: ResizeObserver;
+  // Historial local para sparklines de KPI cards
+  private dataHistory: WeatherDataPoint[] = [];
+
+  // Getters para datos de KPI Cards
+  get tempKpiData(): KPICardData {
+    const last60 = this.getLastNPoints(60);
+    return {
+      title: 'Average Temperature',
+      icon: Thermometer,
+      value: this.tempDisplay,
+      unit: '°C',
+      trend: this.trendTemp,
+      pulse: this.tempPulse,
+      sparklineData: last60.map((d) => d.temperature),
+      sparklineColor: this.teal,
+      overlaySummary: this.overlayTempSummary,
+      activeRangeLabel: this.activeRangeLabel,
+    };
+  }
+
+  get energyKpiData(): KPICardData {
+    const last60 = this.getLastNPoints(60);
+    return {
+      title: 'Energy Produced',
+      icon: Zap,
+      value: this.energyDisplay,
+      unit: 'kWh',
+      trend: this.trendEnergy,
+      pulse: this.energyPulse,
+      sparklineData: last60.map((d) => d.energy),
+      sparklineColor: this.slate,
+      overlaySummary: this.overlayEnergySummary,
+      activeRangeLabel: this.activeRangeLabel,
+    };
+  }
+
+  private getLastNPoints(n: number): WeatherDataPoint[] {
+    return this.dataHistory.slice(-n);
+  }
+
+  get statisticsData(): StatisticsData {
+    return {
+      processedDisplay: this.processedDisplay,
+      deltas: this.deltas,
+      stats: {
+        tempMax: this.stats.tempMax,
+        energySum: this.stats.energySum,
+        prodAvgPerMin: this.stats.prodAvgPerMin,
+        utilizationPct: this.stats.utilizationPct,
+      },
+      elapsedTime: this.elapsedTime,
+      activeRangeLabel: this.activeRangeLabel,
+    };
+  }
 
   // Paleta series
   private teal = '#0EA5A2';
   private slate = '#475569';
 
   // Formateadores
-  nfTemp = new Intl.NumberFormat('es-ES', {
+  nfTemp = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  nfEnergy = new Intl.NumberFormat('es-ES', {
+  nfEnergy = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
-  nfInt = new Intl.NumberFormat('es-ES');
+  nfInt = new Intl.NumberFormat('en-US');
   get tempDisplay(): string {
     return this.nfTemp.format(this.currentTemperature);
   }
@@ -122,6 +216,31 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
   get processedDisplay(): string {
     return this.nfInt.format(this.dataPointsProcessed);
+  }
+
+  // Helper methods for trend labels
+  getTempTrendLabel(): string {
+    if (!this.tempKpiData) return 'Stable';
+    switch (this.tempKpiData.trend) {
+      case 'up':
+        return 'Rising';
+      case 'down':
+        return 'Falling';
+      default:
+        return 'Stable';
+    }
+  }
+
+  getEnergyTrendLabel(): string {
+    if (!this.energyKpiData) return 'Stable';
+    switch (this.energyKpiData.trend) {
+      case 'up':
+        return 'Rising';
+      case 'down':
+        return 'Falling';
+      default:
+        return 'Stable';
+    }
   }
 
   // Tendencias y pulses (mantienen último estado hasta que cambie)
@@ -154,15 +273,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     energySumPct: 0,
   };
 
-  // "Actualizado hace …"
+  // "Updated … ago"
   lastUpdatedAt: number = Date.now();
-  lastUpdatedRel: string = 'hace 0 s';
-  private rtf = new Intl.RelativeTimeFormat('es-ES', { numeric: 'auto' });
+  lastUpdatedRel: string = '0 seconds ago';
+  private rtf = new Intl.RelativeTimeFormat('en-US', { numeric: 'auto' });
 
   // KPIs de resumen
   energyPeakTime = '--:--';
   energyPeakKwh = 0;
-  tempStateLabel = 'Estable';
+  tempStateLabel = 'Stable';
   tempVariationLabel = '±0.0%';
 
   // Variación térmica en número y dirección para flecha/colores
@@ -214,21 +333,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       .then(() => {
         this.isStreaming = true;
         this.startTimer();
-        queueMicrotask(() => this.drawSparklines());
       })
       .catch((err: unknown) =>
         console.error('Error cargando assets/data.yml:', err)
       );
 
-    this.resizeSub = fromEvent(window, 'resize').subscribe(() =>
-      this.drawSparklines()
-    );
-
     this.subscriptions.add(
       fromEvent<KeyboardEvent>(window, 'keydown').subscribe((ev) => {
         if (ev.key.toLowerCase() === 't') {
           this.setTheme(this.themeChoice === 'dark' ? 'light' : 'dark');
-          queueMicrotask(() => this.themeToggleEl?.nativeElement?.focus());
         }
       })
     );
@@ -236,20 +349,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     this.initializeCharts();
-
-    if (
-      this.sparkTempRef?.nativeElement &&
-      this.sparkEnergyRef?.nativeElement &&
-      'ResizeObserver' in window
-    ) {
-      this.sparkResizeObs = new ResizeObserver((): void =>
-        this.drawSparklines()
-      );
-      this.sparkResizeObs.observe(this.sparkTempRef.nativeElement);
-      this.sparkResizeObs.observe(this.sparkEnergyRef.nativeElement);
-    }
-
-    this.drawSparklines();
+    this.initializeSparklines();
   }
 
   ngOnDestroy(): void {
@@ -258,12 +358,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       cancelAnimationFrame(this.energyAnimationFrame);
 
     this.subscriptions.unsubscribe();
-    this.resizeSub?.unsubscribe?.();
     if (this.timerInterval) clearInterval(this.timerInterval);
     this.temperatureChart?.destroy();
     this.energyChart?.destroy();
-
-    this.sparkResizeObs?.disconnect();
   }
 
   // ---------- Tema ----------
@@ -276,6 +373,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private applyThemeFromChoice(): void {
     this.isDark = this.themeChoice === 'dark';
+    // Apply to both html and body for better compatibility
+    document.documentElement.classList.toggle('theme-dark', this.isDark);
     document.body.classList.toggle('theme-dark', this.isDark);
   }
 
@@ -302,7 +401,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private restyleChartsForTheme(): void {
     const t = this.themeTokens();
 
-    const restyle = (chart?: Chart) => {
+    const restyle = (chart?: Chart, gradientColor?: string) => {
       if (!chart) return;
       const o = chart.options!;
       if ((o.scales as any)?.x?.grid) (o.scales as any).x.grid.color = t.grid;
@@ -315,12 +414,25 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         o.plugins.tooltip.bodyColor = t.tooltipBody as any;
         o.plugins.tooltip.borderColor = t.tooltipBorder as any;
       }
+
+      // Regenerate gradient if provided - use actual canvas height
+      if (gradientColor && chart.data.datasets[0]) {
+        const canvas = chart.canvas;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          const canvasHeight = canvas.height || 260;
+          const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
+          gradient.addColorStop(0, gradientColor + '40');
+          gradient.addColorStop(1, gradientColor + '00');
+          chart.data.datasets[0].backgroundColor = gradient;
+        }
+      }
+
       chart.update('none');
     };
 
-    restyle(this.temperatureChart);
-    restyle(this.energyChart);
-    this.drawSparklines();
+    restyle(this.temperatureChart, this.teal);
+    restyle(this.energyChart, this.slate);
   }
 
   // ---------- Charts ----------
@@ -329,33 +441,56 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       !this.temperatureChartRef?.nativeElement ||
       !this.energyChartRef?.nativeElement
     ) {
-      queueMicrotask(() => this.initializeCharts());
+      setTimeout(() => this.initializeCharts(), 100);
       return;
     }
+
+    const tempCanvas = this.temperatureChartRef.nativeElement;
+    const energyCanvas = this.energyChartRef.nativeElement;
+
+    // Verificar que los canvas tengan dimensiones
+    const tempRect = tempCanvas.getBoundingClientRect();
+    const energyRect = energyCanvas.getBoundingClientRect();
+
+    if (
+      tempRect.width === 0 ||
+      tempRect.height === 0 ||
+      energyRect.width === 0 ||
+      energyRect.height === 0
+    ) {
+      setTimeout(() => this.initializeCharts(), 100);
+      return;
+    }
+
     const t = this.themeTokens();
 
     // Obtener DPR del dispositivo
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
     // Función para configurar canvas con DPR correcto
     const configureCanvas = (canvas: HTMLCanvasElement) => {
       const rect = canvas.getBoundingClientRect();
-      canvas.width = Math.round(rect.width * dpr);
-      canvas.height = Math.round(rect.height * dpr);
-      canvas.style.width = rect.width + 'px';
-      canvas.style.height = rect.height + 'px';
+      const width = rect.width || canvas.offsetWidth || 400;
+      const height = rect.height || 260; // Usar altura real del canvas (260px según CSS)
+
+      if (width > 0 && height > 0) {
+        canvas.width = Math.round(width * dpr);
+        canvas.height = Math.round(height * dpr);
+        canvas.style.width = width + 'px';
+        canvas.style.height = height + 'px';
+      }
     };
 
     // Configurar ambos canvas ANTES de crear las gráficas
-    configureCanvas(this.temperatureChartRef.nativeElement);
-    configureCanvas(this.energyChartRef.nativeElement);
+    configureCanvas(tempCanvas);
+    configureCanvas(energyCanvas);
 
     const commonOptions: ChartConfiguration['options'] = {
       responsive: true,
       maintainAspectRatio: false,
       devicePixelRatio: dpr,
       animation: { duration: 220 },
-      layout: { padding: 4 },
+      layout: { padding: { top: 8, bottom: 24, left: 4, right: 4 } },
       interaction: { intersect: false, mode: 'index' },
       plugins: {
         legend: { display: false },
@@ -378,9 +513,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           grid: { color: t.grid },
           ticks: {
             color: t.tick,
-            maxRotation: 0,
+            maxRotation: 45,
+            minRotation: 0,
             autoSkip: true,
             maxTicksLimit: 6,
+            padding: 10,
+            font: {
+              size: 11,
+            },
           },
           border: { display: false },
         },
@@ -393,21 +533,32 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       },
     };
 
+    // Create gradient for temperature chart - use actual canvas height
+    const tempCtx = tempCanvas.getContext('2d')!;
+    const tempHeight = tempCanvas.height || 260;
+    const tempGradient = tempCtx.createLinearGradient(0, 0, 0, tempHeight);
+    tempGradient.addColorStop(0, this.teal + '40');
+    tempGradient.addColorStop(1, this.teal + '00');
+
     this.temperatureChart = new Chart(this.temperatureChartRef.nativeElement, {
       type: 'line',
       data: {
         labels: [],
         datasets: [
           {
-            label: 'Temperatura (°C)',
+            label: 'Temperature (°C)',
             data: [],
             borderColor: this.teal,
-            backgroundColor: 'transparent',
-            tension: 0.25,
-            fill: false,
+            backgroundColor: tempGradient,
+            tension: 0.4,
+            fill: true,
             pointRadius: 0,
-            pointHoverRadius: 0,
-            borderWidth: 1.75,
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: this.teal,
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 2,
+            borderWidth: 2.5,
+            pointBackgroundColor: this.teal,
           },
         ],
       },
@@ -418,17 +569,31 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           tooltip: {
             ...commonOptions.plugins!.tooltip!,
             callbacks: {
-              title: (items: any[]) => items?.[0]?.label ?? '',
+              title: (items: any[]) => {
+                const item = items?.[0];
+                return item ? `Time: ${item.label}` : '';
+              },
               label: (item: any) => {
                 const val =
                   typeof item.parsed?.y === 'number' ? item.parsed.y : 0;
-                return `${this.nfTemp.format(val)} °C`;
+                return `Temperature: ${this.nfTemp.format(val)} °C`;
               },
+              labelColor: () => ({
+                borderColor: 'transparent',
+                backgroundColor: this.teal,
+              }),
             },
           },
         },
       },
     });
+
+    // Create gradient for energy chart - use actual canvas height
+    const energyCtx = energyCanvas.getContext('2d')!;
+    const energyHeight = energyCanvas.height || 260;
+    const energyGradient = energyCtx.createLinearGradient(0, 0, 0, energyHeight);
+    energyGradient.addColorStop(0, this.slate + '40');
+    energyGradient.addColorStop(1, this.slate + '00');
 
     this.energyChart = new Chart(this.energyChartRef.nativeElement, {
       type: 'line',
@@ -436,16 +601,19 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         labels: [],
         datasets: [
           {
-            label: 'Energía (kWh)',
+            label: 'Energy (kWh)',
             data: [],
             borderColor: this.slate,
-            backgroundColor: 'transparent',
-            tension: 0.25,
-            fill: false,
+            backgroundColor: energyGradient,
+            tension: 0.4,
+            fill: true,
             pointRadius: 0,
-            pointHoverRadius: 0,
-            borderWidth: 1.75,
-            borderDash: [4, 3],
+            pointHoverRadius: 6,
+            pointHoverBackgroundColor: this.slate,
+            pointHoverBorderColor: '#ffffff',
+            pointHoverBorderWidth: 2,
+            borderWidth: 2.5,
+            pointBackgroundColor: this.slate,
           },
         ],
       },
@@ -456,12 +624,19 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           tooltip: {
             ...commonOptions.plugins!.tooltip!,
             callbacks: {
-              title: (items: any[]) => items?.[0]?.label ?? '',
+              title: (items: any[]) => {
+                const item = items?.[0];
+                return item ? `Time: ${item.label}` : '';
+              },
               label: (item: any) => {
                 const val =
                   typeof item.parsed?.y === 'number' ? item.parsed.y : 0;
-                return `${this.nfEnergy.format(val)} kWh`;
+                return `Energy: ${this.nfEnergy.format(val)} kWh`;
               },
+              labelColor: () => ({
+                borderColor: 'transparent',
+                backgroundColor: this.slate,
+              }),
             },
           },
         },
@@ -577,11 +752,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       this.weatherStream
         .getDataHistory()
         .subscribe((history: WeatherDataPoint[]) => {
+          this.dataHistory = history; // Almacenar para KPI cards
           this.updateCharts(history);
           this.updateSummary(history);
           this.updateStats(history);
-          this.drawSparklines(history);
           this.updateOverlaySummaries(history);
+          this.cdr.markForCheck(); // Trigger change detection para KPI cards
         })
     );
   }
@@ -597,13 +773,39 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private windowPoints(): number {
     const m =
       this.ranges.find((r) => r.key === this.activeRangeKey)?.minutes ?? 15;
-    return Math.max(12, Math.floor((m * 60) / 5));
+    const requestedPoints = Math.floor((m * 60) / 5);
+    // Usar todos los datos disponibles si el historial es menor que lo solicitado
+    const availablePoints = this.dataHistory?.length ?? 0;
+    if (availablePoints > 0) {
+      // Si solicitamos más puntos de los disponibles, usar todos los disponibles
+      return Math.min(requestedPoints, availablePoints);
+    }
+    return Math.max(12, requestedPoints);
   }
 
   onChangeRange(key: string): void {
     const allowed: RangeKey[] = ['5m', '15m', '60m', '24h'];
-    if (allowed.includes(key as RangeKey))
-      this.activeRangeKey = key as RangeKey;
+    if (allowed.includes(key as RangeKey)) {
+      const previousRange = this.activeRangeKey;
+      
+      // Solo actualizar si el rango cambió
+      if (previousRange !== key) {
+        this.activeRangeKey = key as RangeKey;
+        
+        // Actualizar gráficos si están inicializados y hay datos
+        if (this.temperatureChart && 
+            this.energyChart && 
+            this.dataHistory && 
+            this.dataHistory.length > 0) {
+          this.updateCharts(this.dataHistory);
+          this.updateSummary(this.dataHistory);
+          this.updateStats(this.dataHistory);
+          this.updateOverlaySummaries(this.dataHistory);
+          this.drawIndicatorSparklines();
+          this.cdr.markForCheck();
+        }
+      }
+    }
   }
 
   onTempCheckboxChange(checked: boolean): void {
@@ -631,6 +833,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const N = this.windowPoints();
     const last = history.slice(-N);
 
+    if (last.length === 0) return;
+
     const now = new Date();
     const labels = last.map((_, index) => {
       const secondsAgo = (last.length - 1 - index) * 5;
@@ -648,14 +852,19 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       this.temperatureChart.data.labels = labels;
       (this.temperatureChart.data.datasets[0].data as number[]) = temperatures;
       this.temperatureChart.getDatasetMeta(0).hidden = !this.showTemp;
-      this.temperatureChart.update('none');
+      this.temperatureChart.update();
     }
     if (this.energyChart) {
       this.energyChart.data.labels = labels;
       (this.energyChart.data.datasets[0].data as number[]) = energies;
       this.energyChart.getDatasetMeta(0).hidden = !this.showEnergy;
-      this.energyChart.update('none');
+      this.energyChart.update();
     }
+
+    // Update indicator sparklines - use setTimeout to ensure DOM is ready
+    setTimeout(() => {
+      this.drawIndicatorSparklines();
+    }, 50);
   }
 
   private updateSummary(history: WeatherDataPoint[]): void {
@@ -695,11 +904,11 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const maxTemp = Math.max(...temps);
     const range = maxTemp - minTemp;
 
-    let state = 'Estable';
-    if (range < 2) state = 'Muy estable';
-    else if (range < 5) state = 'Estable';
+    let state = 'Stable';
+    if (range < 2) state = 'Very stable';
+    else if (range < 5) state = 'Stable';
     else if (range < 10) state = 'Variable';
-    else state = 'Muy variable';
+    else state = 'Very variable';
     this.tempStateLabel = state;
 
     let deltaPct = 0;
@@ -923,60 +1132,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     };
   }
 
-  private drawSparklines(history?: WeatherDataPoint[]): void {
-    const N = 60;
-    const data = history ?? [];
-    const last = data.slice(-N);
-
-    const draw = (
-      canvas: HTMLCanvasElement | undefined,
-      values: number[],
-      stroke: string
-    ) => {
-      if (!canvas || values.length < 2) return;
-
-      const ctx = canvas.getContext('2d')!;
-      ctx.imageSmoothingEnabled = false;
-
-      const cssW = canvas.clientWidth;
-      const cssH = canvas.clientHeight;
-
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(cssW * dpr);
-      canvas.height = Math.round(cssH * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-      ctx.clearRect(0, 0, cssW, cssH);
-
-      const min = Math.min(...values);
-      const max = Math.max(...values);
-      const scaleX = (i: number) => (i / (values.length - 1)) * (cssW - 2) + 1;
-      const scaleY = (v: number) => {
-        if (max === min) return cssH / 2;
-        const t = (v - min) / (max - min);
-        return cssH - t * (cssH - 2) - 1;
-      };
-
-      const crisp = (v: number) => Math.round(v) + 0.5;
-
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = stroke;
-      ctx.globalAlpha = 1;
-
-      ctx.beginPath();
-      ctx.moveTo(crisp(scaleX(0)), crisp(scaleY(values[0])));
-      for (let i = 1; i < values.length; i++) {
-        ctx.lineTo(crisp(scaleX(i)), crisp(scaleY(values[i])));
-      }
-      ctx.stroke();
-    };
-
-    const temps = last.map((d) => d.temperature);
-    const eners = last.map((d) => d.energy);
-    draw(this.sparkTempRef?.nativeElement, temps, this.teal);
-    draw(this.sparkEnergyRef?.nativeElement, eners, this.slate);
-  }
-
   private startTimer(): void {
     this.startTime = new Date();
     this.timerInterval = setInterval(() => {
@@ -1002,7 +1157,189 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       else if (diffSec < 86400)
         rel = this.rtf.format(-Math.round(diffSec / 3600), 'hour');
       else rel = this.rtf.format(-Math.round(diffSec / 86400), 'day');
-      this.lastUpdatedRel = rel.replace('dentro de ', 'en ');
+      // Format: "X seconds ago" or "X minutes ago" etc.
+      this.lastUpdatedRel = rel;
     }, 1000);
   }
+
+  // Initialize sparklines for indicator cards
+  private initializeSparklines(): void {
+    setTimeout(() => {
+      this.drawIndicatorSparklines();
+    }, 200);
+  }
+
+  private drawIndicatorSparklines(): void {
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      if (this.tempSparklineRef?.nativeElement) {
+        const tempData = this.tempKpiData?.sparklineData;
+        if (tempData && tempData.length >= 2) {
+          this.drawSparkline(
+            this.tempSparklineRef.nativeElement,
+            tempData,
+            this.tempKpiData.sparklineColor
+          );
+        }
+      }
+
+      if (this.energySparklineRef?.nativeElement) {
+        const energyData = this.energyKpiData?.sparklineData;
+        if (energyData && energyData.length >= 2) {
+          this.drawSparkline(
+            this.energySparklineRef.nativeElement,
+            energyData,
+            this.energyKpiData.sparklineColor
+          );
+        }
+      }
+    });
+  }
+
+  private drawSparkline(canvas: HTMLCanvasElement, values: number[], color: string): void {
+    const ctx = canvas.getContext('2d');
+    if (!ctx || !values || values.length < 2) return;
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+
+    const rect = canvas.getBoundingClientRect();
+    const cssW = rect.width || canvas.clientWidth || 200;
+    const cssH = rect.height || canvas.clientHeight || 100;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    if (cssW <= 0 || cssH <= 0) {
+      setTimeout(() => this.drawSparkline(canvas, values, color), 100);
+      return;
+    }
+
+    canvas.width = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    // Usar todo el ancho y alto del canvas sin márgenes
+    const padding = 0;
+    const scaleX = (i: number) => (i / (values.length - 1)) * (cssW - padding * 2) + padding;
+    const scaleY = (v: number) => {
+      if (max === min) return cssH / 2;
+      const t = (v - min) / (max - min);
+      return cssH - t * (cssH - padding * 2) - padding;
+    };
+
+    // Draw gradient area - more subtle
+    const gradient = ctx.createLinearGradient(0, 0, 0, cssH);
+    gradient.addColorStop(0, color + '12');
+    gradient.addColorStop(0.5, color + '06');
+    gradient.addColorStop(1, color + '00');
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.moveTo(scaleX(0), cssH);
+    ctx.lineTo(scaleX(0), scaleY(values[0]));
+    for (let i = 1; i < values.length; i++) {
+      ctx.lineTo(scaleX(i), scaleY(values[i]));
+    }
+    ctx.lineTo(scaleX(values.length - 1), cssH);
+    ctx.closePath();
+    ctx.fill();
+
+    // Draw line - refined
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.shadowBlur = 0;
+    ctx.beginPath();
+    ctx.moveTo(scaleX(0), scaleY(values[0]));
+    for (let i = 1; i < values.length; i++) {
+      ctx.lineTo(scaleX(i), scaleY(values[i]));
+    }
+    ctx.stroke();
+  }
+
+  toggleHelp(): void {
+    this.showHelp = !this.showHelp;
+    if (this.showHelp) {
+      this.helpSlideIndex = 0;
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+
+  closeHelp(): void {
+    this.showHelp = false;
+    this.helpSlideIndex = 0;
+    document.body.style.overflow = '';
+  }
+
+  nextHelpSlide(): void {
+    if (this.helpSlideIndex < this.helpSlides.length - 1) {
+      this.helpSlideIndex++;
+    }
+  }
+
+  prevHelpSlide(): void {
+    if (this.helpSlideIndex > 0) {
+      this.helpSlideIndex--;
+    }
+  }
+
+  goToHelpSlide(index: number): void {
+    if (index >= 0 && index < this.helpSlides.length) {
+      this.helpSlideIndex = index;
+    }
+  }
+
+  // Lucide icon components
+  Thermometer = Thermometer;
+  TrendingUp = TrendingUp;
+  BarChart3 = BarChart3;
+  Lightbulb = Lightbulb;
+  HelpCircle = HelpCircle;
+  X = X;
+  ChevronLeft = ChevronLeft;
+  ChevronRight = ChevronRight;
+  Zap = Zap;
+  ArrowUpRight = ArrowUpRight;
+  ArrowDownRight = ArrowDownRight;
+  Minus = Minus;
+  Database = Database;
+  Flame = Flame;
+  ArrowLeftRight = ArrowLeftRight;
+  Gauge = Gauge;
+  Rocket = Rocket;
+  Clock = Clock;
+  Hourglass = Hourglass;
+  Activity = Activity;
+  BatteryCharging = BatteryCharging;
+
+  helpSlides = [
+    {
+      icon: Thermometer,
+      title: 'Current Status',
+      description: 'Monitor real-time temperature and energy production values. Each card shows the current value, trend indicators (rising/falling), and a mini chart showing recent changes.',
+    },
+    {
+      icon: TrendingUp,
+      title: 'Time Series Charts',
+      description: 'Visualize temperature and energy data over different time ranges. Use the Time Range buttons (5 min, 15 min, 60 min, 24 h) to change the window of data displayed. Toggle series visibility with checkboxes.',
+    },
+    {
+      icon: BarChart3,
+      title: 'Statistics & Analytics',
+      description: 'Get detailed statistics including processed data points, average temperature change, min/max values, current vs peak utilization, and update intervals.',
+    },
+    {
+      icon: Lightbulb,
+      title: 'Tips & Tricks',
+      description: 'Hover over KPI cards for detailed tooltips. Use the theme toggle to switch between light and dark modes. The status indicator shows real-time data updates.',
+    },
+  ];
 }

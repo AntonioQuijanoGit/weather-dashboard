@@ -1,0 +1,179 @@
+/* =============== Statistics =============== */
+section.statistics,
+.statistics {
+  margin-top: var(--space-5);
+}
+
+section.statistics.card-surface,
+.statistics.card-surface {
+  margin-top: var(--space-5);
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-6);
+  gap: var(--space-4);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.stats-header::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), transparent);
+  border-radius: var(--radius-full);
+}
+
+.stats-header .section-title {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.stats-header .muted {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.stats-grid {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.statistics .stat,
+.stat {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
+  overflow: hidden;
+}
+
+.statistics .stat:hover,
+.stat:hover {
+  background: var(--surface-elevated);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.statistics .stat-label,
+.stat-label {
+  font-size: var(--fs-sm);
+  color: var(--text-2);
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--fw-medium);
+  font-family: var(--font-sans);
+  line-height: var(--lh-snug);
+}
+
+.statistics .stat-value,
+.stat-value {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-bold);
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  justify-self: end;
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: var(--lh-tight);
+}
+
+/* Barra de progreso */
+.statistics .stat.stat--with-progress,
+.stat.stat--with-progress {
+  row-gap: var(--space-2);
+}
+
+.statistics .progress,
+.statistics .progress-bar,
+.progress,
+.progress-bar {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--bg-secondary);
+  overflow: hidden;
+  border: 0;
+  box-shadow: none;
+}
+
+body.theme-dark .statistics .progress,
+body.theme-dark .statistics .progress-bar,
+body.theme-dark .progress,
+body.theme-dark .progress-bar {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.statistics .progress__bar,
+.statistics .progress-fill,
+.progress__bar,
+.progress-fill {
+  height: 100%;
+  border: 0;
+  box-shadow: none;
+  transition: width var(--transition-slow);
+  background: linear-gradient(
+    90deg,
+    var(--accent),
+    color-mix(in oklab, var(--accent) 70%, var(--accent-light))
+  );
+  border-radius: var(--radius-full);
+}
+
+/* Deltas */
+.statistics .delta,
+.delta {
+  color: inherit;
+}
+
+.statistics .delta iconify-icon,
+.delta iconify-icon {
+  transition: color var(--transition-slow);
+  vertical-align: -2px;
+}
+
+.statistics .delta.up iconify-icon,
+.delta.up iconify-icon {
+  color: var(--success);
+}
+
+.statistics .delta.down iconify-icon,
+.delta.down iconify-icon {
+  color: var(--error);
+}

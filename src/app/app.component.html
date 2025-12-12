@@ -1,453 +1,692 @@
-<header class="header">
-  <div class="brand">
-    <div class="brand__logo">
-      <iconify-icon icon="solar:wind-bold-duotone" width="22" height="22" aria-hidden="true"></iconify-icon>
-    </div>
-    <div class="brand__text">
-      <h1>Meteologica</h1>
-      <p>Predicción en tiempo real</p>
-    </div>
-  </div>
-
-  <div class="header-actions">
-    <div class="theme-switch" aria-label="Cambiar tema">
-      <input
-        #themeToggle
-        id="themeToggle"
-        type="checkbox"
-        class="theme-switch__input"
-        [checked]="themeChoice==='dark'"
-        (change)="setTheme(themeToggle.checked ? 'dark' : 'light')"
-        aria-labelledby="themeSwitchLabel"
-      />
-      <label class="theme-switch__label" for="themeToggle">
-        <iconify-icon class="theme-switch__icon" icon="ph:sun-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-        <span class="theme-switch__track">
-          <span class="theme-switch__thumb"></span>
-        </span>
-        <span id="themeSwitchLabel" class="sr-only">Cambiar tema</span>
-        <iconify-icon class="theme-switch__icon" icon="ph:moon-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-      </label>
-    </div>
-
-    <div class="status" role="status" aria-live="polite" aria-atomic="true" [class.active]="isStreaming">
-      <span class="status-indicator"></span>
-      <span>{{ isStreaming ? 'Actualizando datos en tiempo real' : 'Inicializando...' }}</span>
-    </div>
-  </div>
-</header>
+<app-header
+  [isStreaming]="isStreaming"
+  [themeChoice]="themeChoice"
+  (themeChange)="setTheme($event)"
+>
+</app-header>
 
 <main class="container">
-  <!-- Toolbar -->
-  <section class="toolbar card-surface">
-    <div class="series-group" role="group" aria-label="Series">
-      <span class="label">Series:</span>
-
-      <label class="toggle">
-        <input #tempChk type="checkbox" [checked]="showTemp" (change)="onTempCheckboxChange(tempChk.checked)">
-        <span>
-          <iconify-icon icon="ph:thermometer-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          &nbsp;Temperatura
-        </span>
-      </label>
-
-      <label class="toggle">
-        <input #energyChk type="checkbox" [checked]="showEnergy" (change)="onEnergyCheckboxChange(energyChk.checked)">
-        <span>
-          <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          &nbsp;Energía
-        </span>
-      </label>
-    </div>
-  </section>
-
-  <!-- KPIs -->
-  <section class="current-values card-surface">
-    <div class="kpis-header">
-      <h2 class="section-title">Indicadores</h2>
-      <div class="microcopy">
-        <span class="dot" [class.on]="isStreaming"></span>
-        <span class="muted">Actualizado {{ lastUpdatedRel }}</span>
+  <!-- Current Status -->
+  <section class="current-status-section" aria-labelledby="currentStatusTitle">
+    <div class="current-status-header">
+      <div class="current-status-header__main">
+        <h2 class="current-status-title" id="currentStatusTitle">Current Status</h2>
+        <div class="current-status-meta">
+          <span class="current-status-update">Updated {{ lastUpdatedRel }}</span>
+        </div>
       </div>
     </div>
 
     @if (processedDisplay==='0') {
-      <div class="skeletons">
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-      </div>
+    <div class="indicators-skeletons">
+      <div class="indicator-skeleton"></div>
+      <div class="indicator-skeleton"></div>
+    </div>
     } @else {
-      <div class="cards">
-        <!-- KPI Temperatura -->
-        <div class="card kpi" tabindex="0" role="group" aria-label="Temperatura media">
-          <div class="kpi-head">
-            <div class="kpi-title">
-              <iconify-icon icon="ph:thermometer-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-              <span>Temperatura media</span>
-            </div>
-            <div class="kpi-trend" [class.up]="trendTemp==='up'" [class.down]="trendTemp==='down'">
-              <span class="muted">{{ trendTemp==='flat' ? 'estable' : (trendTemp==='up' ? 'alza' : 'baja') }}</span>
-              <iconify-icon
-                class="kpi-trend__icon"
-                [icon]="trendTemp==='up' ? 'ph:trend-up-duotone' : trendTemp==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
-                width="16" height="16" aria-hidden="true">
-              </iconify-icon>
-            </div>
+    <div class="indicators-grid">
+      <div
+        class="indicator-card indicator-card--temperature"
+        [attr.data-theme]="'temperature'"
+        role="region"
+        [attr.aria-label]="'Temperature indicator: ' + (tempKpiData.value || '0.00') + ' degrees Celsius'"
+        tabindex="0"
+      >
+        <div class="indicator-card__header">
+          <div class="indicator-card__icon-wrapper">
+            <lucide-icon
+              [name]="Thermometer"
+              [size]="24"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+              class="indicator-card__icon"
+            ></lucide-icon>
           </div>
-
-          <div class="kpi-body">
-            <div class="kpi-value"
-                 [class.flash-on]="tempPulse"
-                 [class.kpi-bounce]="tempPulse">
-              {{ tempDisplay }}<span class="unit">°C</span>
-            </div>
-            <div class="sparkline-wrap">
-              <canvas #sparkTemp class="sparkline" aria-hidden="true"></canvas>
-            </div>
-
-            <!-- Hovercard numérica -->
-            <div class="kpi-hovercard" role="dialog" aria-label="Resumen temperatura">
-              <div class="hovercard-head">
-                <iconify-icon icon="ph:thermometer-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-                <span>Temperatura · {{ activeRangeLabel }}</span>
-                <span class="pill-count">{{ overlayTempSummary.count }} pts</span>
-              </div>
-
-              <div class="hovercard-body">
-                <div class="hover-row">
-                  <span class="hover-label">Último</span>
-                  <span class="hover-value">
-                    {{ overlayTempSummary.last | number:'1.1-2' }}<span class="hover-unit">°C</span>
-                  </span>
-                </div>
-
-                <div class="hover-row">
-                  <span class="hover-label">% vs mitad anterior</span>
-                  <span class="hover-value">
-                    <span class="delta-pill-mini" [class.up]="overlayTempSummary.pctHalf! > 0" [class.down]="overlayTempSummary.pctHalf! < 0">
-                      {{ overlayTempSummary.pctHalf | number:'1.0-1' }}%
-                      <iconify-icon
-                        [icon]="overlayTempSummary.pctHalf! > 0 ? 'ph:arrow-up-right-duotone' : overlayTempSummary.pctHalf! < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
-                        width="14" height="14" aria-hidden="true">
-                      </iconify-icon>
-                    </span>
-                  </span>
-                </div>
-
-                <div class="hover-divider"></div>
-
-                <div class="hover-row">
-                  <span class="hover-label">Rango</span>
-                  <span class="hover-value range">
-                    {{ overlayTempSummary.min | number:'1.1-2' }} – {{ overlayTempSummary.max | number:'1.1-2' }}<span class="hover-unit">°C</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
+          <div class="indicator-card__meta">
+            <h3 class="indicator-card__title">Temperature</h3>
+            <span class="indicator-card__subtitle">Real-time average</span>
           </div>
         </div>
 
-        <!-- KPI Energía -->
-        <div class="card kpi" tabindex="0" role="group" aria-label="Energía producida">
-          <div class="kpi-head">
-            <div class="kpi-title">
-              <iconify-icon icon="ph:lightning-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-              <span>Energía producida</span>
-            </div>
-            <div class="kpi-trend" [class.up]="trendEnergy==='up'" [class.down]="trendEnergy==='down'">
-              <span class="muted">{{ trendEnergy==='flat' ? 'estable' : (trendEnergy==='up' ? 'alza' : 'baja') }}</span>
-              <iconify-icon
-                class="kpi-trend__icon"
-                [icon]="trendEnergy==='up' ? 'ph:trend-up-duotone' : trendEnergy==='down' ? 'ph:trend-down-duotone' : 'ph:minus-duotone'"
-                width="16" height="16" aria-hidden="true">
-              </iconify-icon>
-            </div>
+        <div class="indicator-card__value-section">
+          <div class="indicator-card__main-value">
+            <span class="indicator-value">{{
+              tempKpiData.value || "0.00"
+            }}</span>
+            <span class="indicator-unit">°C</span>
           </div>
+          <div
+            class="indicator-card__trend"
+            [class.up]="tempKpiData && tempKpiData.trend === 'up'"
+            [class.down]="tempKpiData && tempKpiData.trend === 'down'"
+          >
+            <lucide-icon
+              [name]="
+                tempKpiData && tempKpiData.trend === 'up'
+                  ? ArrowUpRight
+                  : tempKpiData && tempKpiData.trend === 'down'
+                  ? ArrowDownRight
+                  : Minus
+              "
+              [size]="14"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+            <span>{{ getTempTrendLabel() }}</span>
+          </div>
+        </div>
 
-          <div class="kpi-body">
-            <div class="kpi-value"
-                 [class.flash-on]="energyPulse"
-                 [class.kpi-bounce]="energyPulse">
-              {{ energyDisplay }}<span class="unit">kWh</span>
-            </div>
-            <div class="sparkline-wrap">
-              <canvas #sparkEnergy class="sparkline" aria-hidden="true"></canvas>
-            </div>
+        <div class="indicator-card__chart-wrapper">
+          <canvas
+            #tempSparkline
+            class="indicator-sparkline"
+            aria-hidden="true"
+          ></canvas>
+        </div>
 
-            <!-- Hovercard numérica -->
-            <div class="kpi-hovercard" role="dialog" aria-label="Resumen energía">
-              <div class="hovercard-head">
-                <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-                <span>Energía · {{ activeRangeLabel }}</span>
-                <span class="pill-count">{{ overlayEnergySummary.count }} pts</span>
-              </div>
-
-              <div class="hovercard-body">
-                <div class="hover-row">
-                  <span class="hover-label">Último</span>
-                  <span class="hover-value">
-                    {{ overlayEnergySummary.last | number:'1.2-2' }}<span class="hover-unit">kWh</span>
-                  </span>
-                </div>
-
-                <div class="hover-row">
-                  <span class="hover-label">% vs mitad anterior</span>
-                  <span class="hover-value">
-                    <span class="delta-pill-mini" [class.up]="overlayEnergySummary.pctHalf! > 0" [class.down]="overlayEnergySummary.pctHalf! < 0">
-                      {{ overlayEnergySummary.pctHalf | number:'1.0-1' }}%
-                      <iconify-icon
-                        [icon]="overlayEnergySummary.pctHalf! > 0 ? 'ph:arrow-up-right-duotone' : overlayEnergySummary.pctHalf! < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
-                        width="14" height="14" aria-hidden="true">
-                      </iconify-icon>
-                    </span>
-                  </span>
-                </div>
-
-                <div class="hover-divider"></div>
-
-                <div class="hover-row">
-                  <span class="hover-label">Rango</span>
-                  <span class="hover-value range">
-                    {{ overlayEnergySummary.min | number:'1.2-2' }} – {{ overlayEnergySummary.max | number:'1.2-2' }}<span class="hover-unit">kWh</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
+        <div class="indicator-card__footer">
+          <div class="indicator-metric">
+            <span class="indicator-metric__label">Range</span>
+            <span class="indicator-metric__value">
+              {{
+                tempKpiData?.overlaySummary
+                  ? (tempKpiData.overlaySummary.min | number : "1.1-1")
+                  : "0.0"
+              }}
+              –
+              {{
+                tempKpiData?.overlaySummary
+                  ? (tempKpiData.overlaySummary.max | number : "1.1-1")
+                  : "0.0"
+              }}°C
+            </span>
           </div>
         </div>
       </div>
+
+      <div
+        class="indicator-card indicator-card--energy"
+        [attr.data-theme]="'energy'"
+        role="region"
+        [attr.aria-label]="'Energy production indicator: ' + (energyKpiData.value || '0.00') + ' kilowatt hours'"
+        tabindex="0"
+      >
+        <div class="indicator-card__header">
+          <div class="indicator-card__icon-wrapper">
+            <lucide-icon
+              [name]="Zap"
+              [size]="24"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+              class="indicator-card__icon"
+            ></lucide-icon>
+          </div>
+          <div class="indicator-card__meta">
+            <h3 class="indicator-card__title">Energy Production</h3>
+            <span class="indicator-card__subtitle">Current output</span>
+          </div>
+        </div>
+
+        <div class="indicator-card__value-section">
+          <div class="indicator-card__main-value">
+            <span class="indicator-value">{{
+              energyKpiData.value || "0.00"
+            }}</span>
+            <span class="indicator-unit">kWh</span>
+          </div>
+          <div
+            class="indicator-card__trend"
+            [class.up]="energyKpiData && energyKpiData.trend === 'up'"
+            [class.down]="energyKpiData && energyKpiData.trend === 'down'"
+          >
+            <lucide-icon
+              [name]="
+                energyKpiData && energyKpiData.trend === 'up'
+                  ? ArrowUpRight
+                  : energyKpiData && energyKpiData.trend === 'down'
+                  ? ArrowDownRight
+                  : Minus
+              "
+              [size]="14"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+            <span>{{ getEnergyTrendLabel() }}</span>
+          </div>
+        </div>
+
+        <div class="indicator-card__chart-wrapper">
+          <canvas
+            #energySparklineCanvas
+            class="indicator-sparkline"
+            aria-hidden="true"
+          ></canvas>
+        </div>
+
+        <div class="indicator-card__footer">
+          <div class="indicator-metric">
+            <span class="indicator-metric__label">Range</span>
+            <span class="indicator-metric__value">
+              {{
+                energyKpiData?.overlaySummary
+                  ? (energyKpiData.overlaySummary.min | number : "1.2-2")
+                  : "0.00"
+              }}
+              –
+              {{
+                energyKpiData?.overlaySummary
+                  ? (energyKpiData.overlaySummary.max | number : "1.2-2")
+                  : "0.00"
+              }}
+              kWh
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
     }
   </section>
 
-  <!-- Gráficas -->
-  <section class="charts">
-    <div class="chart-container card-surface">
-      <div class="section-title">Temperatura (°C)</div>
-      <p id="tempChartDesc" class="sr-only">
-        Gráfico de líneas de temperatura en grados Celsius.
-        Ventana activa: {{ activeRangeLabel }}.
-        Última actualización: {{ lastUpdatedRel }}.
-      </p>
-      <canvas
-        #temperatureChart
-        role="img"
-        [attr.aria-label]="'Serie de temperatura en °C, ventana ' + activeRangeLabel"
-        [attr.aria-describedby]="'tempChartDesc'">
-      </canvas>
+  <!-- Time Series Charts -->
+  <section class="charts-section" aria-labelledby="chartsTitle">
+    <div class="charts-header">
+      <div class="charts-header__main">
+        <h2 class="section-title" id="chartsTitle">Time Series Analysis</h2>
+        <div class="charts-header__controls">
+          <div class="range-selector-group">
+            <span class="range-selector-label" id="rangeLabel">Time Range:</span>
+            <div class="range-buttons" role="group" aria-labelledby="rangeLabel">
+              @for (range of ranges; track range.key) {
+              <button
+                type="button"
+                class="range-button"
+                [class.active]="activeRangeKey === range.key"
+                (click)="onChangeRange(range.key)"
+                [attr.aria-pressed]="activeRangeKey === range.key"
+                [attr.aria-label]="'Select ' + range.label + ' time range'"
+                [attr.tabindex]="activeRangeKey === range.key ? '0' : '-1'"
+              >
+                {{ range.label }}
+              </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="series-toggle-group">
+        <span class="series-toggle-label" id="seriesLabel">Visible Series:</span>
+        <div class="series-toggles" role="group" aria-labelledby="seriesLabel">
+          <label class="toggle">
+            <input
+              #tempChk
+              type="checkbox"
+              [checked]="showTemp"
+              (change)="onTempCheckboxChange(tempChk.checked)"
+              aria-label="Toggle temperature series visibility"
+            />
+            <span>
+              <lucide-icon
+                [name]="Thermometer"
+                [size]="14"
+                [strokeWidth]="1.5"
+                aria-hidden="true"
+              ></lucide-icon>
+              Temperature
+            </span>
+          </label>
+
+          <label class="toggle">
+            <input
+              #energyChk
+              type="checkbox"
+              [checked]="showEnergy"
+              (change)="onEnergyCheckboxChange(energyChk.checked)"
+              aria-label="Toggle energy series visibility"
+            />
+            <span>
+              <lucide-icon
+                [name]="Zap"
+                [size]="14"
+                [strokeWidth]="1.5"
+                aria-hidden="true"
+              ></lucide-icon>
+              Energy
+            </span>
+          </label>
+        </div>
+      </div>
     </div>
 
-    <div class="chart-container card-surface">
-      <div class="section-title">Energía producida (kWh)</div>
-      <p id="energyChartDesc" class="sr-only">
-        Gráfico de líneas de energía producida en kilovatios-hora.
-        Ventana activa: {{ activeRangeLabel }}.
-        Última actualización: {{ lastUpdatedRel }}.
-      </p>
-      <canvas
-        #energyChart
-        role="img"
-        [attr.aria-label]="'Serie de energía en kWh, ventana ' + activeRangeLabel"
-        [attr.aria-describedby]="'energyChartDesc'">
-      </canvas>
+    <div class="charts">
+      <div class="chart-container card-surface">
+        <div class="section-title">Temperature (°C)</div>
+        <p id="tempChartDesc" class="sr-only">
+          Line chart of temperature in degrees Celsius. Active window:
+          {{ activeRangeLabel }}. Last update: {{ lastUpdatedRel }}.
+        </p>
+        <canvas
+          #temperatureChart
+          role="img"
+          [attr.aria-label]="
+            'Temperature series in °C, window ' + activeRangeLabel
+          "
+          [attr.aria-describedby]="'tempChartDesc'"
+        >
+        </canvas>
+      </div>
+
+      <div class="chart-container card-surface">
+        <div class="section-title">Energy Production (kWh)</div>
+        <p id="energyChartDesc" class="sr-only">
+          Line chart of energy produced in kilowatt-hours. Active window:
+          {{ activeRangeLabel }}. Last update: {{ lastUpdatedRel }}.
+        </p>
+        <canvas
+          #energyChart
+          role="img"
+          [attr.aria-label]="'Energy series in kWh, window ' + activeRangeLabel"
+          [attr.aria-describedby]="'energyChartDesc'"
+        >
+        </canvas>
+      </div>
     </div>
   </section>
 
-  <!-- Estadísticas -->
-  <section class="statistics card-surface">
-    <div class="stats-header">
-      <h2 class="section-title">Estadísticas</h2>
-      <div class="muted">Ventana: {{ activeRangeLabel }}</div>
+  <!-- Analytics (Unified Statistics + Period Summary) -->
+  <section class="analytics-section card-surface" aria-labelledby="analyticsTitle">
+    <div class="analytics-header">
+      <h2 class="section-title" id="analyticsTitle">Analytics</h2>
+      <div class="muted">Time window: {{ activeRangeLabel }}</div>
     </div>
 
-    <div class="stats-grid">
+    <!-- Key Metrics Grid -->
+    <div class="analytics-key-metrics">
+      <div class="card kpi" role="group" aria-label="Energy peak">
+        <div class="kpi-head">
+          <div class="kpi-title">
+            <lucide-icon
+              [name]="Zap"
+              [size]="20"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+            <span>Energy Peak</span>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">
+            {{ energyPeakKwh.toFixed(2) }}<span class="unit">kWh</span>
+          </div>
+          <div class="muted">Today at {{ energyPeakTime }}</div>
+        </div>
+      </div>
 
+      <div
+        class="card kpi"
+        role="group"
+        aria-label="Average temperature"
+      >
+        <div class="kpi-head">
+          <div class="kpi-title">
+            <lucide-icon
+              [name]="Thermometer"
+              [size]="20"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+            <span>Average Temperature</span>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">
+            {{ stats.tempAvg.toFixed(1) }}<span class="unit">°C</span>
+          </div>
+          <div class="muted">Last {{ activeRangeLabel }}</div>
+        </div>
+      </div>
+
+      <div class="card kpi" role="group" aria-label="Thermal variation">
+        <div class="kpi-head">
+          <div class="kpi-title">
+            <lucide-icon
+              [name]="Activity"
+              [size]="20"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+            <span>Thermal Variation</span>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value kpi-value--with-trend">
+            <span>{{ tempVariationLabel.replace(".", ",") }}</span>
+            <span
+              class="kpi-trend"
+              [class.up]="tempDeltaDir === 'up'"
+              [class.down]="tempDeltaDir === 'down'"
+            >
+              <lucide-icon
+                class="kpi-trend__icon"
+                [name]="
+                  tempDeltaDir === 'up'
+                    ? ArrowUpRight
+                    : tempDeltaDir === 'down'
+                    ? ArrowDownRight
+                    : Minus
+                "
+                [size]="14"
+                [strokeWidth]="1.5"
+                aria-hidden="true"
+              >
+              </lucide-icon>
+            </span>
+          </div>
+          <div class="muted">{{ tempStateLabel }}</div>
+        </div>
+      </div>
+
+      <div
+        class="card kpi"
+        role="group"
+        aria-label="Accumulated energy"
+      >
+        <div class="kpi-head">
+          <div class="kpi-title">
+            <lucide-icon
+              [name]="BatteryCharging"
+              [size]="20"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+            <span>Accumulated Energy</span>
+          </div>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value">
+            {{ stats.energySum.toFixed(2) }}<span class="unit">kWh</span>
+          </div>
+          <div class="muted">Last {{ activeRangeLabel }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Statistics Grid -->
+    <div class="analytics-stats-grid">
       <div class="stat">
         <span class="stat-label">
-          <iconify-icon icon="ph:database-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Datos procesados
+          <lucide-icon
+            [name]="Database"
+            [size]="20"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+          Processed Data
         </span>
-        <span class="stat-value">{{ processedDisplay }}</span>
+        <span class="stat-value">{{ statisticsData.processedDisplay }}</span>
       </div>
 
       <div class="stat">
         <span class="stat-label">
-          <iconify-icon icon="ph:arrows-left-right-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Cambio Temp. media
+          <lucide-icon
+            [name]="Flame"
+            [size]="20"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+          Max. Temperature
+        </span>
+        <span class="stat-value">{{ statisticsData.stats.tempMax.toFixed(1) }} °C</span>
+      </div>
+
+      <div class="stat">
+        <span class="stat-label">
+          <lucide-icon
+            [name]="ArrowLeftRight"
+            [size]="20"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+          Temp. Change
         </span>
         <span class="stat-value">
-          <span class="delta"
-                [class.up]="deltas.tempAvgPct > 0"
-                [class.down]="deltas.tempAvgPct < 0"
-                [attr.title]="'Cambio vs ventana anterior: ' + (deltas.tempAvgPct | number:'1.0-1') + '%'">
-            {{ (deltas.tempAvgPct || 0) | number:'1.0-1' }}%
-            <iconify-icon
-              [icon]="deltas.tempAvgPct > 0
-                        ? 'ph:arrow-up-right-duotone'
-                        : (deltas.tempAvgPct < 0
-                            ? 'ph:arrow-down-right-duotone'
-                            : 'ph:minus-duotone')"
-              width="14" height="14" aria-hidden="true">
-            </iconify-icon>
+          <span
+            class="delta"
+            [class.up]="statisticsData.deltas.tempAvgPct > 0"
+            [class.down]="statisticsData.deltas.tempAvgPct < 0"
+            [attr.title]="
+              'Change vs previous window: ' +
+              (statisticsData.deltas.tempAvgPct | number : '1.0-1') +
+              '%'
+            "
+          >
+            {{ statisticsData.deltas.tempAvgPct || 0 | number : "1.0-1" }}%
+            <lucide-icon
+              [name]="
+                statisticsData.deltas.tempAvgPct > 0
+                  ? ArrowUpRight
+                  : statisticsData.deltas.tempAvgPct < 0
+                  ? ArrowDownRight
+                  : Minus
+              "
+              [size]="12"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            >
+            </lucide-icon>
           </span>
         </span>
       </div>
 
       <div class="stat">
         <span class="stat-label">
-          <iconify-icon icon="ph:flame-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Máx. temperatura
+          <lucide-icon
+            [name]="ArrowLeftRight"
+            [size]="20"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+          Energy Change
         </span>
-        <span class="stat-value">{{ stats.tempMax.toFixed(1) }} °C</span>
+        <span class="stat-value">
+          <span
+            class="delta"
+            [class.up]="statisticsData.deltas.energySumPct > 0"
+            [class.down]="statisticsData.deltas.energySumPct < 0"
+            [attr.title]="
+              'Change vs previous window: ' +
+              (statisticsData.deltas.energySumPct | number : '1.0-1') +
+              '%'
+            "
+          >
+            {{ statisticsData.deltas.energySumPct || 0 | number : "1.0-1" }}%
+            <lucide-icon
+              [name]="
+                statisticsData.deltas.energySumPct > 0
+                  ? ArrowUpRight
+                  : statisticsData.deltas.energySumPct < 0
+                  ? ArrowDownRight
+                  : Minus
+              "
+              [size]="12"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+          </span>
+        </span>
       </div>
 
       <div class="stat">
         <span class="stat-label">
-          <iconify-icon icon="ph:lightning-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Energía acumulada
+            <lucide-icon
+              [name]="Gauge"
+              [size]="20"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+            Avg. Production
         </span>
-        <span class="stat-value">{{ stats.energySum.toFixed(2) }} kWh</span>
+        <span class="stat-value"
+          >{{ statisticsData.stats.prodAvgPerMin.toFixed(3) }} kWh/min</span
+        >
+      </div>
+
+      <div class="stat stat--with-progress">
+        <span class="stat-label">
+          <lucide-icon
+            [name]="Rocket"
+            [size]="20"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+          Current vs Peak
+        </span>
+        <span class="stat-value">{{ statisticsData.stats.utilizationPct }}%</span>
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            [style.width.%]="statisticsData.stats.utilizationPct"
+          ></div>
+        </div>
       </div>
 
       <div class="stat">
         <span class="stat-label">
-          <iconify-icon icon="ph:clock-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Intervalo de actualización
+          <lucide-icon
+            [name]="Clock"
+            [size]="20"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+          Update Interval
         </span>
         <span class="stat-value">5 s</span>
       </div>
 
       <div class="stat">
         <span class="stat-label">
-          <iconify-icon icon="ph:hourglass-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Tiempo transcurrido
+          <lucide-icon
+            [name]="Hourglass"
+            [size]="20"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+          Elapsed Time
         </span>
-        <span class="stat-value">{{ elapsedTime }}</span>
-      </div>
-
-      <!-- Producción media -->
-      <div class="stat">
-        <span class="stat-label">
-          <iconify-icon icon="ph:speedometer-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Producción media
-        </span>
-        <span class="stat-value">{{ stats.prodAvgPerMin.toFixed(3) }} kWh/min</span>
-      </div>
-
-      <div class="stat">
-        <span class="stat-label">
-          <iconify-icon icon="ph:arrows-left-right-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Cambio Energía
-        </span>
-        <span class="stat-value">
-          <span class="delta"
-                [class.up]="deltas.energySumPct > 0"
-                [class.down]="deltas.energySumPct < 0"
-                [attr.title]="'Cambio vs ventana anterior: ' + (deltas.energySumPct|number:'1.0-1') + '%'">
-            {{ (deltas.energySumPct || 0) | number:'1.0-1' }}%
-            <iconify-icon
-              [icon]="deltas.energySumPct > 0 ? 'ph:arrow-up-right-duotone' : deltas.energySumPct < 0 ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
-              width="14" height="14" aria-hidden="true"></iconify-icon>
-          </span>
-        </span>
-      </div>
-
-      <!-- Nivel actual vs pico -->
-      <div class="stat stat--with-progress">
-        <span class="stat-label">
-          <iconify-icon icon="ph:rocket-duotone" width="16" height="16" aria-hidden="true"></iconify-icon>
-          Nivel actual vs pico
-        </span>
-        <span class="stat-value">{{ stats.utilizationPct }}%</span>
-        <div class="progress-bar">
-          <div class="progress-fill" [style.width.%]="stats.utilizationPct"></div>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- Resumen del periodo -->
-  <section class="summary-kpis card-surface" style="margin-top:16px;">
-    <div class="kpis-header">
-      <h2 class="section-title">Resumen del periodo</h2>
-      <div class="muted">Ventana: {{ activeRangeLabel }}</div>
-    </div>
-
-    <div class="cards kpi-quad">
-      <div class="card kpi" role="group" aria-label="Pico de energía">
-        <div class="kpi-head">
-          <div class="kpi-title">
-            <iconify-icon icon="ph:lightning-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-            <span>Pico de energía</span>
-          </div>
-        </div>
-        <div class="kpi-body">
-          <div class="kpi-value">{{ energyPeakKwh.toFixed(2) }}<span class="unit">kWh</span></div>
-          <div class="muted">Hoy a las {{ energyPeakTime }}</div>
-        </div>
-      </div>
-
-      <div class="card kpi" role="group" aria-label="Temperatura media (ventana)">
-        <div class="kpi-head">
-          <div class="kpi-title">
-            <iconify-icon icon="ph:thermometer-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-            <span>Temperatura media</span>
-          </div>
-        </div>
-        <div class="kpi-body">
-          <div class="kpi-value">{{ stats.tempAvg.toFixed(1) }}<span class="unit">°C</span></div>
-          <div class="muted">Últimos {{ activeRangeLabel }}</div>
-        </div>
-      </div>
-
-      <div class="card kpi" role="group" aria-label="Variación térmica">
-        <div class="kpi-head">
-          <div class="kpi-title">
-            <iconify-icon icon="ph:activity-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-            <span>Variación térmica</span>
-          </div>
-        </div>
-        <div class="kpi-body">
-          <div class="kpi-value" style="display:flex; align-items:center; gap:8px;">
-  <span>{{ tempVariationLabel.replace('.', ',') }}</span>
-  <span
-    class="kpi-trend"
-    [class.up]="tempDeltaDir==='up'"
-    [class.down]="tempDeltaDir==='down'">
-    <iconify-icon
-      class="kpi-trend__icon"
-      [icon]="tempDeltaDir==='up' ? 'ph:arrow-up-right-duotone' : tempDeltaDir==='down' ? 'ph:arrow-down-right-duotone' : 'ph:minus-duotone'"
-      width="16" height="16" aria-hidden="true">
-    </iconify-icon>
-  </span>
-</div>
-
-          <div class="muted">{{ tempStateLabel }}</div>
-        </div>
-      </div>
-
-      <div class="card kpi" role="group" aria-label="Energía acumulada (ventana)">
-        <div class="kpi-head">
-          <div class="kpi-title">
-            <iconify-icon icon="ph:battery-charging-duotone" width="18" height="18" aria-hidden="true"></iconify-icon>
-            <span>Energía acumulada</span>
-          </div>
-        </div>
-        <div class="kpi-body">
-          <div class="kpi-value">{{ stats.energySum.toFixed(2) }}<span class="unit">kWh</span></div>
-          <div class="muted">Últimos {{ activeRangeLabel }}</div>
-        </div>
+        <span class="stat-value">{{ statisticsData.elapsedTime }}</span>
       </div>
     </div>
   </section>
-
 </main>
 
-<footer class="footer">
-  <div class="footer-content">
-    <p>© {{ currentYear }} Meteologica — Plataforma de análisis meteorológico en tiempo real</p>
-    <p class="tech-info">Desarrollado por <strong>Antonio Quijano</strong> en <strong>Angular/Chart.js</strong></p>
+<app-footer></app-footer>
+
+<!-- Help Button -->
+<button
+  class="help-button"
+  (click)="toggleHelp()"
+  [attr.aria-expanded]="showHelp"
+  aria-label="Show help and information about the application"
+  type="button"
+>
+  <lucide-icon [name]="HelpCircle" [size]="24" aria-hidden="true"></lucide-icon>
+</button>
+
+<!-- Help Modal - Tutorial Style -->
+@if (showHelp) {
+<div class="help-modal-overlay" (click)="closeHelp()" role="dialog" aria-modal="true" aria-labelledby="help-title">
+  <div class="help-modal" (click)="$event.stopPropagation()">
+    <div class="help-modal__header">
+      <div class="help-modal__header-content">
+        <h2 id="help-title" class="help-modal__title">
+          Welcome to Weather Dashboard
+        </h2>
+        <p class="help-modal__subtitle">Let's explore how it works</p>
+      </div>
+      <button
+        class="help-modal__close"
+        (click)="closeHelp()"
+        aria-label="Close help dialog"
+        type="button"
+      >
+        <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+      </button>
+    </div>
+
+    <div class="help-modal__content">
+      <!-- Tutorial Slides -->
+      <div class="help-tutorial">
+        <div class="help-tutorial__slide-container">
+          @for (slide of helpSlides; track slide.title; let i = $index) {
+            <div 
+              class="help-tutorial__slide" 
+              [class.help-tutorial__slide--active]="helpSlideIndex === i"
+              [attr.aria-hidden]="helpSlideIndex !== i"
+            >
+              <div class="help-tutorial__slide-content">
+                <div class="help-tutorial__icon-wrapper">
+                  <div class="help-tutorial__icon-bg"></div>
+                  <lucide-icon [name]="slide.icon" class="help-tutorial__icon" [size]="44" [strokeWidth]="1.5" aria-hidden="true"></lucide-icon>
+                </div>
+                <h3 class="help-tutorial__title">{{ slide.title }}</h3>
+                <p class="help-tutorial__description">{{ slide.description }}</p>
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Slide Indicators & Counter -->
+        <div class="help-tutorial__progress">
+          <div class="help-tutorial__counter">
+            <span class="help-tutorial__counter-current">{{ helpSlideIndex + 1 }}</span>
+            <span class="help-tutorial__counter-separator">/</span>
+            <span class="help-tutorial__counter-total">{{ helpSlides.length }}</span>
+          </div>
+          <div class="help-tutorial__indicators" role="tablist" aria-label="Tutorial slides">
+            @for (slide of helpSlides; track slide.title; let i = $index) {
+              <button
+                class="help-tutorial__indicator"
+                [class.help-tutorial__indicator--active]="helpSlideIndex === i"
+                [class.help-tutorial__indicator--completed]="helpSlideIndex > i"
+                (click)="goToHelpSlide(i)"
+                [attr.aria-selected]="helpSlideIndex === i"
+                [attr.aria-label]="'Go to slide ' + (i + 1) + ': ' + slide.title"
+                type="button"
+                role="tab"
+              ></button>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="help-modal__footer">
+      <div class="help-modal__footer-actions">
+        <button 
+          class="help-modal__button help-modal__button--secondary" 
+          (click)="prevHelpSlide()" 
+          [disabled]="helpSlideIndex === 0"
+          type="button"
+          aria-label="Previous slide"
+        >
+          <lucide-icon [name]="ChevronLeft" [size]="18" aria-hidden="true"></lucide-icon>
+          Previous
+        </button>
+        @if (helpSlideIndex === helpSlides.length - 1) {
+          <button class="help-modal__button" (click)="closeHelp()" type="button">
+            Got it!
+          </button>
+        } @else {
+          <button 
+            class="help-modal__button" 
+            (click)="nextHelpSlide()" 
+            type="button"
+            aria-label="Next slide"
+          >
+            Next
+            <lucide-icon [name]="ChevronRight" [size]="18" aria-hidden="true"></lucide-icon>
+          </button>
+        }
+      </div>
+    </div>
   </div>
-</footer>
+</div>
+}

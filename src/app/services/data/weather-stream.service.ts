@@ -28,8 +28,8 @@ export class WeatherStreamService {
 
   // Configuración
   private readonly STEP_INTERVAL_MS = 5000; // 5 segundos
-  private readonly HISTORY_PRELOAD = 60;    // Precargar 60 puntos (5 min)
-  private readonly MAX_HISTORY = 200;       // Límite de historial en memoria
+  private readonly HISTORY_PRELOAD = 720;   // Precargar 720 puntos (60 min)
+  private readonly MAX_HISTORY = 2880;      // Límite de historial en memoria (24h = 2880 puntos a 5s)
 
   // Derivados
   private get expectedPointsPerDay(): number {
@@ -112,7 +112,9 @@ export class WeatherStreamService {
   }
 
   private preloadHistory(): void {
-    const start = Math.max(0, this.currentIndex - this.HISTORY_PRELOAD);
+    // Precargar hasta MAX_HISTORY puntos si están disponibles
+    const preloadSize = Math.min(this.MAX_HISTORY, this.allData.length);
+    const start = Math.max(0, this.currentIndex - preloadSize);
     this.dataHistory = this.allData.slice(start, this.currentIndex);
     this.dataHistorySubject.next([...this.dataHistory]); // mantiene en sincronía si se reusa fuera
   }

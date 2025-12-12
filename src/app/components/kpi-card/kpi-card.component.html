@@ -1,0 +1,139 @@
+<div
+  class="kpi-card"
+  [attr.data-theme]="
+    data.title === 'Average Temperature' ? 'temperature' : 'energy'
+  "
+  tabindex="0"
+  role="group"
+  [attr.aria-label]="data.title"
+  *ngIf="data"
+>
+  <!-- Header -->
+  <div class="kpi-card__header">
+    <div class="kpi-card__title">
+      <lucide-icon
+        [name]="data.icon"
+        [size]="18"
+        [strokeWidth]="1.5"
+        aria-hidden="true"
+        class="kpi-card__icon"
+      ></lucide-icon>
+      <span class="kpi-card__title-text">{{ data.title }}</span>
+    </div>
+    <div
+      class="kpi-card__trend"
+      [class.up]="data.trend === 'up'"
+      [class.down]="data.trend === 'down'"
+    >
+      <lucide-icon
+        [name]="getTrendIcon()"
+        [size]="12"
+        [strokeWidth]="1.5"
+        aria-hidden="true"
+      ></lucide-icon>
+      <span>{{ getTrendLabel() }}</span>
+    </div>
+  </div>
+
+  <!-- Main Value -->
+  <div class="kpi-card__value-wrapper">
+    <div
+      class="kpi-card__value"
+      [class.flash-on]="data.pulse"
+      [class.kpi-bounce]="data.pulse"
+    >
+      <span class="kpi-card__value-number">{{ data.value }}</span>
+      <span class="kpi-card__value-unit">{{ data.unit }}</span>
+    </div>
+  </div>
+
+  <!-- Sparkline -->
+  <div class="kpi-card__chart">
+    <canvas #sparkline class="kpi-card__sparkline" aria-hidden="true"></canvas>
+  </div>
+
+  <!-- Hovercard -->
+  <div
+    class="kpi-card__tooltip"
+    role="dialog"
+    [attr.aria-label]="'Summary ' + data.title"
+  >
+    <div class="kpi-card__tooltip-header">
+      <div class="kpi-card__tooltip-title">
+        <lucide-icon
+          [name]="data.icon"
+          [size]="14"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        <span>{{ data.title }}</span>
+      </div>
+      <span class="kpi-card__tooltip-badge">{{ data.activeRangeLabel }}</span>
+    </div>
+
+    <div class="kpi-card__tooltip-body">
+      <!-- Current Value - Featured -->
+      <div class="kpi-card__tooltip-row kpi-card__tooltip-row--featured">
+        <div class="kpi-card__tooltip-metric">
+          <span class="kpi-card__tooltip-label">Current Value</span>
+          <span class="kpi-card__tooltip-value kpi-card__tooltip-value--large">
+            {{ data.overlaySummary.last | number : "1.2-2"
+            }}<span class="kpi-card__tooltip-unit">{{ data.unit }}</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- Change - If available -->
+      <div
+        class="kpi-card__tooltip-row"
+        *ngIf="data.overlaySummary.pctHalf !== undefined"
+      >
+        <span class="kpi-card__tooltip-label">Change</span>
+        <span
+          class="kpi-card__tooltip-change"
+          [class.up]="data.overlaySummary.pctHalf! > 0"
+          [class.down]="data.overlaySummary.pctHalf! < 0"
+        >
+          <lucide-icon
+            [name]="
+              data.overlaySummary.pctHalf! > 0
+                ? ArrowUpRight
+                : data.overlaySummary.pctHalf! < 0
+                ? ArrowDownRight
+                : Minus
+            "
+            [size]="12"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+          {{ data.overlaySummary.pctHalf | number : "1.1-1" }}%
+        </span>
+      </div>
+
+      <!-- Range -->
+      <div class="kpi-card__tooltip-row">
+        <span class="kpi-card__tooltip-label">Range</span>
+        <span class="kpi-card__tooltip-value">
+          {{ data.overlaySummary.min | number : "1.2-2" }} –
+          {{ data.overlaySummary.max | number : "1.2-2"
+          }}<span class="kpi-card__tooltip-unit">{{ data.unit }}</span>
+        </span>
+      </div>
+
+      <!-- Data Points - With proper spacing -->
+      <div class="kpi-card__tooltip-row kpi-card__tooltip-row--last">
+        <span class="kpi-card__tooltip-label">Data Points</span>
+        <span class="kpi-card__tooltip-value kpi-card__tooltip-value--count">
+          <lucide-icon
+            [name]="Database"
+            [size]="14"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+            style="opacity: 0.6; margin-right: 4px"
+          ></lucide-icon>
+          {{ data.overlaySummary.count }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

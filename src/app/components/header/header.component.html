@@ -1,0 +1,73 @@
+<header class="header" role="banner">
+  <div class="header-container">
+    <div class="brand">
+      <div class="brand__logo" aria-hidden="true">
+        <lucide-icon
+          [name]="Wind"
+          [size]="28"
+          [strokeWidth]="2"
+          aria-hidden="true"
+        ></lucide-icon>
+      </div>
+      <div class="brand__text">
+        <h1>WeatherFlow</h1>
+        <p>Real-time Forecast</p>
+      </div>
+    </div>
+
+    <nav class="header-actions" aria-label="Header actions">
+      <div class="theme-switch">
+        <input
+          #themeToggle
+          id="themeToggle"
+          type="checkbox"
+          class="theme-switch__input"
+          [checked]="themeChoice === 'dark'"
+          (change)="onThemeToggle(themeToggle.checked)"
+          (keydown.enter)="onThemeToggle(!themeToggle.checked)"
+          aria-label="Toggle between light and dark theme"
+          aria-describedby="themeDescription"
+        />
+        <label class="theme-switch__label" for="themeToggle">
+          <lucide-icon
+            class="theme-switch__icon"
+            [name]="Sun"
+            [size]="16"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+          <span class="theme-switch__track" aria-hidden="true">
+            <span class="theme-switch__thumb"></span>
+          </span>
+          <span id="themeDescription" class="sr-only"
+            >Currently in {{ themeChoice === "dark" ? "dark" : "light" }} mode.
+            Press Enter or click to toggle</span
+          >
+          <lucide-icon
+            class="theme-switch__icon"
+            [name]="Moon"
+            [size]="16"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+        </label>
+      </div>
+
+      <div
+        class="status"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        [class.active]="isStreaming"
+      >
+        <span
+          class="status-indicator"
+          [attr.aria-label]="isStreaming ? 'Active status' : 'Inactive status'"
+        ></span>
+        <span>{{
+          isStreaming ? "Updating data in real-time" : "Initializing..."
+        }}</span>
+      </div>
+    </nav>
+  </div>
+</header>

@@ -1,0 +1,184 @@
+<section class="statistics card-surface" *ngIf="data">
+  <div class="stats-header">
+    <h2 class="section-title">Statistics</h2>
+    <div class="muted">Window: {{ data.activeRangeLabel }}</div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat">
+      <span class="stat-label">
+        <lucide-icon
+          [name]="Database"
+          [size]="20"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        Processed Data
+      </span>
+      <span class="stat-value">{{ data.processedDisplay }}</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">
+        <lucide-icon
+          [name]="ArrowLeftRight"
+          [size]="20"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        Avg. Temp. Change
+      </span>
+      <span class="stat-value">
+        <span
+          class="delta"
+          [class.up]="data.deltas.tempAvgPct > 0"
+          [class.down]="data.deltas.tempAvgPct < 0"
+          [attr.title]="
+            'Change vs previous window: ' +
+            (data.deltas.tempAvgPct | number : '1.0-1') +
+            '%'
+          "
+        >
+          {{ data.deltas.tempAvgPct || 0 | number : "1.0-1" }}%
+          <lucide-icon
+            [name]="
+              data.deltas.tempAvgPct > 0
+                ? ArrowUpRight
+                : data.deltas.tempAvgPct < 0
+                ? ArrowDownRight
+                : Minus
+            "
+            [size]="14"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          >
+          </lucide-icon>
+        </span>
+      </span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">
+        <lucide-icon
+          [name]="Flame"
+          [size]="20"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        Max. Temperature
+      </span>
+      <span class="stat-value">{{ data.stats.tempMax.toFixed(1) }} °C</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">
+        <lucide-icon
+          [name]="Zap"
+          [size]="20"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        Accumulated Energy
+      </span>
+      <span class="stat-value">{{ data.stats.energySum.toFixed(2) }} kWh</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">
+        <lucide-icon
+          [name]="Clock"
+          [size]="20"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        Update Interval
+      </span>
+      <span class="stat-value">5 s</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">
+        <lucide-icon
+          [name]="Hourglass"
+          [size]="20"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        Elapsed Time
+      </span>
+      <span class="stat-value">{{ data.elapsedTime }}</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">
+        <lucide-icon
+          [name]="Gauge"
+          [size]="20"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        Average Production
+      </span>
+      <span class="stat-value"
+        >{{ data.stats.prodAvgPerMin.toFixed(3) }} kWh/min</span
+      >
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">
+        <lucide-icon
+          [name]="ArrowLeftRight"
+          [size]="20"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        Energy Change
+      </span>
+      <span class="stat-value">
+        <span
+          class="delta"
+          [class.up]="data.deltas.energySumPct > 0"
+          [class.down]="data.deltas.energySumPct < 0"
+          [attr.title]="
+            'Change vs previous window: ' +
+            (data.deltas.energySumPct | number : '1.0-1') +
+            '%'
+          "
+        >
+          {{ data.deltas.energySumPct || 0 | number : "1.0-1" }}%
+          <lucide-icon
+            [name]="
+              data.deltas.energySumPct > 0
+                ? ArrowUpRight
+                : data.deltas.energySumPct < 0
+                ? ArrowDownRight
+                : Minus
+            "
+            [size]="14"
+            [strokeWidth]="1.5"
+            aria-hidden="true"
+          ></lucide-icon>
+        </span>
+      </span>
+    </div>
+
+    <div class="stat stat--with-progress">
+      <span class="stat-label">
+        <lucide-icon
+          [name]="Rocket"
+          [size]="20"
+          [strokeWidth]="1.5"
+          aria-hidden="true"
+        ></lucide-icon>
+        Current vs Peak Level
+      </span>
+      <span class="stat-value">{{ data.stats.utilizationPct }}%</span>
+      <div class="progress-bar">
+        <div
+          class="progress-fill"
+          [style.width.%]="data.stats.utilizationPct"
+        ></div>
+      </div>
+    </div>
+  </div>
+</section>

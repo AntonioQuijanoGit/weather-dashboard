@@ -4,12 +4,36 @@
     <meta charset="utf-8" />
     <title>Metereología</title>
     <base href="/" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes"
+    />
     <link rel="icon" type="image/png" href="assets/wind-power.png?v=3" />
     <link rel="apple-touch-icon" href="assets/wind-power.png?v=3" />
     <meta name="theme-color" content="#0EA5A2" />
+    <meta
+      name="description"
+      content="Real-time meteorological analysis platform with temperature and energy data visualization"
+    />
+
+    <!-- System fonts - Helvetica Neue preferred -->
+    <!-- Using system font stack for optimal performance and Helvetica-like appearance -->
 
     <script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
+
+    <!-- Apply theme immediately to prevent flash -->
+    <script>
+      (function () {
+        const stored = localStorage.getItem("theme");
+        const prefersDark =
+          window.matchMedia?.("(prefers-color-scheme: dark)").matches ?? false;
+        const theme = stored || (prefersDark ? "dark" : "light");
+        if (theme === "dark") {
+          document.documentElement.classList.add("theme-dark");
+          document.body.classList.add("theme-dark");
+        }
+      })();
+    </script>
   </head>
   <body>
     <app-root></app-root>
