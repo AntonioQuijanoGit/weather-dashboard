@@ -5965,57 +5965,6 @@ lucide-icon {
   }
 }
 
-/* =============== Compact Mode =============== */
-main.compact .section-description,
-.compact .section-description {
-  display: none !important;
-}
-
-main.compact .additional-metrics-section,
-.compact .additional-metrics-section {
-  padding: var(--space-4) 0 !important;
-}
-
-main.compact .additional-metrics-grid,
-.compact .additional-metrics-grid {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
-  gap: var(--space-3) !important;
-}
-
-main.compact .metric-card,
-.compact .metric-card {
-  padding: var(--space-4) !important;
-}
-
-main.compact .metric-card__header,
-.compact .metric-card__header {
-  margin-bottom: var(--space-3) !important;
-  padding-bottom: var(--space-2) !important;
-  font-size: var(--fs-sm) !important;
-}
-
-main.compact .metric-item,
-.compact .metric-item {
-  padding: var(--space-1) 0 !important;
-}
-
-main.compact .metric-label,
-main.compact .metric-value,
-.compact .metric-label,
-.compact .metric-value {
-  font-size: var(--fs-xs) !important;
-}
-
-/* Additional compact styles for better visibility */
-main.compact .current-status-section,
-main.compact .charts-section,
-main.compact .analytics-section {
-  margin-bottom: var(--space-6) !important;
-}
-
-main.compact .section-title {
-  margin-bottom: var(--space-3) !important;
-}
 
 /* =============== Responsive Additional Metrics =============== */
 @media (max-width: 768px) {

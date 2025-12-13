@@ -62,7 +62,6 @@ import {
   Save,
   Bookmark,
   Maximize2,
-  Minimize2,
 } from 'lucide-angular';
 
 Chart.register(...registerables);
@@ -376,9 +375,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     this.applyThemeFromChoice();
     
-    // Load compact mode preference
-    const compactStored = localStorage.getItem('compactMode');
-    this.compactMode = compactStored === 'true';
 
     this.subscribeToData();
 
@@ -2026,12 +2022,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           return;
         }
 
-        // Compact mode (M)
-        if (key === 'm' && !ctrl && !shift) {
-          ev.preventDefault();
-          this.toggleCompactMode();
-          return;
-        }
 
         // Export shortcuts
         if (ctrl && key === 'e') {
@@ -2253,10 +2243,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     this.applyFilters();
   }
   
-  toggleCompactMode(): void {
-    this.compactMode = !this.compactMode;
-    localStorage.setItem('compactMode', String(this.compactMode));
-  }
 
   // ---------- Saved Views Functions ----------
   savedViews: Array<{ id: string; name: string; config: any }> = [];
@@ -2323,7 +2309,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ExternalLink = ExternalLink;
   Info = Info;
   Maximize2 = Maximize2;
-  Minimize2 = Minimize2;
   Bell = Bell;
   Filter = Filter;
   Calendar = Calendar;
@@ -2383,8 +2368,6 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   // Filters
   showFilters = false;
   
-  // View mode
-  compactMode = false;
   
   // Additional metrics
   additionalMetrics = {

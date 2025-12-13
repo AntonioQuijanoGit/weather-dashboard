@@ -5,7 +5,7 @@
 >
 </app-header>
 
-<main class="container" [class.compact]="compactMode">
+<main class="container">
   <!-- Current Status -->
   <section class="current-status-section" aria-labelledby="currentStatusTitle">
     <div class="current-status-header">
@@ -22,17 +22,6 @@
               <span class="update-indicator__interval">· Every 5s</span>
             </span>
           </div>
-          <button
-            class="action-button action-button--secondary"
-            (click)="toggleCompactMode()"
-            type="button"
-            [title]="compactMode ? 'Switch to expanded view' : 'Switch to compact view'"
-            aria-label="Toggle compact mode"
-            style="margin-left: var(--space-3); padding: var(--space-2) var(--space-3);"
-          >
-            <lucide-icon [name]="compactMode ? Maximize2 : Minimize2" [size]="14" aria-hidden="true"></lucide-icon>
-            <span style="margin-left: 4px;">{{ compactMode ? 'Expanded' : 'Compact' }}</span>
-          </button>
         </div>
       </div>
     </div>
@@ -835,7 +824,7 @@
   </section>
 
   <!-- Additional Metrics Section -->
-  <section class="additional-metrics-section" aria-labelledby="additionalMetricsTitle" [class.compact]="compactMode">
+  <section class="additional-metrics-section" aria-labelledby="additionalMetricsTitle">
     <div class="additional-metrics-header">
       <h2 class="section-title" id="additionalMetricsTitle">Advanced Metrics</h2>
       <p class="section-description">
