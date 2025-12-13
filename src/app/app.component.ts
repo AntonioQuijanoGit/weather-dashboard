@@ -550,7 +550,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           },
         },
       },
-      layout: { padding: { top: 12, bottom: 50, left: 8, right: 8 } },
+      layout: { 
+        padding: { 
+          top: 12, 
+          bottom: 50, 
+          left: window.innerWidth < 640 ? 4 : 8,
+          right: window.innerWidth < 640 ? 4 : 8 
+        } 
+      },
       interaction: { intersect: false, mode: 'index' },
       plugins: {
         legend: { display: false },
@@ -614,11 +621,36 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           ticks: { 
             color: t.tick, 
             autoSkip: true, 
-            maxTicksLimit: 6,
-            padding: 12,
+            maxTicksLimit: window.innerWidth < 640 ? 5 : 6, // Fewer ticks on mobile
+            padding: window.innerWidth < 640 ? 6 : 12, // Less padding on mobile
             font: {
-              size: 11,
+              size: window.innerWidth < 640 ? 10 : 11, // Smaller font on mobile
               weight: '500' as any,
+            },
+            callback: function(value: any) {
+              // Format numbers to prevent stretching on mobile
+              const num = typeof value === 'number' ? value : parseFloat(value);
+              if (isNaN(num)) return '';
+              const isMobile = window.innerWidth < 640;
+              
+              // Use compact notation for large numbers
+              if (Math.abs(num) >= 1000) {
+                return (num / 1000).toFixed(1) + 'k';
+              }
+              
+              // On mobile, use fewer decimal places
+              if (isMobile) {
+                if (Math.abs(num) < 1) {
+                  return num.toFixed(1);
+                }
+                return num.toFixed(0); // No decimals on mobile for cleaner look
+              }
+              
+              // Desktop: more precision
+              if (Math.abs(num) < 1) {
+                return num.toFixed(2);
+              }
+              return num.toFixed(1);
             },
           },
           border: { display: false },

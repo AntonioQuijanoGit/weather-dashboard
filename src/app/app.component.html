@@ -5,7 +5,7 @@
 >
 </app-header>
 
-<main class="container">
+<main class="container" [class.compact]="compactMode">
   <!-- Current Status -->
   <section class="current-status-section" aria-labelledby="currentStatusTitle">
     <div class="current-status-header">
@@ -371,49 +371,6 @@
         <span class="toolbar-info-value">Every 5s</span>
       </div>
     </div>
-    
-      <div class="series-toggle-group">
-        <span class="series-toggle-label" id="seriesLabel">Visible Series:</span>
-        <div class="series-toggles" role="group" aria-labelledby="seriesLabel">
-          <label class="toggle">
-            <input
-              #tempChk
-              type="checkbox"
-              [checked]="showTemp"
-              (change)="onTempCheckboxChange(tempChk.checked)"
-              aria-label="Toggle temperature series visibility"
-            />
-            <span>
-              <lucide-icon
-                [name]="Thermometer"
-                [size]="14"
-                [strokeWidth]="1.5"
-                aria-hidden="true"
-              ></lucide-icon>
-              Temperature
-            </span>
-          </label>
-
-          <label class="toggle">
-            <input
-              #energyChk
-              type="checkbox"
-              [checked]="showEnergy"
-              (change)="onEnergyCheckboxChange(energyChk.checked)"
-              aria-label="Toggle energy series visibility"
-            />
-            <span>
-              <lucide-icon
-                [name]="Zap"
-                [size]="14"
-                [strokeWidth]="1.5"
-                aria-hidden="true"
-              ></lucide-icon>
-              Energy
-            </span>
-          </label>
-        </div>
-      </div>
 
     <!-- Comparison Panel - Appears right after header when active -->
     @if (comparisonMode) {
@@ -762,6 +719,50 @@
       </div>
     </div>
     }
+
+    <!-- Visible Series Toggle - Just above charts -->
+    <div class="series-toggle-group">
+      <span class="series-toggle-label" id="seriesLabel">Visible Series:</span>
+      <div class="series-toggles" role="group" aria-labelledby="seriesLabel">
+        <label class="toggle">
+          <input
+            #tempChk2
+            type="checkbox"
+            [checked]="showTemp"
+            (change)="onTempCheckboxChange(tempChk2.checked)"
+            aria-label="Toggle temperature series visibility"
+          />
+          <span>
+            <lucide-icon
+              [name]="Thermometer"
+              [size]="14"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+            Temperature
+          </span>
+        </label>
+
+        <label class="toggle">
+          <input
+            #energyChk2
+            type="checkbox"
+            [checked]="showEnergy"
+            (change)="onEnergyCheckboxChange(energyChk2.checked)"
+            aria-label="Toggle energy series visibility"
+          />
+          <span>
+            <lucide-icon
+              [name]="Zap"
+              [size]="14"
+              [strokeWidth]="1.5"
+              aria-hidden="true"
+            ></lucide-icon>
+            Energy
+          </span>
+        </label>
+      </div>
+    </div>
 
     <!-- Charts -->
     <div class="charts">
