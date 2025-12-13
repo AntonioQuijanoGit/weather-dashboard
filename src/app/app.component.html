@@ -10,7 +10,7 @@
   <section class="current-status-section" aria-labelledby="currentStatusTitle">
     <div class="current-status-header">
       <div class="current-status-header__main">
-        <h2 class="section-title section-title--large" id="currentStatusTitle">Current Status</h2>
+        <h2 class="section-title section-title--large" id="currentStatusTitle">Real-time Metrics</h2>
         <p class="section-description">
           Real-time monitoring of temperature and energy production metrics. Values update every 5 seconds with trend indicators showing recent changes.
         </p>
@@ -227,87 +227,103 @@
           </div>
         </div>
         
-        <div class="charts-toolbar__group charts-toolbar__group--secondary">
-          <div class="charts-toolbar__actions">
+        <div class="charts-toolbar__group charts-toolbar__group--tools">
+          <span class="range-selector-label" id="toolsLabel">Tools</span>
+          <div class="tools-cards" role="group" aria-labelledby="toolsLabel">
             <button
-              class="toolbar-button"
+              class="tool-card"
               (click)="toggleComparison()"
               [class.active]="comparisonMode"
               type="button"
               aria-label="Toggle comparison mode"
               title="Compare periods"
             >
-              <lucide-icon [name]="BarChart" [size]="16" aria-hidden="true"></lucide-icon>
-              <span>Compare</span>
+              <lucide-icon [name]="BarChart" [size]="18" aria-hidden="true"></lucide-icon>
+              <span class="tool-card__label">Compare</span>
             </button>
             <button
-              class="toolbar-button"
+              class="tool-card"
               (click)="toggleAlerts()"
               [class.active]="showAlerts"
               type="button"
               aria-label="Toggle alerts"
               title="Configure alerts"
             >
-              <lucide-icon [name]="Bell" [size]="16" aria-hidden="true"></lucide-icon>
-              <span>Alerts</span>
+              <lucide-icon [name]="Bell" [size]="18" aria-hidden="true"></lucide-icon>
+              <span class="tool-card__label">Alerts</span>
             </button>
             <button
-              class="toolbar-button"
+              class="tool-card"
               (click)="toggleFilters()"
               [class.active]="showFilters"
               type="button"
               aria-label="Toggle filters"
               title="Filter data"
             >
-              <lucide-icon [name]="Filter" [size]="16" aria-hidden="true"></lucide-icon>
-              <span>Filters</span>
+              <lucide-icon [name]="Filter" [size]="18" aria-hidden="true"></lucide-icon>
+              <span class="tool-card__label">Filters</span>
             </button>
             <button
-              class="toolbar-button"
+              class="tool-card"
               (click)="showSavedViews = !showSavedViews"
               [class.active]="showSavedViews"
               type="button"
               aria-label="Saved views"
               title="Saved views"
             >
-              <lucide-icon [name]="Bookmark" [size]="16" aria-hidden="true"></lucide-icon>
-              <span>Views</span>
+              <lucide-icon [name]="Bookmark" [size]="18" aria-hidden="true"></lucide-icon>
+              <span class="tool-card__label">Views</span>
             </button>
-          </div>
-          
-          <div class="charts-toolbar__exports">
             <button
-              class="toolbar-button"
+              class="tool-card"
               (click)="exportChartAsImage('temperature')"
               type="button"
               title="Export Temperature Chart"
               aria-label="Export temperature chart as PNG"
             >
-              <lucide-icon [name]="Image" [size]="16" aria-hidden="true"></lucide-icon>
-              <span>Temp PNG</span>
+              <lucide-icon [name]="Image" [size]="18" aria-hidden="true"></lucide-icon>
+              <span class="tool-card__label">Temp PNG</span>
             </button>
             <button
-              class="toolbar-button"
+              class="tool-card"
               (click)="exportChartAsImage('energy')"
               type="button"
               title="Export Energy Chart"
               aria-label="Export energy chart as PNG"
             >
-              <lucide-icon [name]="Image" [size]="16" aria-hidden="true"></lucide-icon>
-              <span>Energy PNG</span>
+              <lucide-icon [name]="Image" [size]="18" aria-hidden="true"></lucide-icon>
+              <span class="tool-card__label">Energy PNG</span>
             </button>
             <button
-              class="toolbar-button"
+              class="tool-card"
               (click)="exportDataAsCSV()"
               type="button"
               title="Export All Data"
               aria-label="Export all data as CSV"
             >
-              <lucide-icon [name]="Download" [size]="16" aria-hidden="true"></lucide-icon>
-              <span>CSV</span>
+              <lucide-icon [name]="Download" [size]="18" aria-hidden="true"></lucide-icon>
+              <span class="tool-card__label">CSV</span>
             </button>
           </div>
         </div>
+      </div>
+    </div>
+    
+    <div class="charts-toolbar__info">
+      <div class="toolbar-info-item">
+        <lucide-icon [name]="Database" [size]="14" aria-hidden="true"></lucide-icon>
+        <span class="toolbar-info-label">Data Points:</span>
+        <span class="toolbar-info-value">{{ dataHistory?.length || 0 }}</span>
+      </div>
+      <div class="toolbar-info-item">
+        <lucide-icon [name]="Calendar" [size]="14" aria-hidden="true"></lucide-icon>
+        <span class="toolbar-info-label">Window:</span>
+        <span class="toolbar-info-value">{{ activeRangeLabel }}</span>
+      </div>
+      <div class="toolbar-info-item">
+        <lucide-icon [name]="Activity" [size]="14" aria-hidden="true"></lucide-icon>
+        <span class="toolbar-info-label">Update Rate:</span>
+        <span class="toolbar-info-value">Every 5s</span>
       </div>
     </div>
     

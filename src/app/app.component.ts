@@ -39,13 +39,13 @@ import {
   ArrowDownRight,
   Minus,
   Database,
+  Clock,
+  Activity,
   Flame,
   ArrowLeftRight,
   Gauge,
   Rocket,
-  Clock,
   Hourglass,
-  Activity,
   BatteryCharging,
   Download,
   FileText,
@@ -158,7 +158,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   private resizeSub?: any;
 
   // Historial local para sparklines de KPI cards
-  private dataHistory: WeatherDataPoint[] = [];
+  dataHistory: WeatherDataPoint[] = [];
 
   // Getters para datos de KPI Cards
   get tempKpiData(): KPICardData {
@@ -1776,13 +1776,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ArrowDownRight = ArrowDownRight;
   Minus = Minus;
   Database = Database;
+  Clock = Clock;
+  Activity = Activity;
   Flame = Flame;
   ArrowLeftRight = ArrowLeftRight;
   Gauge = Gauge;
   Rocket = Rocket;
-  Clock = Clock;
   Hourglass = Hourglass;
-  Activity = Activity;
   BatteryCharging = BatteryCharging;
   Download = Download;
   FileText = FileText;
