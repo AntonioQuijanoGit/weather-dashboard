@@ -1935,8 +1935,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       try {
         const notification = new Notification('Weather Alert', {
           body: message,
-          icon: '/favicon.ico',
-          badge: '/favicon.ico',
+          icon: '/assets/favicon.svg',
+          badge: '/assets/favicon.svg',
           tag: alert.id, // Prevent duplicate notifications
           requireInteraction: false,
         });

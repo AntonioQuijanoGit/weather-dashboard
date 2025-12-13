@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00D9FF;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect width="64" height="64" rx="14" fill="url(#bgGradient)"/>
+  
+  <!-- Wind/Weather icon - Modern and clean -->
+  <g transform="translate(16, 16)">
+    <!-- Wind lines -->
+    <path d="M8 12C10 12 12 14 12 16C12 18 10 20 8 20" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.95"/>
+    <path d="M16 8C18 8 20 10 20 12C20 14 18 16 16 16" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.9"/>
+    <path d="M4 16C6 16 8 18 8 20C8 22 6 24 4 24" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round" opacity="0.85"/>
+    
+    <!-- Energy bolt -->
+    <path d="M18 6L14 16H20L16 26L20 16H14L18 6Z" fill="white" opacity="0.9"/>
+  </g>
+</svg>
+
