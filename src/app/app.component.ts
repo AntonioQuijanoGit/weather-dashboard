@@ -634,12 +634,18 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
                 return (num / 1000).toFixed(1) + 'k';
               }
               
-              // On mobile, use fewer decimal places
+              // On mobile, use fewer decimal places and shorter format
               if (isMobile) {
-                if (Math.abs(num) < 1) {
-                  return num.toFixed(1);
+                if (Math.abs(num) >= 100) {
+                  return num.toFixed(0); // No decimals for large numbers
                 }
-                return num.toFixed(0); // No decimals on mobile for cleaner look
+                if (Math.abs(num) >= 10) {
+                  return num.toFixed(1); // One decimal for medium numbers
+                }
+                if (Math.abs(num) < 1) {
+                  return num.toFixed(1); // One decimal for small numbers
+                }
+                return num.toFixed(1); // One decimal for numbers between 1-10
               }
               
               // Desktop: more precision

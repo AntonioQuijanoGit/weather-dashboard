@@ -3000,6 +3000,31 @@ section.statistics.card-surface,
 
   .stat-value {
     font-size: var(--fs-lg);
+    letter-spacing: -0.005em;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  .stat-value--production {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+  }
+
+  .stat-value-unit {
+    font-size: 0.65em;
+  }
+
+  .indicator-value {
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  .kpi-value {
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
   }
 }
 
@@ -3095,13 +3120,68 @@ section.statistics.card-surface,
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: var(--lh-tight);
+  word-break: break-word;
+  white-space: normal;
+  text-align: right;
+  min-width: 0;
+  font-feature-settings: 'tnum' 1;
+}
+
+.stat-value--production {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: normal;
+}
+
+.stat-value-number {
+  font-size: inherit;
+  font-weight: inherit;
+  white-space: nowrap;
+}
+
+.stat-value-unit {
+  font-size: 0.65em;
+  font-weight: var(--fw-medium);
+  opacity: 0.8;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 @media (max-width: 640px) {
   .statistics .stat-value,
   .stat-value {
     font-size: var(--fs-xl);
-    letter-spacing: -0.015em;
+    letter-spacing: -0.01em; /* Less negative spacing to prevent stretching */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  .stat-value--production {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .stat-value-unit {
+    font-size: 0.7em;
+  }
+
+  .indicator-value {
+    letter-spacing: -0.03em; /* Less negative spacing on mobile */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  .kpi-value {
+    letter-spacing: -0.02em; /* Less negative spacing on mobile */
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
   }
 }
 

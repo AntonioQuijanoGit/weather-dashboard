@@ -1160,9 +1160,10 @@
             ></lucide-icon>
             Avg. Production
         </span>
-        <span class="stat-value"
-          >{{ statisticsData.stats.prodAvgPerMin.toFixed(3) }} kWh/min</span
-        >
+        <span class="stat-value stat-value--production">
+          <span class="stat-value-number">{{ statisticsData.stats.prodAvgPerMin.toFixed(3) }}</span>
+          <span class="stat-value-unit">kWh/min</span>
+        </span>
       </div>
 
       <div class="stat stat--with-progress">
