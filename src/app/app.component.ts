@@ -62,6 +62,7 @@ import {
   Save,
   Bookmark,
   Maximize2,
+  Minimize2,
 } from 'lucide-angular';
 
 Chart.register(...registerables);
@@ -213,8 +214,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Paleta series - Mejorada para mejor contraste y accesibilidad
-  private teal = '#06B6D4'; // Cyan más vibrante y accesible
-  private slate = '#64748B'; // Slate más claro y legible
+  // Colores mejorados tipo Vercel - más vibrantes y modernos
+  private teal = '#00D9FF'; // Cyan brillante y moderno
+  private slate = '#8B5CF6'; // Púrpura vibrante para energía (más distintivo)
 
   // Formateadores
   nfTemp = new Intl.NumberFormat('en-US', {
@@ -346,6 +348,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Ciclo de vida ----------
   ngOnInit(): void {
+    // Check notification permission
+    if ('Notification' in window) {
+      this.notificationPermission = Notification.permission;
+      this.alertSettings.enableBrowserNotifications = Notification.permission === 'granted';
+    }
+    
+    // Setup keyboard shortcuts
+    this.setupKeyboardShortcuts();
     // Load saved views
     const saved = localStorage.getItem('savedViews');
     if (saved) {
@@ -365,6 +375,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       localStorage.setItem('theme', this.themeChoice);
     }
     this.applyThemeFromChoice();
+    
+    // Load compact mode preference
+    const compactStored = localStorage.getItem('compactMode');
+    this.compactMode = compactStored === 'true';
 
     this.subscribeToData();
 
@@ -378,13 +392,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         console.error('Error cargando assets/data.yml:', err)
       );
 
-    this.subscriptions.add(
-      fromEvent<KeyboardEvent>(window, 'keydown').subscribe((ev) => {
-        if (ev.key.toLowerCase() === 't') {
-          this.setTheme(this.themeChoice === 'dark' ? 'light' : 'dark');
-        }
-      })
-    );
+    // Keyboard shortcuts are now handled in setupKeyboardShortcuts()
   }
 
   ngAfterViewInit(): void {
@@ -462,7 +470,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         if (ctx) {
           const canvasHeight = canvas.height || 260;
           const gradient = ctx.createLinearGradient(0, 0, 0, canvasHeight);
-          gradient.addColorStop(0, gradientColor + '40');
+          gradient.addColorStop(0, gradientColor + '25');
+          gradient.addColorStop(0.3, gradientColor + '12');
+          gradient.addColorStop(0.6, gradientColor + '06');
           gradient.addColorStop(1, gradientColor + '00');
           chart.data.datasets[0].backgroundColor = gradient;
         }
@@ -621,8 +631,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const tempCtx = tempCanvas.getContext('2d')!;
     const tempHeight = tempCanvas.height || 260;
     const tempGradient = tempCtx.createLinearGradient(0, 0, 0, tempHeight);
-    tempGradient.addColorStop(0, this.teal + '30'); // Más sutil
-    tempGradient.addColorStop(0.5, this.teal + '15');
+    tempGradient.addColorStop(0, this.teal + '25'); // Gradiente más sutil y elegante
+    tempGradient.addColorStop(0.3, this.teal + '12');
+    tempGradient.addColorStop(0.6, this.teal + '06');
     tempGradient.addColorStop(1, this.teal + '00');
 
     this.temperatureChart = new Chart(this.temperatureChartRef.nativeElement, {
@@ -679,8 +690,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const energyCtx = energyCanvas.getContext('2d')!;
     const energyHeight = energyCanvas.height || 260;
     const energyGradient = energyCtx.createLinearGradient(0, 0, 0, energyHeight);
-    energyGradient.addColorStop(0, this.slate + '30'); // Más sutil
-    energyGradient.addColorStop(0.5, this.slate + '15');
+    energyGradient.addColorStop(0, this.slate + '25'); // Gradiente más sutil y elegante
+    energyGradient.addColorStop(0.3, this.slate + '12');
+    energyGradient.addColorStop(0.6, this.slate + '06');
     energyGradient.addColorStop(1, this.slate + '00');
 
     this.energyChart = new Chart(this.energyChartRef.nativeElement, {
@@ -850,6 +862,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           this.updateSummary(history);
           this.updateStats(history);
           this.updateOverlaySummaries(history);
+          this.calculateAdditionalMetrics(); // Calculate additional metrics
           // Reload comparison data if comparison mode is active
           if (this.comparisonMode) {
             this.loadComparisonData();
@@ -1575,6 +1588,139 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }, 500);
   }
 
+  async exportChartsAsCombinedImage(): Promise<void> {
+    if (!this.temperatureChart || !this.energyChart) return;
+    
+    const tempCanvas = this.temperatureChart.canvas;
+    const energyCanvas = this.energyChart.canvas;
+    
+    // Create a combined canvas
+    const combinedCanvas = document.createElement('canvas');
+    const ctx = combinedCanvas.getContext('2d');
+    if (!ctx) return;
+    
+    const spacing = 40;
+    const padding = 40;
+    const width = Math.max(tempCanvas.width, energyCanvas.width);
+    const height = tempCanvas.height + energyCanvas.height + spacing + padding * 2;
+    
+    combinedCanvas.width = width + padding * 2;
+    combinedCanvas.height = height;
+    
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, combinedCanvas.width, combinedCanvas.height);
+    
+    // Draw temperature chart
+    ctx.drawImage(tempCanvas, padding, padding, tempCanvas.width, tempCanvas.height);
+    
+    // Draw energy chart
+    ctx.drawImage(
+      energyCanvas,
+      padding,
+      padding + tempCanvas.height + spacing,
+      energyCanvas.width,
+      energyCanvas.height
+    );
+    
+    // Add title
+    ctx.fillStyle = '#000000';
+    ctx.font = 'bold 24px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      'Weather Dashboard - Combined Charts',
+      combinedCanvas.width / 2,
+      30
+    );
+    
+    // Add timestamp
+    ctx.font = '14px Inter, sans-serif';
+    ctx.fillStyle = '#666666';
+    ctx.fillText(
+      `Exported: ${new Date().toLocaleString()}`,
+      combinedCanvas.width / 2,
+      combinedCanvas.height - 15
+    );
+    
+    // Download
+    const url = combinedCanvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = `weather-charts-combined-${new Date().toISOString().split('T')[0]}.png`;
+    link.href = url;
+    link.click();
+    
+    // Show success toast
+    this.showToast('Charts exported successfully!', 'success');
+  }
+
+  exportStatisticsAsJSON(): void {
+    const stats = {
+      timestamp: new Date().toISOString(),
+      dataPoints: this.dataPointsProcessed,
+      currentValues: {
+        temperature: this.currentTemperature,
+        energy: this.currentEnergy,
+      },
+      statistics: {
+        ...this.stats,
+        deltas: this.deltas,
+      },
+      additionalMetrics: this.additionalMetrics,
+      activeRange: this.activeRangeKey,
+      alerts: this.alerts.map((a) => ({
+        type: a.type,
+        threshold: a.threshold,
+        condition: a.condition,
+        triggered: a.triggered,
+        triggerCount: a.triggerCount,
+      })),
+    };
+    
+    const blob = new Blob([JSON.stringify(stats, null, 2)], {
+      type: 'application/json',
+    });
+    const link = document.createElement('a');
+    link.download = `weather-statistics-${new Date().toISOString().split('T')[0]}.json`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+    
+    this.showToast('Statistics exported successfully!', 'success');
+  }
+
+  showToast(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
+    const toast = document.createElement('div');
+    const colors = {
+      success: '#10b981',
+      error: '#ef4444',
+      info: '#3b82f6',
+    };
+    
+    toast.textContent = message;
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: ${colors[type]};
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      animation: slideInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 14px;
+      font-weight: 500;
+      max-width: 300px;
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.animation = 'slideOutDown 0.3s ease-out';
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
   setHelpTab(tab: 'tutorial' | 'about'): void {
     this.helpModalTab = tab;
   }
@@ -1630,6 +1776,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       condition,
       active: true,
       triggered: false,
+      lastTriggered: undefined,
+      triggerCount: 0,
     };
     this.alerts.push(alert);
     this.checkAlerts();
@@ -1652,6 +1800,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   checkAlerts(): void {
+    const now = Date.now();
+    const cooldownMs = this.alertSettings.cooldownSeconds * 1000;
+
     this.alerts.forEach((alert) => {
       if (!alert.active) return;
 
@@ -1665,54 +1816,385 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       }
 
       if (triggered && !alert.triggered) {
-        alert.triggered = true;
-        this.showAlertNotification(alert);
+        // Check cooldown
+        const canTrigger = !alert.lastTriggered || (now - alert.lastTriggered) >= cooldownMs;
+        
+        if (canTrigger) {
+          alert.triggered = true;
+          alert.lastTriggered = now;
+          alert.triggerCount++;
+          
+          // Add to history
+          this.alertHistory.unshift({
+            id: Date.now().toString(),
+            alertId: alert.id,
+            timestamp: now,
+            type: alert.type,
+            value,
+            threshold: alert.threshold,
+            condition: alert.condition,
+          });
+          
+          // Keep only last 100 history items
+          if (this.alertHistory.length > 100) {
+            this.alertHistory = this.alertHistory.slice(0, 100);
+          }
+          
+          this.showAlertNotification(alert, value);
+        }
       } else if (!triggered) {
         alert.triggered = false;
       }
     });
   }
 
-  showAlertNotification(alert: any): void {
+  async showAlertNotification(alert: any, currentValue: number): Promise<void> {
     // Show visual notification
-    const message = `${alert.type === 'temperature' ? 'Temperature' : 'Energy'} is ${alert.condition === 'above' ? 'above' : 'below'} ${alert.threshold}${alert.type === 'temperature' ? '°C' : 'kWh'}`;
-    console.log('Alert:', message);
+    const message = `${alert.type === 'temperature' ? 'Temperature' : 'Energy'} is ${alert.condition === 'above' ? 'above' : 'below'} ${alert.threshold}${alert.type === 'temperature' ? '°C' : 'kWh'} (Current: ${this.nfTemp.format(currentValue)}${alert.type === 'temperature' ? '°C' : 'kWh'})`;
     
-    // Create a simple toast notification
+    // Create a toast notification with better styling
     const toast = document.createElement('div');
     toast.className = 'alert-toast';
-    toast.textContent = `⚠️ ${message}`;
+    toast.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 18px;">⚠️</span>
+        <div>
+          <div style="font-weight: 600; margin-bottom: 2px;">Alert Triggered</div>
+          <div style="font-size: 13px; opacity: 0.9;">${message}</div>
+        </div>
+      </div>
+    `;
     toast.style.cssText = `
       position: fixed;
       top: 20px;
       right: 20px;
-      background: var(--error);
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
       color: white;
-      padding: 12px 16px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 14px 18px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);
       z-index: 10000;
-      animation: slideInRight 0.3s ease-out;
+      animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       font-size: 14px;
       font-weight: 500;
+      max-width: 400px;
+      cursor: pointer;
     `;
-    document.body.appendChild(toast);
     
-    setTimeout(() => {
+    toast.addEventListener('click', () => {
       toast.style.animation = 'slideOutRight 0.3s ease-out';
       setTimeout(() => toast.remove(), 300);
-    }, 4000);
+    });
+    
+    document.body.appendChild(toast);
+    
+    // Auto-remove after 6 seconds
+    setTimeout(() => {
+      if (toast.parentNode) {
+        toast.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+      }
+    }, 6000);
+    
+    // Browser notification if enabled and permitted
+    if (this.alertSettings.enableBrowserNotifications && this.notificationPermission === 'granted') {
+      try {
+        const notification = new Notification('Weather Alert', {
+          body: message,
+          icon: '/favicon.ico',
+          badge: '/favicon.ico',
+          tag: alert.id, // Prevent duplicate notifications
+          requireInteraction: false,
+        });
+        
+        notification.onclick = () => {
+          window.focus();
+          notification.close();
+        };
+        
+        // Auto-close after 5 seconds
+        setTimeout(() => notification.close(), 5000);
+      } catch (error) {
+        console.warn('Failed to show browser notification:', error);
+      }
+    }
   }
 
-  // ---------- Filter Functions ----------
+  async requestNotificationPermission(): Promise<void> {
+    if (!('Notification' in window)) {
+      console.warn('This browser does not support notifications');
+      return;
+    }
+    
+    if (this.notificationPermission === 'default') {
+      const permission = await Notification.requestPermission();
+      this.notificationPermission = permission;
+      this.alertSettings.enableBrowserNotifications = permission === 'granted';
+    }
+  }
+
+  clearAlertHistory(): void {
+    this.alertHistory = [];
+  }
+
+  // ---------- Keyboard Shortcuts ----------
+  setupKeyboardShortcuts(): void {
+    this.subscriptions.add(
+      fromEvent<KeyboardEvent>(document, 'keydown').subscribe((ev) => {
+        // Ignore if typing in input/textarea
+        const target = ev.target as HTMLElement;
+        if (
+          target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+
+        const key = ev.key.toLowerCase();
+        const ctrl = ev.ctrlKey || ev.metaKey;
+        const shift = ev.shiftKey;
+
+        // Theme toggle (T)
+        if (key === 't' && !ctrl && !shift) {
+          ev.preventDefault();
+          this.setTheme(this.themeChoice === 'dark' ? 'light' : 'dark');
+          return;
+        }
+
+        // Toggle panels
+        if (key === 'c' && !ctrl && !shift) {
+          ev.preventDefault();
+          this.toggleComparison();
+          return;
+        }
+
+        if (key === 'a' && !ctrl && !shift) {
+          ev.preventDefault();
+          this.toggleAlerts();
+          return;
+        }
+
+        if (key === 'f' && !ctrl && !shift) {
+          ev.preventDefault();
+          this.toggleFilters();
+          return;
+        }
+
+        if (key === 'v' && !ctrl && !shift) {
+          ev.preventDefault();
+          this.showSavedViews = !this.showSavedViews;
+          return;
+        }
+
+        // Help (H or ?)
+        if ((key === 'h' || key === '?') && !ctrl && !shift) {
+          ev.preventDefault();
+          this.showHelp = !this.showHelp;
+          return;
+        }
+
+        // Compact mode (M)
+        if (key === 'm' && !ctrl && !shift) {
+          ev.preventDefault();
+          this.toggleCompactMode();
+          return;
+        }
+
+        // Export shortcuts
+        if (ctrl && key === 'e') {
+          ev.preventDefault();
+          if (shift) {
+            this.exportChartsAsCombinedImage();
+          } else {
+            this.exportDataAsCSV();
+          }
+          return;
+        }
+
+        // Range shortcuts (1-4)
+        if (key >= '1' && key <= '4' && !ctrl && !shift) {
+          ev.preventDefault();
+          const ranges: RangeKey[] = ['5m', '15m', '60m', '24h'];
+          const index = parseInt(key) - 1;
+          if (ranges[index]) {
+            this.onChangeRange(ranges[index]);
+          }
+          return;
+        }
+
+        // Escape to close modals/panels
+        if (key === 'escape') {
+          if (this.showHelp) {
+            this.showHelp = false;
+          }
+          if (this.showAlerts) {
+            this.showAlerts = false;
+          }
+          if (this.showFilters) {
+            this.showFilters = false;
+          }
+          if (this.showSavedViews) {
+            this.showSavedViews = false;
+          }
+          if (this.comparisonMode) {
+            this.comparisonMode = false;
+          }
+        }
+      })
+    );
+  }
+
+  // ---------- Additional Metrics Calculation ----------
+  calculateAdditionalMetrics(): void {
+    if (!this.dataHistory || this.dataHistory.length < 2) return;
+
+    const recent = this.dataHistory.slice(-60); // Last 60 points (5 minutes)
+    const temps = recent.map((d) => d.temperature);
+    const energies = recent.map((d) => d.energy);
+
+    // Change rates (per minute)
+    if (recent.length >= 2) {
+      const timeDiff = (recent.length - 1) * 5; // seconds
+      const tempDiff = temps[temps.length - 1] - temps[0];
+      const energyDiff = energies[energies.length - 1] - energies[0];
+      this.additionalMetrics.tempChangeRate = (tempDiff / timeDiff) * 60; // per minute
+      this.additionalMetrics.energyChangeRate = (energyDiff / timeDiff) * 60; // per minute
+    }
+
+    // Standard deviation
+    const tempAvg = temps.reduce((a, b) => a + b, 0) / temps.length;
+    const energyAvg = energies.reduce((a, b) => a + b, 0) / energies.length;
+    const tempVariance =
+      temps.reduce((sum, val) => sum + Math.pow(val - tempAvg, 2), 0) /
+      temps.length;
+    const energyVariance =
+      energies.reduce((sum, val) => sum + Math.pow(val - energyAvg, 2), 0) /
+      energies.length;
+    this.additionalMetrics.tempStdDev = Math.sqrt(tempVariance);
+    this.additionalMetrics.energyStdDev = Math.sqrt(energyVariance);
+
+    // Median and percentiles
+    const sortedTemps = [...temps].sort((a, b) => a - b);
+    const sortedEnergies = [...energies].sort((a, b) => a - b);
+    this.additionalMetrics.tempMedian = this.getMedian(sortedTemps);
+    this.additionalMetrics.energyMedian = this.getMedian(sortedEnergies);
+    this.additionalMetrics.tempPercentile25 = this.getPercentile(sortedTemps, 0.25);
+    this.additionalMetrics.tempPercentile75 = this.getPercentile(sortedTemps, 0.75);
+    this.additionalMetrics.energyPercentile25 = this.getPercentile(sortedEnergies, 0.25);
+    this.additionalMetrics.energyPercentile75 = this.getPercentile(sortedEnergies, 0.75);
+
+    // Historical average (all data)
+    if (this.dataHistory.length > 0) {
+      const allTemps = this.dataHistory.map((d) => d.temperature);
+      const allEnergies = this.dataHistory.map((d) => d.energy);
+      this.additionalMetrics.historicalAvg.temp =
+        allTemps.reduce((a, b) => a + b, 0) / allTemps.length;
+      this.additionalMetrics.historicalAvg.energy =
+        allEnergies.reduce((a, b) => a + b, 0) / allEnergies.length;
+    }
+
+    // Correlation
+    if (temps.length === energies.length && temps.length > 1) {
+      this.additionalMetrics.correlation = this.calculateCorrelation(temps, energies);
+    }
+  }
+
+  private getMedian(sorted: number[]): number {
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0
+      ? (sorted[mid - 1] + sorted[mid]) / 2
+      : sorted[mid];
+  }
+
+  private getPercentile(sorted: number[], percentile: number): number {
+    const index = Math.floor(sorted.length * percentile);
+    return sorted[Math.min(index, sorted.length - 1)];
+  }
+
+  formatTimestamp(timestamp: number): string {
+    return new Date(timestamp).toLocaleTimeString();
+  }
+
+  toggleDayOfWeek(day: number, checked: boolean): void {
+    if (checked) {
+      if (!this.advancedFilters.daysOfWeek.includes(day)) {
+        this.advancedFilters.daysOfWeek.push(day);
+      }
+    } else {
+      this.advancedFilters.daysOfWeek = this.advancedFilters.daysOfWeek.filter(d => d !== day);
+    }
+  }
+
+  updateCooldown(value: string): void {
+    const num = parseInt(value, 10);
+    this.alertSettings.cooldownSeconds = isNaN(num) ? 60 : num;
+  }
+
+  private calculateCorrelation(x: number[], y: number[]): number {
+    const n = x.length;
+    const xMean = x.reduce((a, b) => a + b, 0) / n;
+    const yMean = y.reduce((a, b) => a + b, 0) / n;
+
+    let numerator = 0;
+    let xSumSq = 0;
+    let ySumSq = 0;
+
+    for (let i = 0; i < n; i++) {
+      const xDiff = x[i] - xMean;
+      const yDiff = y[i] - yMean;
+      numerator += xDiff * yDiff;
+      xSumSq += xDiff * xDiff;
+      ySumSq += yDiff * yDiff;
+    }
+
+    const denominator = Math.sqrt(xSumSq * ySumSq);
+    return denominator === 0 ? 0 : numerator / denominator;
+  }
+
+  // ---------- Filter Functions - Enhanced ----------
   toggleFilters(): void {
     this.showFilters = !this.showFilters;
   }
 
   applyFilters(): void {
-    // Filter logic - for now just update charts
-    // In a full implementation, you'd filter dataHistory here
-    this.updateCharts(this.dataHistory);
+    // Filter logic - apply all filters
+    let filteredData = [...this.dataHistory];
+    
+    // Apply value filters
+    filteredData = filteredData.filter((d) => {
+      return (
+        d.temperature >= this.valueFilters.tempMin &&
+        d.temperature <= this.valueFilters.tempMax &&
+        d.energy >= this.valueFilters.energyMin &&
+        d.energy <= this.valueFilters.energyMax
+      );
+    });
+    
+    // Apply advanced filters
+    if (this.advancedFilters.hourStart !== 0 || this.advancedFilters.hourEnd !== 23) {
+      filteredData = filteredData.filter((d) => {
+        if (!d.time) return true;
+        const date = new Date(d.time);
+        const hour = date.getHours();
+        return hour >= this.advancedFilters.hourStart && hour <= this.advancedFilters.hourEnd;
+      });
+    }
+    
+    // Apply day of week filter
+    if (this.advancedFilters.daysOfWeek.length < 7) {
+      filteredData = filteredData.filter((d) => {
+        if (!d.time) return true;
+        const date = new Date(d.time);
+        const dayOfWeek = date.getDay();
+        return this.advancedFilters.daysOfWeek.includes(dayOfWeek);
+      });
+    }
+    
+    // Apply trend filter (simplified - would need to calculate trend per point)
+    // This is a placeholder for future implementation
+    
+    this.updateCharts(filteredData);
     this.cdr.markForCheck();
   }
 
@@ -1724,7 +2206,24 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       energyMin: 0,
       energyMax: 100,
     };
+    this.advancedFilters = {
+      hourStart: 0,
+      hourEnd: 23,
+      daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+      trendFilter: 'all',
+      valueRange: {
+        tempMin: 0,
+        tempMax: 100,
+        energyMin: 0,
+        energyMax: 100,
+      },
+    };
     this.applyFilters();
+  }
+  
+  toggleCompactMode(): void {
+    this.compactMode = !this.compactMode;
+    localStorage.setItem('compactMode', String(this.compactMode));
   }
 
   // ---------- Saved Views Functions ----------
@@ -1792,6 +2291,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   ExternalLink = ExternalLink;
   Info = Info;
   Maximize2 = Maximize2;
+  Minimize2 = Minimize2;
   Bell = Bell;
   Filter = Filter;
   Calendar = Calendar;
@@ -1817,7 +2317,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.comparisonMode;
   }
 
-  // Alerts system
+  // Alerts system - Enhanced
   alerts: Array<{
     id: string;
     type: 'temperature' | 'energy';
@@ -1825,6 +2325,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     condition: 'above' | 'below';
     active: boolean;
     triggered: boolean;
+    lastTriggered?: number; // Timestamp for cooldown
+    triggerCount: number; // Count of times triggered
   }> = [];
   showAlerts = false;
   alertSettings = {
@@ -1832,16 +2334,63 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     tempMax: 50,
     energyMin: 0,
     energyMax: 100,
+    cooldownSeconds: 60, // Cooldown period in seconds
+    enableBrowserNotifications: false,
   };
+  alertHistory: Array<{
+    id: string;
+    alertId: string;
+    timestamp: number;
+    type: 'temperature' | 'energy';
+    value: number;
+    threshold: number;
+    condition: 'above' | 'below';
+  }> = [];
+  notificationPermission: NotificationPermission = 'default';
 
   // Filters
   showFilters = false;
+  
+  // View mode
+  compactMode = false;
+  
+  // Additional metrics
+  additionalMetrics = {
+    tempChangeRate: 0, // °C per minute
+    energyChangeRate: 0, // kWh per minute
+    tempStdDev: 0,
+    energyStdDev: 0,
+    tempMedian: 0,
+    energyMedian: 0,
+    tempPercentile25: 0,
+    tempPercentile75: 0,
+    energyPercentile25: 0,
+    energyPercentile75: 0,
+    historicalAvg: {
+      temp: 0,
+      energy: 0,
+    },
+    correlation: 0, // Correlation between temp and energy
+  };
+  
   dateFilter: { start?: Date; end?: Date } = {};
   valueFilters = {
     tempMin: 0,
     tempMax: 100,
     energyMin: 0,
     energyMax: 100,
+  };
+  advancedFilters = {
+    hourStart: 0,
+    hourEnd: 23,
+    daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // 0 = Sunday, 6 = Saturday
+    trendFilter: 'all' as 'all' | 'up' | 'down' | 'flat',
+    valueRange: {
+      tempMin: 0,
+      tempMax: 100,
+      energyMin: 0,
+      energyMax: 100,
+    },
   };
 
   helpSlides = [
