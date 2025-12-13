@@ -11,6 +11,7 @@ import {
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { WeatherStreamService } from './services/data/weather-stream.service';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { WeatherDataPoint } from './services/data/weather-data-loader.service';
 import { Subscription, fromEvent } from 'rxjs';
 import { HeaderComponent } from './components/header/header.component';
@@ -46,6 +47,21 @@ import {
   Hourglass,
   Activity,
   BatteryCharging,
+  Download,
+  FileText,
+  Image,
+  Code,
+  Github,
+  ExternalLink,
+  Info,
+  Bell,
+  Filter,
+  Calendar,
+  BarChart,
+  Settings,
+  Save,
+  Bookmark,
+  Maximize2,
 } from 'lucide-angular';
 
 Chart.register(...registerables);
@@ -75,6 +91,7 @@ type OverlaySummary = {
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     HeaderComponent,
     FooterComponent,
     KpiCardComponent,
@@ -117,8 +134,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   activeRangeKey: RangeKey = '15m';
   get activeRangeLabel(): string {
     const item = this.ranges.find((r) => r.key === this.activeRangeKey);
-    return item ? item.label : '';
+    return item ? item.label : 'period';
   }
+
   get activeRangeMinutes(): number {
     return (
       this.ranges.find((r) => r.key === this.activeRangeKey)?.minutes ?? 15
@@ -194,9 +212,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     };
   }
 
-  // Paleta series
-  private teal = '#0EA5A2';
-  private slate = '#475569';
+  // Paleta series - Mejorada para mejor contraste y accesibilidad
+  private teal = '#06B6D4'; // Cyan más vibrante y accesible
+  private slate = '#64748B'; // Slate más claro y legible
 
   // Formateadores
   nfTemp = new Intl.NumberFormat('en-US', {
@@ -272,6 +290,19 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     tempAvgPct: 0,
     energySumPct: 0,
   };
+  
+  // Comparison values for display
+  comparisonValues: {
+    currentTempAvg: number;
+    previousTempAvg: number;
+    currentEnergySum: number;
+    previousEnergySum: number;
+  } = {
+    currentTempAvg: 0,
+    previousTempAvg: 0,
+    currentEnergySum: 0,
+    previousEnergySum: 0,
+  };
 
   // "Updated … ago"
   lastUpdatedAt: number = Date.now();
@@ -315,13 +346,22 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Ciclo de vida ----------
   ngOnInit(): void {
+    // Load saved views
+    const saved = localStorage.getItem('savedViews');
+    if (saved) {
+      try {
+        this.savedViews = JSON.parse(saved);
+      } catch (e) {
+        console.error('Error loading saved views:', e);
+      }
+    }
+
     const stored = localStorage.getItem('theme');
     if (stored === 'light' || stored === 'dark') {
       this.themeChoice = stored;
     } else {
-      const prefersDark =
-        window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-      this.themeChoice = prefersDark ? 'dark' : 'light';
+      // Default to light theme (white) regardless of system preference
+      this.themeChoice = 'light';
       localStorage.setItem('theme', this.themeChoice);
     }
     this.applyThemeFromChoice();
@@ -489,8 +529,18 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       responsive: true,
       maintainAspectRatio: false,
       devicePixelRatio: dpr,
-      animation: { duration: 220 },
-      layout: { padding: { top: 8, bottom: 24, left: 4, right: 4 } },
+      animation: { 
+        duration: 600,
+        easing: 'easeOutCubic' as any,
+      },
+      transitions: {
+        active: {
+          animation: {
+            duration: 0,
+          },
+        },
+      },
+      layout: { padding: { top: 12, bottom: 50, left: 8, right: 8 } },
       interaction: { intersect: false, mode: 'index' },
       plugins: {
         legend: { display: false },
@@ -502,31 +552,65 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           bodyColor: t.tooltipBody,
           borderColor: t.tooltipBorder,
           borderWidth: 1,
-          displayColors: false,
-          cornerRadius: 8,
-          padding: 10,
+          displayColors: true,
+          cornerRadius: 10,
+          padding: 12,
+          titleFont: {
+            size: 13,
+            weight: '600' as any,
+          },
+          bodyFont: {
+            size: 12,
+            weight: '400' as any,
+          },
+          titleSpacing: 6,
+          bodySpacing: 4,
+          caretSize: 6,
+          caretPadding: 8,
         },
-        decimation: { enabled: true, algorithm: 'lttb', samples: 60 },
+        decimation: { enabled: true, algorithm: 'lttb', samples: 80 },
       },
       scales: {
         x: {
-          grid: { color: t.grid },
+          grid: { 
+            color: t.grid,
+            lineWidth: 1,
+          },
           ticks: {
             color: t.tick,
             maxRotation: 45,
-            minRotation: 0,
+            minRotation: 45,
             autoSkip: true,
-            maxTicksLimit: 6,
-            padding: 10,
+            maxTicksLimit: 10,
+            padding: 12,
             font: {
               size: 11,
+              weight: '500' as any,
+            },
+            callback: function(value: any, index: number, ticks: any[]) {
+              // Show labels more intelligently
+              const totalTicks = ticks.length;
+              const step = Math.max(1, Math.ceil(totalTicks / 10));
+              return index % step === 0 ? this.getLabelForValue(value) : '';
             },
           },
           border: { display: false },
         },
         y: {
-          grid: { color: t.grid },
-          ticks: { color: t.tick, autoSkip: true, maxTicksLimit: 5 },
+          grid: { 
+            color: t.grid,
+            lineWidth: 1,
+          },
+          ticks: { 
+            color: t.tick, 
+            autoSkip: true, 
+            maxTicksLimit: 6,
+            padding: 12,
+            font: {
+              size: 11,
+              weight: '500' as any,
+            },
+          },
           border: { display: false },
           beginAtZero: false,
         },
@@ -537,7 +621,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const tempCtx = tempCanvas.getContext('2d')!;
     const tempHeight = tempCanvas.height || 260;
     const tempGradient = tempCtx.createLinearGradient(0, 0, 0, tempHeight);
-    tempGradient.addColorStop(0, this.teal + '40');
+    tempGradient.addColorStop(0, this.teal + '30'); // Más sutil
+    tempGradient.addColorStop(0.5, this.teal + '15');
     tempGradient.addColorStop(1, this.teal + '00');
 
     this.temperatureChart = new Chart(this.temperatureChartRef.nativeElement, {
@@ -550,15 +635,17 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
             data: [],
             borderColor: this.teal,
             backgroundColor: tempGradient,
-            tension: 0.4,
+            tension: 0.5, // Más suave
             fill: true,
             pointRadius: 0,
-            pointHoverRadius: 6,
-            pointHoverBackgroundColor: this.teal,
-            pointHoverBorderColor: '#ffffff',
-            pointHoverBorderWidth: 2,
+            pointHoverRadius: 0,
+            pointHoverBackgroundColor: 'transparent',
+            pointHoverBorderColor: 'transparent',
+            pointHoverBorderWidth: 0,
             borderWidth: 2.5,
-            pointBackgroundColor: this.teal,
+            pointBackgroundColor: 'transparent',
+            pointBorderColor: 'transparent',
+            cubicInterpolationMode: 'monotone' as any, // Interpolación más suave
           },
         ],
       },
@@ -592,7 +679,8 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const energyCtx = energyCanvas.getContext('2d')!;
     const energyHeight = energyCanvas.height || 260;
     const energyGradient = energyCtx.createLinearGradient(0, 0, 0, energyHeight);
-    energyGradient.addColorStop(0, this.slate + '40');
+    energyGradient.addColorStop(0, this.slate + '30'); // Más sutil
+    energyGradient.addColorStop(0.5, this.slate + '15');
     energyGradient.addColorStop(1, this.slate + '00');
 
     this.energyChart = new Chart(this.energyChartRef.nativeElement, {
@@ -605,15 +693,17 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
             data: [],
             borderColor: this.slate,
             backgroundColor: energyGradient,
-            tension: 0.4,
+            tension: 0.5, // Más suave
             fill: true,
             pointRadius: 0,
-            pointHoverRadius: 6,
-            pointHoverBackgroundColor: this.slate,
-            pointHoverBorderColor: '#ffffff',
-            pointHoverBorderWidth: 2,
+            pointHoverRadius: 0,
+            pointHoverBackgroundColor: 'transparent',
+            pointHoverBorderColor: 'transparent',
+            pointHoverBorderWidth: 0,
             borderWidth: 2.5,
-            pointBackgroundColor: this.slate,
+            pointBackgroundColor: 'transparent',
+            pointBorderColor: 'transparent',
+            cubicInterpolationMode: 'monotone' as any, // Interpolación más suave
           },
         ],
       },
@@ -737,6 +827,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         );
         this.energyPulse = !this.energyPulse;
 
+        // Check alerts on each update
+        this.checkAlerts();
+
         const now = new Date();
         this.currentTime =
           `${String(now.getHours()).padStart(2, '0')}:` +
@@ -757,6 +850,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
           this.updateSummary(history);
           this.updateStats(history);
           this.updateOverlaySummaries(history);
+          // Reload comparison data if comparison mode is active
+          if (this.comparisonMode) {
+            this.loadComparisonData();
+          }
           this.cdr.markForCheck(); // Trigger change detection para KPI cards
         })
     );
@@ -848,23 +945,138 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     const temperatures = last.map((d) => d.temperature);
     const energies = last.map((d) => d.energy);
 
+    // Calculate reference lines for temperature (only average)
+    const tempAvg = temperatures.reduce((a, b) => a + b, 0) / temperatures.length;
+
+    // Calculate reference lines for energy (only average)
+    const energyAvg = energies.reduce((a, b) => a + b, 0) / energies.length;
+
     if (this.temperatureChart) {
       this.temperatureChart.data.labels = labels;
-      (this.temperatureChart.data.datasets[0].data as number[]) = temperatures;
+      const mainDataset = this.temperatureChart.data.datasets[0] as any;
+      mainDataset.data = temperatures;
+      // Ensure no points are shown
+      mainDataset.pointRadius = 0;
+      mainDataset.pointHoverRadius = 0;
       this.temperatureChart.getDatasetMeta(0).hidden = !this.showTemp;
-      this.temperatureChart.update();
+      
+      // Remove all reference lines
+      this.removeReferenceLines(this.temperatureChart);
+      
+      // Add comparison dataset if comparison mode is active
+      let comparisonIdx = this.temperatureChart.data.datasets.findIndex((d: any) => d.label === 'Previous Period');
+      if (this.comparisonMode && this.comparisonData.temp.length > 0) {
+        // Create comparison dataset if it doesn't exist
+        if (comparisonIdx === -1) {
+          comparisonIdx = this.temperatureChart.data.datasets.length;
+          this.temperatureChart.data.datasets.push({
+            label: 'Previous Period',
+            data: [],
+            borderColor: this.isDark ? 'rgba(148, 163, 184, 0.4)' : 'rgba(107, 114, 128, 0.4)',
+            backgroundColor: 'transparent',
+            tension: 0.4,
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            borderWidth: 1.5,
+            borderDash: [5, 5],
+            pointHoverBackgroundColor: 'transparent',
+            pointHoverBorderColor: 'transparent',
+            pointBackgroundColor: 'transparent',
+            pointBorderColor: 'transparent',
+            order: 2,
+          } as any);
+        }
+        // Align comparison data with current labels
+        const comparisonData = this.comparisonData.temp.slice(-labels.length);
+        while (comparisonData.length < labels.length) {
+          comparisonData.unshift(null as any);
+        }
+        (this.temperatureChart.data.datasets[comparisonIdx].data as number[]) = comparisonData.slice(-labels.length);
+        this.temperatureChart.getDatasetMeta(comparisonIdx).hidden = !this.showTemp;
+      } else {
+        // Remove comparison dataset if comparison mode is off
+        if (comparisonIdx !== -1) {
+          this.temperatureChart.data.datasets.splice(comparisonIdx, 1);
+        }
+      }
+      
+      this.temperatureChart.update('active');
     }
+    
     if (this.energyChart) {
       this.energyChart.data.labels = labels;
-      (this.energyChart.data.datasets[0].data as number[]) = energies;
+      const mainDataset = this.energyChart.data.datasets[0] as any;
+      mainDataset.data = energies;
+      // Ensure no points are shown
+      mainDataset.pointRadius = 0;
+      mainDataset.pointHoverRadius = 0;
       this.energyChart.getDatasetMeta(0).hidden = !this.showEnergy;
-      this.energyChart.update();
+      
+      // Remove all reference lines
+      this.removeReferenceLines(this.energyChart);
+      
+      // Add comparison dataset if comparison mode is active
+      let comparisonIdx = this.energyChart.data.datasets.findIndex((d: any) => d.label === 'Previous Period');
+      if (this.comparisonMode && this.comparisonData.energy.length > 0) {
+        // Create comparison dataset if it doesn't exist
+        if (comparisonIdx === -1) {
+          comparisonIdx = this.energyChart.data.datasets.length;
+          this.energyChart.data.datasets.push({
+            label: 'Previous Period',
+            data: [],
+            borderColor: this.isDark ? 'rgba(148, 163, 184, 0.4)' : 'rgba(107, 114, 128, 0.4)',
+            backgroundColor: 'transparent',
+            tension: 0.4,
+            fill: false,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            borderWidth: 1.5,
+            borderDash: [5, 5],
+            pointHoverBackgroundColor: 'transparent',
+            pointHoverBorderColor: 'transparent',
+            pointBackgroundColor: 'transparent',
+            pointBorderColor: 'transparent',
+            order: 2,
+          } as any);
+        }
+        // Align comparison data with current labels
+        const comparisonData = this.comparisonData.energy.slice(-labels.length);
+        while (comparisonData.length < labels.length) {
+          comparisonData.unshift(null as any);
+        }
+        (this.energyChart.data.datasets[comparisonIdx].data as number[]) = comparisonData.slice(-labels.length);
+        this.energyChart.getDatasetMeta(comparisonIdx).hidden = !this.showEnergy;
+      } else {
+        // Remove comparison dataset if comparison mode is off
+        if (comparisonIdx !== -1) {
+          this.energyChart.data.datasets.splice(comparisonIdx, 1);
+        }
+      }
+      
+      this.energyChart.update('active');
     }
 
     // Update indicator sparklines - use setTimeout to ensure DOM is ready
     setTimeout(() => {
       this.drawIndicatorSparklines();
     }, 50);
+  }
+
+
+  private removeReferenceLines(chart: Chart | undefined): void {
+    if (!chart) return;
+
+    const datasets = chart.data.datasets;
+    const toRemove = ['Average', 'Normal Zone Max', 'Normal Zone Min', 'Maximum', 'Minimum'];
+    
+    // Remove all reference lines
+    toRemove.forEach(label => {
+      const idx = datasets.findIndex((d: any) => d.label === label);
+      if (idx !== -1) {
+        datasets.splice(idx, 1);
+      }
+    });
   }
 
   private updateSummary(history: WeatherDataPoint[]): void {
@@ -1052,6 +1264,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       tempAvgPct: Number(pct(currTempAvg, prevTempAvg).toFixed(1)),
       energySumPct: Number(pct(currEnergySum, prevEnergySum).toFixed(1)),
     };
+    
+    // Store comparison values for display
+    this.comparisonValues = {
+      currentTempAvg: currTempAvg,
+      previousTempAvg: prevTempAvg,
+      currentEnergySum: currEnergySum,
+      previousEnergySum: prevEnergySum,
+    };
 
     this.stats = {
       tempAvg: Number(currTempAvg.toFixed(1)),
@@ -1151,13 +1371,21 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         Math.round((Date.now() - (this.lastUpdatedAt || Date.now())) / 1000)
       );
       let rel: string;
-      if (diffSec < 60) rel = this.rtf.format(-diffSec, 'second');
-      else if (diffSec < 3600)
-        rel = this.rtf.format(-Math.round(diffSec / 60), 'minute');
-      else if (diffSec < 86400)
-        rel = this.rtf.format(-Math.round(diffSec / 3600), 'hour');
-      else rel = this.rtf.format(-Math.round(diffSec / 86400), 'day');
-      // Format: "X seconds ago" or "X minutes ago" etc.
+      // Format time more naturally and concisely
+      if (diffSec < 5) {
+        rel = 'now';
+      } else if (diffSec < 60) {
+        rel = `${diffSec}s ago`;
+      } else if (diffSec < 3600) {
+        const mins = Math.round(diffSec / 60);
+        rel = `${mins}m ago`;
+      } else if (diffSec < 86400) {
+        const hours = Math.round(diffSec / 3600);
+        rel = `${hours}h ago`;
+      } else {
+        const days = Math.round(diffSec / 86400);
+        rel = `${days}d ago`;
+      }
       this.lastUpdatedRel = rel;
     }, 1000);
   }
@@ -1223,25 +1451,31 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
     const min = Math.min(...values);
     const max = Math.max(...values);
-    // Usar todo el ancho y alto del canvas sin márgenes
-    const padding = 0;
-    const scaleX = (i: number) => (i / (values.length - 1)) * (cssW - padding * 2) + padding;
+    const range = max - min;
+    
+    // Add vertical padding for better visual spacing
+    const vPadding = range > 0 ? range * 0.1 : cssH * 0.1;
+    const hPadding = 0;
+    
+    const scaleX = (i: number) => (i / (values.length - 1)) * (cssW - hPadding * 2) + hPadding;
     const scaleY = (v: number) => {
-      if (max === min) return cssH / 2;
-      const t = (v - min) / (max - min);
-      return cssH - t * (cssH - padding * 2) - padding;
+      if (range === 0) return cssH / 2;
+      const normalized = (v - min + vPadding) / (range + vPadding * 2);
+      return cssH - normalized * (cssH - 0) - 0;
     };
 
-    // Draw gradient area - more subtle
+    // Draw very subtle gradient area
     const gradient = ctx.createLinearGradient(0, 0, 0, cssH);
-    gradient.addColorStop(0, color + '12');
-    gradient.addColorStop(0.5, color + '06');
+    gradient.addColorStop(0, color + '06');
+    gradient.addColorStop(0.5, color + '03');
     gradient.addColorStop(1, color + '00');
 
     ctx.fillStyle = gradient;
     ctx.beginPath();
     ctx.moveTo(scaleX(0), cssH);
     ctx.lineTo(scaleX(0), scaleY(values[0]));
+    
+    // Draw smooth line with rounded joins
     for (let i = 1; i < values.length; i++) {
       ctx.lineTo(scaleX(i), scaleY(values[i]));
     }
@@ -1249,12 +1483,13 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     ctx.closePath();
     ctx.fill();
 
-    // Draw line - refined
+    // Draw clean, smooth line
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.shadowBlur = 0;
+    
     ctx.beginPath();
     ctx.moveTo(scaleX(0), scaleY(values[0]));
     for (let i = 1; i < values.length; i++) {
@@ -1297,6 +1532,236 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // ---------- Export Functions ----------
+  exportChartAsImage(chartType: 'temperature' | 'energy'): void {
+    const chart = chartType === 'temperature' ? this.temperatureChart : this.energyChart;
+    if (!chart) return;
+
+    const canvas = chart.canvas;
+    const url = canvas.toDataURL('image/png');
+    const link = document.createElement('a');
+    link.download = `weather-${chartType}-${new Date().toISOString().split('T')[0]}.png`;
+    link.href = url;
+    link.click();
+  }
+
+  exportDataAsCSV(): void {
+    if (!this.dataHistory || this.dataHistory.length === 0) return;
+
+    const headers = ['Time', 'Temperature (°C)', 'Energy (kWh)'];
+    const rows = this.dataHistory.map((point) => [
+      point.time || '',
+      point.temperature.toFixed(2),
+      point.energy.toFixed(2),
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.join(',')),
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.download = `weather-data-${new Date().toISOString().split('T')[0]}.csv`;
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }
+
+  exportAllChartsAsImages(): void {
+    this.exportChartAsImage('temperature');
+    setTimeout(() => {
+      this.exportChartAsImage('energy');
+    }, 500);
+  }
+
+  setHelpTab(tab: 'tutorial' | 'about'): void {
+    this.helpModalTab = tab;
+  }
+
+  // ---------- Comparison Functions ----------
+  toggleComparison(): void {
+    this.comparisonMode = !this.comparisonMode;
+    if (this.comparisonMode) {
+      // Load comparison data when enabling
+      if (this.dataHistory && this.dataHistory.length > 0) {
+        this.loadComparisonData();
+      }
+    }
+    this.cdr.detectChanges();
+  }
+
+  loadComparisonData(): void {
+    if (!this.dataHistory || this.dataHistory.length === 0) return;
+    
+    const N = this.windowPoints();
+    const comparisonStart = Math.max(0, this.dataHistory.length - 2 * N);
+    const comparisonEnd = this.dataHistory.length - N;
+    
+    if (comparisonStart >= 0 && comparisonEnd > comparisonStart && comparisonEnd <= this.dataHistory.length) {
+      const comparisonSlice = this.dataHistory.slice(comparisonStart, comparisonEnd);
+      const now = new Date();
+      
+      this.comparisonData = {
+        temp: comparisonSlice.map((d) => d.temperature),
+        energy: comparisonSlice.map((d) => d.energy),
+        labels: comparisonSlice.map((_, index) => {
+          const secondsAgo = (comparisonSlice.length - 1 - index) * 5;
+          const timestamp = new Date(now.getTime() - (secondsAgo + N * 5) * 1000);
+          const h = String(timestamp.getHours()).padStart(2, '0');
+          const m = String(timestamp.getMinutes()).padStart(2, '0');
+          return `${h}:${m}`;
+        }),
+      };
+    }
+    this.cdr.markForCheck();
+  }
+
+  // ---------- Alerts Functions ----------
+  toggleAlerts(): void {
+    this.showAlerts = !this.showAlerts;
+  }
+
+  addAlert(type: 'temperature' | 'energy', threshold: number, condition: 'above' | 'below'): void {
+    const alert = {
+      id: Date.now().toString(),
+      type,
+      threshold,
+      condition,
+      active: true,
+      triggered: false,
+    };
+    this.alerts.push(alert);
+    this.checkAlerts();
+  }
+
+  addAlertFromInputs(typeValue: string, thresholdValue: string, conditionValue: string): void {
+    const type = typeValue === 'temperature' ? 'temperature' : 'energy';
+    const condition = conditionValue === 'above' ? 'above' : 'below';
+    const threshold = parseFloat(thresholdValue);
+    
+    if (isNaN(threshold)) {
+      return;
+    }
+    
+    this.addAlert(type, threshold, condition);
+  }
+
+  removeAlert(id: string): void {
+    this.alerts = this.alerts.filter((a) => a.id !== id);
+  }
+
+  checkAlerts(): void {
+    this.alerts.forEach((alert) => {
+      if (!alert.active) return;
+
+      const value = alert.type === 'temperature' ? this.currentTemperature : this.currentEnergy;
+      let triggered = false;
+
+      if (alert.condition === 'above' && value > alert.threshold) {
+        triggered = true;
+      } else if (alert.condition === 'below' && value < alert.threshold) {
+        triggered = true;
+      }
+
+      if (triggered && !alert.triggered) {
+        alert.triggered = true;
+        this.showAlertNotification(alert);
+      } else if (!triggered) {
+        alert.triggered = false;
+      }
+    });
+  }
+
+  showAlertNotification(alert: any): void {
+    // Show visual notification
+    const message = `${alert.type === 'temperature' ? 'Temperature' : 'Energy'} is ${alert.condition === 'above' ? 'above' : 'below'} ${alert.threshold}${alert.type === 'temperature' ? '°C' : 'kWh'}`;
+    console.log('Alert:', message);
+    
+    // Create a simple toast notification
+    const toast = document.createElement('div');
+    toast.className = 'alert-toast';
+    toast.textContent = `⚠️ ${message}`;
+    toast.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--error);
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      animation: slideInRight 0.3s ease-out;
+      font-size: 14px;
+      font-weight: 500;
+    `;
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+      toast.style.animation = 'slideOutRight 0.3s ease-out';
+      setTimeout(() => toast.remove(), 300);
+    }, 4000);
+  }
+
+  // ---------- Filter Functions ----------
+  toggleFilters(): void {
+    this.showFilters = !this.showFilters;
+  }
+
+  applyFilters(): void {
+    // Filter logic - for now just update charts
+    // In a full implementation, you'd filter dataHistory here
+    this.updateCharts(this.dataHistory);
+    this.cdr.markForCheck();
+  }
+
+  clearFilters(): void {
+    this.dateFilter = {};
+    this.valueFilters = {
+      tempMin: 0,
+      tempMax: 100,
+      energyMin: 0,
+      energyMax: 100,
+    };
+    this.applyFilters();
+  }
+
+  // ---------- Saved Views Functions ----------
+  savedViews: Array<{ id: string; name: string; config: any }> = [];
+  showSavedViews = false;
+
+  saveCurrentView(name: string): void {
+    const view = {
+      id: Date.now().toString(),
+      name,
+      config: {
+        activeRangeKey: this.activeRangeKey,
+        showTemp: this.showTemp,
+        showEnergy: this.showEnergy,
+        filters: { ...this.valueFilters, ...this.dateFilter },
+      },
+    };
+    this.savedViews.push(view);
+    localStorage.setItem('savedViews', JSON.stringify(this.savedViews));
+  }
+
+  loadView(viewId: string): void {
+    const view = this.savedViews.find((v) => v.id === viewId);
+    if (view) {
+      this.activeRangeKey = view.config.activeRangeKey;
+      this.showTemp = view.config.showTemp;
+      this.showEnergy = view.config.showEnergy;
+      this.valueFilters = view.config.filters;
+      this.applyFilters();
+    }
+  }
+
+  deleteView(viewId: string): void {
+    this.savedViews = this.savedViews.filter((v) => v.id !== viewId);
+    localStorage.setItem('savedViews', JSON.stringify(this.savedViews));
+  }
+
   // Lucide icon components
   Thermometer = Thermometer;
   TrendingUp = TrendingUp;
@@ -1319,6 +1784,65 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   Hourglass = Hourglass;
   Activity = Activity;
   BatteryCharging = BatteryCharging;
+  Download = Download;
+  FileText = FileText;
+  Image = Image;
+  Code = Code;
+  Github = Github;
+  ExternalLink = ExternalLink;
+  Info = Info;
+  Maximize2 = Maximize2;
+  Bell = Bell;
+  Filter = Filter;
+  Calendar = Calendar;
+  BarChart = BarChart;
+  Settings = Settings;
+  Save = Save;
+  Bookmark = Bookmark;
+
+  // Help modal tabs
+  helpModalTab: 'tutorial' | 'about' = 'tutorial';
+
+  // Comparison mode
+  comparisonMode = false;
+  comparisonRange: RangeKey = '15m';
+  comparisonData: { temp: number[]; energy: number[]; labels: string[] } = {
+    temp: [],
+    energy: [],
+    labels: [],
+  };
+  
+  // Debug: Make sure comparisonMode is accessible
+  get isComparisonMode(): boolean {
+    return this.comparisonMode;
+  }
+
+  // Alerts system
+  alerts: Array<{
+    id: string;
+    type: 'temperature' | 'energy';
+    threshold: number;
+    condition: 'above' | 'below';
+    active: boolean;
+    triggered: boolean;
+  }> = [];
+  showAlerts = false;
+  alertSettings = {
+    tempMin: 0,
+    tempMax: 50,
+    energyMin: 0,
+    energyMax: 100,
+  };
+
+  // Filters
+  showFilters = false;
+  dateFilter: { start?: Date; end?: Date } = {};
+  valueFilters = {
+    tempMin: 0,
+    tempMax: 100,
+    energyMin: 0,
+    energyMax: 100,
+  };
 
   helpSlides = [
     {

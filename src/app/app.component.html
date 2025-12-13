@@ -10,9 +10,18 @@
   <section class="current-status-section" aria-labelledby="currentStatusTitle">
     <div class="current-status-header">
       <div class="current-status-header__main">
-        <h2 class="current-status-title" id="currentStatusTitle">Current Status</h2>
+        <h2 class="section-title section-title--large" id="currentStatusTitle">Current Status</h2>
+        <p class="section-description">
+          Real-time monitoring of temperature and energy production metrics. Values update every 5 seconds with trend indicators showing recent changes.
+        </p>
         <div class="current-status-meta">
-          <span class="current-status-update">Updated {{ lastUpdatedRel }}</span>
+          <div class="update-indicator">
+            <div class="update-indicator__pulse" [class.active]="isStreaming"></div>
+            <span class="update-indicator__text">
+              <span class="update-indicator__time" [attr.data-time]="lastUpdatedRel">{{ lastUpdatedRel }}</span>
+              <span class="update-indicator__interval">· Every 5s</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -189,11 +198,17 @@
   <!-- Time Series Charts -->
   <section class="charts-section" aria-labelledby="chartsTitle">
     <div class="charts-header">
-      <div class="charts-header__main">
+      <div class="charts-header__title-section">
         <h2 class="section-title" id="chartsTitle">Time Series Analysis</h2>
-        <div class="charts-header__controls">
+        <p class="section-description">
+          Interactive line charts displaying temperature and energy production over time. Use the time range selector to view different periods. Export charts as PNG or download data as CSV.
+        </p>
+      </div>
+      
+      <div class="charts-header__toolbar">
+        <div class="charts-toolbar__group charts-toolbar__group--primary">
           <div class="range-selector-group">
-            <span class="range-selector-label" id="rangeLabel">Time Range:</span>
+            <span class="range-selector-label" id="rangeLabel">Time Range</span>
             <div class="range-buttons" role="group" aria-labelledby="rangeLabel">
               @for (range of ranges; track range.key) {
               <button
@@ -211,8 +226,92 @@
             </div>
           </div>
         </div>
+        
+        <div class="charts-toolbar__group charts-toolbar__group--secondary">
+          <div class="charts-toolbar__actions">
+            <button
+              class="toolbar-button"
+              (click)="toggleComparison()"
+              [class.active]="comparisonMode"
+              type="button"
+              aria-label="Toggle comparison mode"
+              title="Compare periods"
+            >
+              <lucide-icon [name]="BarChart" [size]="16" aria-hidden="true"></lucide-icon>
+              <span>Compare</span>
+            </button>
+            <button
+              class="toolbar-button"
+              (click)="toggleAlerts()"
+              [class.active]="showAlerts"
+              type="button"
+              aria-label="Toggle alerts"
+              title="Configure alerts"
+            >
+              <lucide-icon [name]="Bell" [size]="16" aria-hidden="true"></lucide-icon>
+              <span>Alerts</span>
+            </button>
+            <button
+              class="toolbar-button"
+              (click)="toggleFilters()"
+              [class.active]="showFilters"
+              type="button"
+              aria-label="Toggle filters"
+              title="Filter data"
+            >
+              <lucide-icon [name]="Filter" [size]="16" aria-hidden="true"></lucide-icon>
+              <span>Filters</span>
+            </button>
+            <button
+              class="toolbar-button"
+              (click)="showSavedViews = !showSavedViews"
+              [class.active]="showSavedViews"
+              type="button"
+              aria-label="Saved views"
+              title="Saved views"
+            >
+              <lucide-icon [name]="Bookmark" [size]="16" aria-hidden="true"></lucide-icon>
+              <span>Views</span>
+            </button>
+          </div>
+          
+          <div class="charts-toolbar__exports">
+            <button
+              class="toolbar-button"
+              (click)="exportChartAsImage('temperature')"
+              type="button"
+              title="Export Temperature Chart"
+              aria-label="Export temperature chart as PNG"
+            >
+              <lucide-icon [name]="Image" [size]="16" aria-hidden="true"></lucide-icon>
+              <span>Temp PNG</span>
+            </button>
+            <button
+              class="toolbar-button"
+              (click)="exportChartAsImage('energy')"
+              type="button"
+              title="Export Energy Chart"
+              aria-label="Export energy chart as PNG"
+            >
+              <lucide-icon [name]="Image" [size]="16" aria-hidden="true"></lucide-icon>
+              <span>Energy PNG</span>
+            </button>
+            <button
+              class="toolbar-button"
+              (click)="exportDataAsCSV()"
+              type="button"
+              title="Export All Data"
+              aria-label="Export all data as CSV"
+            >
+              <lucide-icon [name]="Download" [size]="16" aria-hidden="true"></lucide-icon>
+              <span>CSV</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="series-toggle-group">
+    </div>
+    
+    <div class="series-toggle-group">
         <span class="series-toggle-label" id="seriesLabel">Visible Series:</span>
         <div class="series-toggles" role="group" aria-labelledby="seriesLabel">
           <label class="toggle">
@@ -254,11 +353,236 @@
           </label>
         </div>
       </div>
-    </div>
 
+    <!-- Comparison Panel - Appears right after header when active -->
+    @if (comparisonMode) {
+    <div class="comparison-panel">
+      <div class="comparison-header">
+        <div>
+          <h3>Period Comparison</h3>
+          <p class="comparison-subtitle">
+            Comparing <strong>current {{ activeRangeLabel }}</strong> 
+            with <strong>previous {{ activeRangeLabel }}</strong>
+          </p>
+        </div>
+        <button class="close-button" (click)="toggleComparison()" type="button" aria-label="Close comparison">
+          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+        </button>
+      </div>
+      <div class="comparison-content">
+        <div class="comparison-explanation">
+          <p class="muted">
+            <lucide-icon [name]="Info" [size]="14" aria-hidden="true"></lucide-icon>
+            The dashed line in the charts shows the previous period for visual comparison.
+          </p>
+        </div>
+        <div class="comparison-stats">
+          <div class="comparison-stat">
+            <div class="comparison-stat-header">
+              <span class="comparison-label">Temperature</span>
+              <span class="comparison-value" [class.positive]="deltas.tempAvgPct > 0" [class.negative]="deltas.tempAvgPct < 0">
+                {{ deltas.tempAvgPct > 0 ? '+' : '' }}{{ deltas.tempAvgPct.toFixed(1) }}%
+              </span>
+            </div>
+            <div class="comparison-details">
+              <span class="comparison-detail">
+                Current: <strong>{{ comparisonValues.currentTempAvg.toFixed(1) }}°C</strong>
+              </span>
+              <span class="comparison-detail">
+                Previous: <strong>{{ comparisonValues.previousTempAvg.toFixed(1) }}°C</strong>
+              </span>
+            </div>
+          </div>
+          <div class="comparison-stat">
+            <div class="comparison-stat-header">
+              <span class="comparison-label">Energy</span>
+              <span class="comparison-value" [class.positive]="deltas.energySumPct > 0" [class.negative]="deltas.energySumPct < 0">
+                {{ deltas.energySumPct > 0 ? '+' : '' }}{{ deltas.energySumPct.toFixed(1) }}%
+              </span>
+            </div>
+            <div class="comparison-details">
+              <span class="comparison-detail">
+                Current: <strong>{{ comparisonValues.currentEnergySum.toFixed(2) }} kWh</strong>
+              </span>
+              <span class="comparison-detail">
+                Previous: <strong>{{ comparisonValues.previousEnergySum.toFixed(2) }} kWh</strong>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Alerts Panel -->
+    @if (showAlerts) {
+    <div class="alerts-panel">
+      <div class="alerts-header">
+        <h3>Configure Alerts</h3>
+        <button class="close-button" (click)="toggleAlerts()" type="button" aria-label="Close alerts">
+          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+        </button>
+      </div>
+      <div class="alerts-content">
+        <div class="alerts-explanation">
+          <p class="muted">
+            <lucide-icon [name]="Info" [size]="14" aria-hidden="true"></lucide-icon>
+            Alerts notify you when values exceed your thresholds. You'll see a notification when triggered.
+          </p>
+        </div>
+        <div class="alert-form">
+          <div class="form-group">
+            <label>Metric</label>
+            <select #alertType class="form-input">
+              <option value="temperature">Temperature</option>
+              <option value="energy">Energy</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Condition</label>
+            <select #alertCondition class="form-input">
+              <option value="above">Above</option>
+              <option value="below">Below</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Threshold</label>
+            <input type="number" #alertThreshold class="form-input" placeholder="Value" step="0.1" />
+          </div>
+          <button
+            class="export-button"
+            (click)="addAlertFromInputs(alertType.value, alertThreshold.value, alertCondition.value)"
+            type="button"
+          >
+            Add Alert
+          </button>
+        </div>
+        @if (alerts.length > 0) {
+          <div class="alerts-list">
+            <div class="alerts-list-header">
+              <span class="alerts-count">{{ alerts.length }} alert{{ alerts.length !== 1 ? 's' : '' }}</span>
+            </div>
+            @for (alert of alerts; track alert.id) {
+            <div class="alert-item" [class.triggered]="alert.triggered">
+              <div class="alert-info">
+                <div class="alert-metric">
+                  <lucide-icon 
+                    [name]="alert.type === 'temperature' ? Thermometer : Zap" 
+                    [size]="14" 
+                    aria-hidden="true"
+                  ></lucide-icon>
+                  <strong>{{ alert.type === 'temperature' ? 'Temperature' : 'Energy' }}</strong>
+                </div>
+                <span class="alert-condition">
+                  {{ alert.condition === 'above' ? '>' : '<' }} 
+                  <strong>{{ alert.threshold }}{{ alert.type === 'temperature' ? '°C' : 'kWh' }}</strong>
+                </span>
+                @if (alert.triggered) {
+                  <span class="alert-status">Active</span>
+                }
+              </div>
+              <button class="alert-remove" (click)="removeAlert(alert.id)" type="button" aria-label="Remove alert">
+                <lucide-icon [name]="X" [size]="16" aria-hidden="true"></lucide-icon>
+              </button>
+            </div>
+            }
+          </div>
+        } @else {
+          <div class="alerts-empty">
+            <p class="muted">No alerts configured. Add one above to get notified when values exceed thresholds.</p>
+          </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Filters Panel -->
+    @if (showFilters) {
+    <div class="filters-panel">
+      <div class="filters-header">
+        <h3>Filter Data</h3>
+        <button class="close-button" (click)="toggleFilters()" type="button" aria-label="Close filters">
+          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+        </button>
+      </div>
+      <div class="filters-content">
+        <div class="filter-group">
+          <label>Temperature Range</label>
+          <div class="filter-inputs">
+            <input type="number" [(ngModel)]="valueFilters.tempMin" class="form-input" placeholder="Min" />
+            <span>to</span>
+            <input type="number" [(ngModel)]="valueFilters.tempMax" class="form-input" placeholder="Max" />
+          </div>
+        </div>
+        <div class="filter-group">
+          <label>Energy Range</label>
+          <div class="filter-inputs">
+            <input type="number" [(ngModel)]="valueFilters.energyMin" class="form-input" placeholder="Min" />
+            <span>to</span>
+            <input type="number" [(ngModel)]="valueFilters.energyMax" class="form-input" placeholder="Max" />
+          </div>
+        </div>
+        <div class="filter-actions">
+          <button class="export-button" (click)="applyFilters()" type="button">Apply Filters</button>
+          <button class="export-button export-button--secondary" (click)="clearFilters()" type="button">Clear</button>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Saved Views Panel -->
+    @if (showSavedViews) {
+    <div class="saved-views-panel">
+      <div class="saved-views-header">
+        <h3>Saved Views</h3>
+        <button class="close-button" (click)="showSavedViews = false" type="button" aria-label="Close saved views">
+          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+        </button>
+      </div>
+      <div class="saved-views-content">
+        <div class="save-view-form">
+          <input #viewName type="text" class="form-input" placeholder="View name" />
+          <button class="export-button" (click)="saveCurrentView(viewName.value); viewName.value = ''" type="button">
+            <lucide-icon [name]="Save" [size]="16" aria-hidden="true"></lucide-icon>
+            Save Current View
+          </button>
+        </div>
+        <div class="saved-views-list">
+          @for (view of savedViews; track view.id) {
+          <div class="saved-view-item">
+            <span>{{ view.name }}</span>
+            <div class="saved-view-actions">
+              <button class="action-button action-button--small" (click)="loadView(view.id)" type="button">Load</button>
+              <button class="action-button action-button--small action-button--danger" (click)="deleteView(view.id)" type="button">Delete</button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Charts -->
     <div class="charts">
       <div class="chart-container card-surface">
-        <div class="section-title">Temperature (°C)</div>
+        <div class="chart-header">
+          <div class="chart-header__main">
+            <div class="chart-header__title">
+              <lucide-icon [name]="Thermometer" [size]="18" aria-hidden="true"></lucide-icon>
+              <span>Temperature</span>
+            </div>
+            <div class="chart-header__meta">
+              <span class="chart-meta-item">
+                <span class="chart-meta-label">Avg</span>
+                <span class="chart-meta-value">{{ stats.tempAvg.toFixed(1) }}°C</span>
+              </span>
+              <span class="chart-meta-item">
+                <span class="chart-meta-label">Max</span>
+                <span class="chart-meta-value">{{ stats.tempMax.toFixed(1) }}°C</span>
+              </span>
+            </div>
+          </div>
+        </div>
         <p id="tempChartDesc" class="sr-only">
           Line chart of temperature in degrees Celsius. Active window:
           {{ activeRangeLabel }}. Last update: {{ lastUpdatedRel }}.
@@ -275,7 +599,24 @@
       </div>
 
       <div class="chart-container card-surface">
-        <div class="section-title">Energy Production (kWh)</div>
+        <div class="chart-header">
+          <div class="chart-header__main">
+            <div class="chart-header__title">
+              <lucide-icon [name]="Zap" [size]="18" aria-hidden="true"></lucide-icon>
+              <span>Energy Production</span>
+            </div>
+            <div class="chart-header__meta">
+              <span class="chart-meta-item">
+                <span class="chart-meta-label">Total</span>
+                <span class="chart-meta-value">{{ stats.energySum.toFixed(2) }} kWh</span>
+              </span>
+              <span class="chart-meta-item">
+                <span class="chart-meta-label">Avg/min</span>
+                <span class="chart-meta-value">{{ stats.prodAvgPerMin.toFixed(3) }}</span>
+              </span>
+            </div>
+          </div>
+        </div>
         <p id="energyChartDesc" class="sr-only">
           Line chart of energy produced in kilowatt-hours. Active window:
           {{ activeRangeLabel }}. Last update: {{ lastUpdatedRel }}.
@@ -295,11 +636,17 @@
   <section class="analytics-section card-surface" aria-labelledby="analyticsTitle">
     <div class="analytics-header">
       <h2 class="section-title" id="analyticsTitle">Analytics</h2>
+      <p class="section-description">
+        Comprehensive statistics and performance metrics for the selected time period. Compare current values with previous periods and track key performance indicators.
+      </p>
       <div class="muted">Time window: {{ activeRangeLabel }}</div>
     </div>
 
     <!-- Key Metrics Grid -->
     <div class="analytics-key-metrics">
+      <p class="section-description section-description--inline">
+        Key performance indicators showing peak values and average measurements for the current monitoring period.
+      </p>
       <div class="card kpi" role="group" aria-label="Energy peak">
         <div class="kpi-head">
           <div class="kpi-title">
@@ -411,6 +758,9 @@
 
     <!-- Detailed Statistics Grid -->
     <div class="analytics-stats-grid">
+      <p class="section-description section-description--inline">
+        Detailed metrics including data processing statistics, temperature extremes, energy production rates, and system utilization.
+      </p>
       <div class="stat">
         <span class="stat-label">
           <lucide-icon
@@ -575,6 +925,7 @@
       </div>
     </div>
   </section>
+
 </main>
 
 <app-footer></app-footer>
@@ -597,9 +948,39 @@
     <div class="help-modal__header">
       <div class="help-modal__header-content">
         <h2 id="help-title" class="help-modal__title">
-          Welcome to Weather Dashboard
+          @if (helpModalTab === 'tutorial') {
+            Welcome to Weather Dashboard
+          } @else {
+            About This Project
+          }
         </h2>
-        <p class="help-modal__subtitle">Let's explore how it works</p>
+        <p class="help-modal__subtitle">
+          @if (helpModalTab === 'tutorial') {
+            Let's explore how it works
+          } @else {
+            Technical details and project information
+          }
+        </p>
+      </div>
+      <div class="help-modal__tabs">
+        <button
+          class="help-tab"
+          [class.active]="helpModalTab === 'tutorial'"
+          (click)="setHelpTab('tutorial')"
+          type="button"
+        >
+          <lucide-icon [name]="HelpCircle" [size]="16" aria-hidden="true"></lucide-icon>
+          How to Use
+        </button>
+        <button
+          class="help-tab"
+          [class.active]="helpModalTab === 'about'"
+          (click)="setHelpTab('about')"
+          type="button"
+        >
+          <lucide-icon [name]="Info" [size]="16" aria-hidden="true"></lucide-icon>
+          About Project
+        </button>
       </div>
       <button
         class="help-modal__close"
@@ -612,6 +993,7 @@
     </div>
 
     <div class="help-modal__content">
+      @if (helpModalTab === 'tutorial') {
       <!-- Tutorial Slides -->
       <div class="help-tutorial">
         <div class="help-tutorial__slide-container">
@@ -656,33 +1038,151 @@
           </div>
         </div>
       </div>
+      } @else {
+      <!-- About Project Tab -->
+      <div class="help-about-content">
+        <div class="about-description">
+          <h3>Project Overview</h3>
+          <p>
+            This is a real-time weather dashboard application that visualizes meteorological data
+            including temperature and energy production metrics. The application simulates progressive
+            data streaming, updating every 5 seconds to provide live insights into weather patterns
+            and energy generation.
+          </p>
+        </div>
+
+        <div class="about-features">
+          <h3>Key Features</h3>
+          <ul>
+            <li>
+              <lucide-icon [name]="Zap" [size]="16" aria-hidden="true"></lucide-icon>
+              <strong>Real-time Streaming:</strong> Progressive data updates every 5 seconds
+            </li>
+            <li>
+              <lucide-icon [name]="TrendingUp" [size]="16" aria-hidden="true"></lucide-icon>
+              <strong>Interactive Charts:</strong> Time series visualization with Chart.js
+            </li>
+            <li>
+              <lucide-icon [name]="BarChart3" [size]="16" aria-hidden="true"></lucide-icon>
+              <strong>Advanced Analytics:</strong> Statistical analysis and trend detection
+            </li>
+            <li>
+              <lucide-icon [name]="Database" [size]="16" aria-hidden="true"></lucide-icon>
+              <strong>YAML Data Source:</strong> Data loaded from structured YAML files
+            </li>
+            <li>
+              <lucide-icon [name]="Activity" [size]="16" aria-hidden="true"></lucide-icon>
+              <strong>Unit Conversion:</strong> Automatic conversion from deciKelvins to Celsius
+            </li>
+            <li>
+              <lucide-icon [name]="Download" [size]="16" aria-hidden="true"></lucide-icon>
+              <strong>Data Export:</strong> Export charts and data in multiple formats
+            </li>
+            <li>
+              <lucide-icon [name]="Bell" [size]="16" aria-hidden="true"></lucide-icon>
+              <strong>Alerts System:</strong> Configurable thresholds and notifications
+            </li>
+            <li>
+              <lucide-icon [name]="Filter" [size]="16" aria-hidden="true"></lucide-icon>
+              <strong>Advanced Filters:</strong> Filter data by temperature and energy ranges
+            </li>
+            <li>
+              <lucide-icon [name]="Bookmark" [size]="16" aria-hidden="true"></lucide-icon>
+              <strong>Saved Views:</strong> Save and load custom dashboard configurations
+            </li>
+          </ul>
+        </div>
+
+        <div class="about-tech">
+          <h3>Technology Stack</h3>
+          <div class="tech-grid">
+            <div class="tech-item">
+              <strong>Framework:</strong> Angular 17 (Standalone Components)
+            </div>
+            <div class="tech-item">
+              <strong>Language:</strong> TypeScript
+            </div>
+            <div class="tech-item">
+              <strong>Charts:</strong> Chart.js 4.5
+            </div>
+            <div class="tech-item">
+              <strong>Data Processing:</strong> js-yaml
+            </div>
+            <div class="tech-item">
+              <strong>Reactive Programming:</strong> RxJS
+            </div>
+            <div class="tech-item">
+              <strong>Styling:</strong> CSS3 with Custom Properties
+            </div>
+            <div class="tech-item">
+              <strong>Icons:</strong> Lucide Angular
+            </div>
+            <div class="tech-item">
+              <strong>Typography:</strong> Inter (Google Fonts)
+            </div>
+          </div>
+        </div>
+
+        <div class="about-data">
+          <h3>Data Source</h3>
+          <p>
+            The application reads meteorological data from a YAML file (<code>data.yml</code>). The
+            data includes temperature measurements in deciKelvins (dK) and energy production values
+            in watt-hours (Wh), which are automatically converted to Celsius and kilowatt-hours (kWh)
+            for display.
+          </p>
+          <p class="muted">
+            <strong>Update Frequency:</strong> Every 5 seconds<br />
+            <strong>Data Format:</strong> YAML with time-series data points<br />
+            <strong>Processing:</strong> Real-time conversion and streaming
+          </p>
+        </div>
+
+        <div class="about-actions">
+          <button class="export-button" (click)="exportAllChartsAsImages()" type="button">
+            <lucide-icon [name]="Image" [size]="18" aria-hidden="true"></lucide-icon>
+            Export Charts as Images
+          </button>
+          <button class="export-button" (click)="exportDataAsCSV()" type="button">
+            <lucide-icon [name]="FileText" [size]="18" aria-hidden="true"></lucide-icon>
+            Export Data as CSV
+          </button>
+        </div>
+      </div>
+      }
     </div>
 
     <div class="help-modal__footer">
       <div class="help-modal__footer-actions">
-        <button 
-          class="help-modal__button help-modal__button--secondary" 
-          (click)="prevHelpSlide()" 
-          [disabled]="helpSlideIndex === 0"
-          type="button"
-          aria-label="Previous slide"
-        >
-          <lucide-icon [name]="ChevronLeft" [size]="18" aria-hidden="true"></lucide-icon>
-          Previous
-        </button>
-        @if (helpSlideIndex === helpSlides.length - 1) {
-          <button class="help-modal__button" (click)="closeHelp()" type="button">
-            Got it!
-          </button>
-        } @else {
+        @if (helpModalTab === 'tutorial') {
           <button 
-            class="help-modal__button" 
-            (click)="nextHelpSlide()" 
+            class="help-modal__button help-modal__button--secondary" 
+            (click)="prevHelpSlide()" 
+            [disabled]="helpSlideIndex === 0"
             type="button"
-            aria-label="Next slide"
+            aria-label="Previous slide"
           >
-            Next
-            <lucide-icon [name]="ChevronRight" [size]="18" aria-hidden="true"></lucide-icon>
+            <lucide-icon [name]="ChevronLeft" [size]="18" aria-hidden="true"></lucide-icon>
+            Previous
+          </button>
+          @if (helpSlideIndex === helpSlides.length - 1) {
+            <button class="help-modal__button" (click)="closeHelp()" type="button">
+              Got it!
+            </button>
+          } @else {
+            <button 
+              class="help-modal__button" 
+              (click)="nextHelpSlide()" 
+              type="button"
+              aria-label="Next slide"
+            >
+              Next
+              <lucide-icon [name]="ChevronRight" [size]="18" aria-hidden="true"></lucide-icon>
+            </button>
+          }
+        } @else {
+          <button class="help-modal__button" (click)="closeHelp()" type="button">
+            Close
           </button>
         }
       </div>
