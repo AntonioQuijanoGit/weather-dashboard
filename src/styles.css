@@ -3,29 +3,29 @@
 /* LIGHT THEME - Vercel Style (Minimalist & Clean) */
 :root {
   /* Base Colors - Vercel Neutrals */
-  --bg: #ffffff;
-  --bg-secondary: #fafafa;
+  --bg: #f8fafc;
+  --bg-secondary: #f1f5f9;
   --surface: #ffffff;
   --surface-elevated: #ffffff;
-  --border: rgba(0, 0, 0, 0.06);
+  --border: #e2e8f0;
   --border-strong: rgba(0, 0, 0, 0.12);
-  --border-hover: rgba(0, 0, 0, 0.08);
+  --border-hover: #cbd5e1;
 
   /* Text Colors - Vercel Style */
   --text: #000000;
-  --text-2: #666666;
-  --text-3: #999999;
+  --text-2: #475569;
+  --text-3: #94a3b8;
   --text-inverse: #ffffff;
 
   /* Accent Colors - Vercel Blue (Very Subtle) */
-  --accent: #000000;
-  --accent-hover: #000000;
-  --accent-light: #666666;
-  --accent-dark: #000000;
-  --accent-gradient: linear-gradient(135deg, #000000 0%, #333333 100%);
-  --accent-glow: rgba(0, 0, 0, 0.05);
-  --accent-subtle: rgba(0, 0, 0, 0.04);
-  --accent-subtle-hover: rgba(0, 0, 0, 0.06);
+  --accent: #0ea5e9;
+  --accent-hover: #0284c7;
+  --accent-light: #38bdf8;
+  --accent-dark: #075985;
+  --accent-gradient: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  --accent-glow: rgba(14, 165, 233, 0.08);
+  --accent-subtle: #e0f2fe;
+  --accent-subtle-hover: #dbeafe;
 
   /* Semantic Colors - Accessible & Refined */
   --success: #059669;
@@ -382,7 +382,7 @@ textarea:focus-visible {
 }
 
 .card-surface:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 8px 20px -8px rgba(15, 23, 42, 0.12);
   border-color: var(--border-hover);
   transform: translateY(-1px);
 }

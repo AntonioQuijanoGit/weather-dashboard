@@ -87,8 +87,8 @@ section.statistics.card-surface,
 
 .statistics .stat-label,
 .stat-label {
-  font-size: var(--fs-sm);
-  color: var(--text-2);
+  font-size: var(--fs-xs);
+  color: #64748b;
   letter-spacing: -0.005em;
   white-space: nowrap;
   display: inline-flex;

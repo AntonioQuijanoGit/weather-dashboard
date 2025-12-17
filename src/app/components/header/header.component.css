@@ -14,7 +14,7 @@
     transform var(--transition-base);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  animation: headerSlideDown 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  animation: none;
 }
 
 @keyframes headerSlideDown {
@@ -56,7 +56,7 @@
   align-items: center;
   gap: var(--space-4);
   flex-shrink: 0;
-  animation: brandFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+  animation: none;
 }
 
 @keyframes brandFadeIn {
@@ -80,7 +80,7 @@
   flex-shrink: 0;
   transition: transform var(--transition-base), 
     background-color var(--transition-base);
-  animation: logoSpin 1s cubic-bezier(0.4, 0, 0.2, 1) 0.4s backwards;
+  animation: none;
   position: relative;
 }
 
@@ -135,7 +135,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
-  animation: textSlideIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.3s backwards;
+  animation: none;
 }
 
 @keyframes textSlideIn {
@@ -161,7 +161,7 @@
   -moz-osx-font-smoothing: grayscale;
   transition: transform var(--transition-base), 
     color var(--transition-base);
-  animation: titleFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.5s backwards;
+  animation: none;
 }
 
 @keyframes titleFadeIn {
@@ -189,7 +189,7 @@
   letter-spacing: -0.01em;
   transition: color var(--transition-base), 
     transform var(--transition-base);
-  animation: subtitleFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.6s backwards;
+  animation: none;
 }
 
 @keyframes subtitleFadeIn {
@@ -213,7 +213,48 @@
   align-items: center;
   gap: var(--space-4);
   flex-shrink: 0;
-  animation: actionsFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.4s backwards;
+  animation: none;
+}
+
+.header-help {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-secondary);
+  color: var(--text-2);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-medium);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: fixed !important;
+  inset: auto var(--space-6) var(--space-6) auto;
+  z-index: var(--z-fixed);
+  box-shadow: var(--shadow-md);
+  pointer-events: auto;
+}
+
+.header-help:hover {
+  background: var(--surface);
+  border-color: var(--border-hover);
+  color: var(--text);
+}
+
+.header-help__label {
+  display: inline-flex;
+}
+
+@media (max-width: 640px) {
+  .header-help__label {
+    display: none;
+  }
+
+  .header-help {
+    bottom: var(--space-4);
+    right: var(--space-4);
+  }
 }
 
 @keyframes actionsFadeIn {

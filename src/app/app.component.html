@@ -2,6 +2,7 @@
   [isStreaming]="isStreaming"
   [themeChoice]="themeChoice"
   (themeChange)="setTheme($event)"
+  (helpClick)="toggleHelp()"
 >
 </app-header>
 
@@ -52,7 +53,7 @@
           </div>
           <div class="indicator-card__meta">
             <h3 class="indicator-card__title">Temperature</h3>
-            <span class="indicator-card__subtitle">Real-time average</span>
+            <span class="indicator-card__subtitle">Avg · {{ activeRangeLabel }}</span>
           </div>
         </div>
 
@@ -138,7 +139,7 @@
           </div>
           <div class="indicator-card__meta">
             <h3 class="indicator-card__title">Energy Production</h3>
-            <span class="indicator-card__subtitle">Current output</span>
+            <span class="indicator-card__subtitle">Output · {{ activeRangeLabel }}</span>
           </div>
         </div>
 
@@ -288,57 +289,62 @@
               <lucide-icon [name]="Bookmark" [size]="18" aria-hidden="true"></lucide-icon>
               <span class="tool-card__label">Views</span>
             </button>
-            <button
-              class="tool-card"
-              (click)="exportChartAsImage('temperature')"
-              type="button"
-              title="Export Temperature Chart"
-              aria-label="Export temperature chart as PNG"
-            >
-              <lucide-icon [name]="Image" [size]="18" aria-hidden="true"></lucide-icon>
-              <span class="tool-card__label">Temp PNG</span>
-            </button>
-            <button
-              class="tool-card"
-              (click)="exportChartAsImage('energy')"
-              type="button"
-              title="Export Energy Chart"
-              aria-label="Export energy chart as PNG"
-            >
-              <lucide-icon [name]="Image" [size]="18" aria-hidden="true"></lucide-icon>
-              <span class="tool-card__label">Energy PNG</span>
-            </button>
-            <button
-              class="tool-card"
-              (click)="exportDataAsCSV()"
-              type="button"
-              title="Export All Data"
-              aria-label="Export all data as CSV"
-            >
-              <lucide-icon [name]="Download" [size]="18" aria-hidden="true"></lucide-icon>
-              <span class="tool-card__label">CSV</span>
-            </button>
-            <button
-              class="tool-card"
-              (click)="exportChartsAsCombinedImage()"
-              type="button"
-              title="Export Combined Charts"
-              aria-label="Export both charts as combined image"
-            >
-              <lucide-icon [name]="Image" [size]="18" aria-hidden="true"></lucide-icon>
-              <span class="tool-card__label">Combined</span>
-            </button>
-            <button
-              class="tool-card"
-              (click)="exportStatisticsAsJSON()"
-              type="button"
-              title="Export Statistics"
-              aria-label="Export statistics as JSON"
-            >
-              <lucide-icon [name]="FileText" [size]="18" aria-hidden="true"></lucide-icon>
-              <span class="tool-card__label">Stats JSON</span>
-            </button>
       </div>
+        </div>
+      </div>
+      <div class="charts-toolbar__exports-bar" aria-label="Exports">
+        <span class="range-selector-label">Export</span>
+        <div class="charts-toolbar__exports">
+          <button
+            class="toolbar-button"
+            (click)="exportChartAsImage('temperature')"
+            type="button"
+            title="Export Temperature Chart"
+            aria-label="Export temperature chart as PNG"
+          >
+            <lucide-icon [name]="Image" [size]="16" aria-hidden="true"></lucide-icon>
+            Temp PNG
+          </button>
+          <button
+            class="toolbar-button"
+            (click)="exportChartAsImage('energy')"
+            type="button"
+            title="Export Energy Chart"
+            aria-label="Export energy chart as PNG"
+          >
+            <lucide-icon [name]="Image" [size]="16" aria-hidden="true"></lucide-icon>
+            Energy PNG
+          </button>
+          <button
+            class="toolbar-button"
+            (click)="exportDataAsCSV()"
+            type="button"
+            title="Export All Data"
+            aria-label="Export all data as CSV"
+          >
+            <lucide-icon [name]="Download" [size]="16" aria-hidden="true"></lucide-icon>
+            CSV
+          </button>
+          <button
+            class="toolbar-button"
+            (click)="exportChartsAsCombinedImage()"
+            type="button"
+            title="Export Combined Charts"
+            aria-label="Export both charts as combined image"
+          >
+            <lucide-icon [name]="Image" [size]="16" aria-hidden="true"></lucide-icon>
+            Combined
+          </button>
+          <button
+            class="toolbar-button"
+            (click)="exportStatisticsAsJSON()"
+            type="button"
+            title="Export Statistics"
+            aria-label="Export statistics as JSON"
+          >
+            <lucide-icon [name]="FileText" [size]="16" aria-hidden="true"></lucide-icon>
+            Stats JSON
+          </button>
         </div>
       </div>
     </div>
@@ -773,6 +779,18 @@
               </span>
             </div>
           </div>
+        <div class="chart-header__actions">
+          <button
+            class="chart-action"
+            type="button"
+            (click)="exportChartAsImage('temperature')"
+            aria-label="Export temperature chart as PNG"
+            title="Export temperature chart"
+          >
+            <lucide-icon [name]="Image" [size]="14" aria-hidden="true"></lucide-icon>
+            PNG
+          </button>
+        </div>
         </div>
         <p id="tempChartDesc" class="sr-only">
           Line chart of temperature in degrees Celsius. Active window:
@@ -807,6 +825,18 @@
               </span>
             </div>
           </div>
+        <div class="chart-header__actions">
+          <button
+            class="chart-action"
+            type="button"
+            (click)="exportChartAsImage('energy')"
+            aria-label="Export energy chart as PNG"
+            title="Export energy chart"
+          >
+            <lucide-icon [name]="Image" [size]="14" aria-hidden="true"></lucide-icon>
+            PNG
+          </button>
+        </div>
         </div>
         <p id="energyChartDesc" class="sr-only">
           Line chart of energy produced in kilowatt-hours. Active window:
@@ -1217,15 +1247,18 @@
 
 <app-footer></app-footer>
 
-<!-- Help Button -->
 <button
   class="help-button"
-  (click)="toggleHelp()"
-  [attr.aria-expanded]="showHelp"
-  aria-label="Show help and information about the application"
   type="button"
+  (click)="toggleHelp()"
+  aria-label="Show help and information about the application"
 >
-  <lucide-icon [name]="HelpCircle" [size]="24" aria-hidden="true"></lucide-icon>
+  <lucide-icon
+    [name]="HelpCircle"
+    [size]="18"
+    [strokeWidth]="1.6"
+    aria-hidden="true"
+  ></lucide-icon>
 </button>
 
 <!-- Help Modal - Tutorial Style -->
