@@ -9,7 +9,7 @@ import {
   ViewEncapsulation,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Wind, Sun, Moon } from 'lucide-angular';
+import { LucideAngularModule, Wind, Sun, Moon, HelpCircle } from 'lucide-angular';
 
 @Component({
   selector: 'app-header',
@@ -24,6 +24,7 @@ export class HeaderComponent {
   @Input() isStreaming = false;
   @Input() themeChoice: 'light' | 'dark' = 'light';
   @Output() themeChange = new EventEmitter<'light' | 'dark'>();
+  @Output() helpClick = new EventEmitter<void>();
 
   @ViewChild('themeToggle') themeToggleEl!: ElementRef<HTMLInputElement>;
 
@@ -31,10 +32,15 @@ export class HeaderComponent {
   Wind = Wind;
   Sun = Sun;
   Moon = Moon;
+  HelpCircle = HelpCircle;
 
   onThemeToggle(checked: boolean): void {
     const newTheme = checked ? 'dark' : 'light';
     this.themeChange.emit(newTheme);
+  }
+
+  openHelp(): void {
+    this.helpClick.emit();
   }
 
   onKeyDown(event: KeyboardEvent): void {
