@@ -2585,6 +2585,7 @@ body.theme-dark .card.kpi:focus-within {
   display: grid;
   gap: var(--space-6);
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
   margin-top: var(--space-6);
 }
 
@@ -2714,6 +2715,9 @@ body.theme-dark .card.kpi:focus-within {
   transition: all var(--transition-base);
   overflow: visible;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .chart-container:hover {
@@ -2797,6 +2801,7 @@ body.theme-dark .card.kpi:focus-within {
   justify-content: space-between;
   align-items: flex-start;
   gap: var(--space-4);
+  flex-shrink: 0;
 }
 
 .chart-header__actions {
@@ -2855,7 +2860,9 @@ body.theme-dark .card.kpi:focus-within {
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 200px;
+  justify-content: flex-start;
 }
 
 .chart-reset-button {
@@ -2882,8 +2889,10 @@ body.theme-dark .card.kpi:focus-within {
 .chart-meta-item {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--space-1);
+  min-width: 70px;
+  flex-shrink: 0;
 }
 
 .chart-meta-label {
@@ -2927,6 +2936,8 @@ body.theme-dark .card.kpi:focus-within {
   border-radius: var(--radius-md);
   transition: opacity var(--transition-base);
   position: relative;
+  flex: 1 1 auto;
+  align-self: stretch;
 }
 
 @media (max-width: 640px) {
@@ -3182,12 +3193,13 @@ section.statistics.card-surface,
 
 .stat-value--production {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 4px;
   line-height: 1.2;
   white-space: normal;
   word-break: normal;
+  justify-content: flex-end;
 }
 
 .stat-value-number {
@@ -4230,12 +4242,6 @@ body.theme-dark .progress-bar {
   z-index: var(--z-fixed);
   transition: all var(--transition-base);
   animation: helpButtonFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) 1s backwards;
-}
-
-@media (min-width: 1200px) {
-  .help-button {
-    right: calc((100vw - 1200px) / 2 + 1200px - var(--space-6));
-  }
 }
 
 @keyframes helpButtonFadeIn {
