@@ -1,239 +1,276 @@
-### 🌤️ Dashboard Meteorológico – Meteologica
+# 🌤️ Weather Dashboard
 
-### 📸 Vista de la aplicación
-![Dashboard Meteorológico](./docs/screenshot.png)
+A modern, real-time weather dashboard application built with Angular that visualizes meteorological data with progressive streaming, interactive charts, and advanced analytics tools.
 
-### 📋 Descripción del Proyecto
-Aplicación web desarrollada en Angular que visualiza datos de predicción meteorológica en tiempo real. La aplicación simula el streaming progresivo de datos cada 5 segundos, mostrando temperatura media y energía producida con gráficos interactivos y actualizaciones automáticas.
+## 📸 Application Preview
 
-### ✨ Características Principales
+![Weather Dashboard](./docs/screenshot.png)
 
--⚡ Streaming Progresivo: actualización automática cada 5 s
+## 📋 Project Description
 
--📊 Visualización en tiempo real: KPIs actualizados dinámicamente
+This web application provides real-time visualization of weather prediction data, including temperature and energy production metrics. The application simulates progressive data streaming every 5 seconds, displaying interactive charts with automatic updates, comprehensive statistics, and powerful analysis tools.
 
--📈 Gráficos interactivos: intervalos minutales con tooltips precisos
+## ✨ Key Features
 
--📱 Diseño responsivo: interfaz adaptable a cualquier dispositivo
+### Real-time Data Streaming
+- ⚡ **Progressive Updates**: Automatic data updates every 5 seconds
+- 📊 **Live Visualization**: Dynamic KPI cards and statistics
+- 📈 **Interactive Charts**: Minute-by-minute intervals with precise tooltips
+- 🔄 **Sliding Window**: Maintains last 60 data points for optimal performance
 
--🧠 Arquitectura modular: servicios desacoplados para datos y conversión
+### Advanced Analytics Tools
+- 📊 **Period Comparison**: Compare current vs previous periods with visual indicators
+- 🔔 **Smart Alerts**: Configure threshold-based notifications for temperature and energy
+- 🔍 **Advanced Filters**: Filter by temperature range, energy range, time of day, days of week, and trends
+- 💾 **Saved Views**: Save and restore dashboard configurations
 
--🔁 Conversión automática de unidades:
+### Data Export
+- 📥 **Export Charts**: Download charts as PNG images (individual or combined)
+- 📊 **Export Data**: Export to CSV or JSON formats
+- 📈 **Export Statistics**: Get detailed stats in JSON format
 
--Temperatura: de deciKelvins (dK) a °C
+### User Experience
+- 🎨 **Modern UI**: Clean, professional design with subtle shadows and smooth transitions
+- 🌓 **Theme Toggle**: Switch between light and dark themes (keyboard shortcut: `T`)
+- 📱 **Fully Responsive**: Optimized for desktop, tablet, and mobile devices
+- ♿ **Accessible**: ARIA labels, keyboard navigation, and focus management
+- ⌨️ **Keyboard Shortcuts**: Power user features with keyboard controls
 
--Energía: en kilovatios-hora (kWh)
+### Interactive Features
+- 📈 **Time Range Selection**: View data for Last Hour, 6 Hours, 24 Hours, or Week
+- 👁️ **Series Visibility**: Toggle temperature and energy series on/off
+- 📊 **Chart Interaction**: Zoom, pan, and hover for detailed information
+- 🎯 **Contextual Help**: Built-in tutorial and project documentation modal
 
-### 🛠️ Tecnologías Utilizadas
+## 🛠️ Technologies Used
 
--Framework: Angular (standalone components)
+- **Framework**: Angular 17 (standalone components)
+- **Language**: TypeScript
+- **Charts**: Chart.js 4.5.1 with zoom plugin
+- **Data Processing**: js-yaml 4.1.0
+- **Styling**: CSS3 with custom properties (CSS variables)
+- **Reactive Programming**: RxJS 7.8 (Observables, BehaviorSubject)
+- **Icons**: Lucide Angular
+- **Date Handling**: date-fns 4.1.0
 
--Lenguaje: TypeScript
-
--Gráficos: Chart.js 4.4.0
-
--Procesamiento de datos: js-yaml
-
--Estilos: CSS3 con variables personalizadas
-
--Programación reactiva: RxJS (Observables, BehaviorSubject)
-
-## 📦 Estructura del Proyecto
+## 📦 Project Structure
 
 ```
-
 weather-dashboard/
 ├── src/
 │   ├── app/
-│   │   ├── app.component.ts             # Componente principal
-│   │   ├── app.component.html           # Template del dashboard
-│   │   ├── app.component.css            # Estilos del componente
+│   │   ├── components/
+│   │   │   ├── header/              # Header with theme toggle
+│   │   │   ├── footer/              # Footer component
+│   │   │   ├── kpi-card/            # KPI card component
+│   │   │   ├── statistics/          # Statistics grid component
+│   │   │   └── toolbar/             # Toolbar component
 │   │   ├── services/
-│   │   │   ├── weather-data-loader.service.ts   # Carga y parseo YAML
-│   │   │   ├── weather-converter.service.ts     # Conversión de unidades
-│   │   │   └── weather-stream.service.ts        # Streaming de datos
-│   │   └── app.config.ts                # Configuración global
-│   ├── styles.css                       # Estilos globales
-│   └── index.html                       # HTML principal
-├── package.json                         # Dependencias
-├── angular.json                         # Configuración Angular
-├── tsconfig.json                        # Configuración TypeScript
-└── README.md                            # Este archivo
+│   │   │   ├── weather-data-loader.service.ts   # YAML loading and parsing
+│   │   │   ├── weather-converter.service.ts     # Unit conversion
+│   │   │   └── weather-stream.service.ts        # Progressive data streaming
+│   │   ├── app.component.ts         # Main component
+│   │   ├── app.component.html       # Dashboard template
+│   │   ├── app.component.css        # Component styles
+│   │   └── app.config.ts            # Global configuration
+│   ├── styles.css                   # Global styles and CSS variables
+│   └── index.html                   # Main HTML file
+├── docs/                            # Documentation and screenshots
+├── package.json                     # Dependencies
+├── angular.json                     # Angular configuration
+├── tsconfig.json                    # TypeScript configuration
+├── Dockerfile                       # Docker configuration
+└── README.md                        # This file
 ```
-### 🚀 Instalación y Ejecución
-### ✅ Prerrequisitos
 
--Node.js (v18 o superior)
+## 🚀 Installation and Execution
 
--npm (incluido con Node.js)
+### ✅ Prerequisites
 
-### ▶️ Pasos para ejecutar la app
+- Node.js (v18 or higher)
+- npm (included with Node.js)
 
-### Instalar dependencias
+### ▶️ Steps to Run the Application
 
-npm install
+1. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
+2. **Start the development server**
+   ```bash
+   npm start
+   ```
+   or
+   ```bash
+   ng serve
+   ```
 
-### Iniciar el servidor de desarrollo
+3. **Open in browser**
+   Navigate to `http://localhost:4200/`
 
-npm start
+## 📊 How the Application Works
 
+### Data Loading
+The `WeatherDataLoaderService` reads and parses the YAML file containing weather data.
 
-o
+### Progressive Streaming
+`WeatherStreamService` emits a new data point every 5 seconds, maintaining a sliding window of the last 60 points.
 
-ng serve
+### UI Updates
+The main component automatically updates:
+- Current values (top KPI cards)
+- Historical charts (last 60 data points)
+- Statistics (average, max, min, totals)
+- Trend indicators (up/down arrows)
 
+### Unit Conversion
+`WeatherConverterService` automatically converts:
+- **Temperature**: deciKelvins (dK) → Celsius (°C)
+  - Formula: °C = (dK / 10) - 273.15
+- **Energy**: Watt-hours (Wh) → Kilowatt-hours (kWh)
 
-### Abrir en el navegador
+## 🔧 Services and Components
 
-http://localhost:4200/
+### 1. WeatherDataLoaderService
+- Loads and parses YAML files
+- Prepares data for streaming
+- Handles file format validation
 
-### 📊 Funcionamiento de la Aplicación
+### 2. WeatherStreamService
+- Emits new data every 5 seconds
+- Maintains a buffer with recent history
+- Manages data flow and subscriptions
 
-### Carga de datos
-El servicio WeatherDataLoaderService lee y parsea el archivo YAML.
+### 3. WeatherConverterService
+- Converts meteorological units to readable formats
+- Temperature: dK → °C
+- Energy: Wh → kWh
 
-### Streaming progresivo
-WeatherStreamService emite cada 5 s el siguiente punto de datos.
+### 4. AppComponent
+- Renders the complete dashboard
+- Manages subscriptions and UI lifecycle
+- Handles user interactions and tool modals
 
-### Actualización de la UI
-El componente principal actualiza:
+## 🎨 Design System
 
--Valores actuales (tarjetas superiores)
+### Color Palette
+- **Primary Accent**: `#0ea5e9` (Sky Blue)
+- **Temperature Series**: `#0ea5e9` (Sky Blue)
+- **Energy Series**: `#475569` (Slate Gray)
+- **Success/Trend Up**: `#059669` (Green)
+- **Error/Trend Down**: `#dc2626` (Red)
 
--Gráficos históricos (últimos 60 puntos)
+### Design Features
+- Clean layout with card-based design
+- Subtle shadows and borders
+- Smooth transitions and micro-interactions
+- Sparklines optimized for retina displays
+- Fully responsive from desktop to mobile
+- Accessible color contrast ratios
 
--Estadísticas
+## ⌨️ Keyboard Shortcuts
 
-### 🔧 Servicios y Componentes
-1. WeatherDataLoaderService
+- `T` - Toggle theme (light/dark)
+- `C` - Toggle comparison mode
+- `A` - Open alerts modal
+- `F` - Open filters modal
+- `V` - Open saved views modal
+- `H` or `?` - Open help modal
+- `Ctrl/Cmd + E` - Export data as CSV
+- `Ctrl/Cmd + Shift + E` - Export charts as combined image
+- `1-4` - Select time range (Last Hour, 6 Hours, 24 Hours, Week)
+- `Esc` - Close active modal
 
--Carga y parsea el archivo YAML.
+## 📈 Optimizations Implemented
 
--Expone los datos preparados para el streaming.
+- **Sliding Window**: Only maintains last 60 data points
+- **Incremental Updates**: Charts update without reloading entire dataset
+- **Optimized Animations**: Uses Chart.js `update('none')` mode
+- **Memory Management**: Proper cleanup in `ngOnDestroy()`
+- **Selective Imports**: Only imports required Chart.js modules
+- **CSS Variables**: Efficient theming and customization
 
-2. WeatherStreamService
+## 📝 Technical Requirements (Met)
 
--Emite cada 5 s nuevos datos.
+✅ Progressive streaming every 5 seconds  
+✅ Real-time visualization  
+✅ Minute-by-minute charts  
+✅ Unit conversion dK → °C  
+✅ Responsive design with dark theme  
+✅ Advanced analytics and filtering  
+✅ Data export capabilities  
+✅ Interactive charts with zoom/pan  
+✅ Accessibility features  
 
--Mantiene un buffer con el historial reciente.
+## 📚 Usage Instructions
 
-3. WeatherConverterService
+### 🔧 Useful Commands
 
--Convierte unidades meteorológicas a formatos legibles:
+```bash
+ng build              # Build for production
+ng test               # Run tests
+ng serve --open       # Open browser automatically
+ng serve --port 4300  # Use different port if 4200 is occupied
+```
 
--Temperatura: dK → °C
+### ⚠️ Troubleshooting
 
--Energía: Wh → kWh
-
-4. AppComponent
-
--Renderiza el dashboard completo.
-
--Gestiona suscripciones y ciclo de vida de la UI.
-
-### 🎨 Diseño y UX
-
--Acento: #0EA5A2
-
--Serie Temperatura: #0EA5A2
-
--Serie Energía: #475569
-
--Tendencias: ↑ #16a34a · ↓ #ef4444
-
-### Características:
-
--Layout limpio con cards
-
--Sparklines optimizados para retina
-
--Microinteracciones y accesibilidad
-
--Responsivo desde escritorio hasta móvil
-
-### 📈 Optimizaciones Implementadas
-
--Ventana deslizante: solo últimos 60 puntos
-
--Actualización incremental: sin recargar dataset
-
--Animaciones optimizadas con update('none')
-
--Limpieza de memoria en ngOnDestroy()
-
--Imports selectivos de Chart.js
-
-### 📝 Requisitos de la Prueba Técnica
-
-✅ Streaming progresivo cada 5 s
-
-✅ Visualización en tiempo real
-
-✅ Gráficos minutales
-
-✅ Conversión dK → °C
-
-✅ Diseño responsive con tema oscuro
-
-### 📚 Instrucciones de Uso
-### 🔧 Comandos útiles
-ng build             # Compilar para producción
-ng test              # Ejecutar tests
-ng serve --open      # Abrir automáticamente el navegador
-
-### ⚠️ Solución de Problemas
-
-Puerto 4200 ocupado:
-
+**Port 4200 is occupied:**
+```bash
 ng serve --port 4300
+```
 
-
-### Problemas de dependencias:
-
+**Dependency issues:**
+```bash
 rm -rf node_modules package-lock.json
 npm install
+```
 
+**Application not updating:**
+- Check browser console (F12)
+- Ensure JavaScript is enabled
+- Try incognito mode
+- Clear browser cache
 
-### La app no actualiza:
+## 🐳 Docker Deployment
 
-Revisa consola (F12)
+Deploy the application without installing Node.js using Docker:
 
-Habilita JavaScript
-
-Prueba modo incógnito
-
-### 🐳 Ejecución con Docker
-
-Puedes desplegar la aplicación sin instalar Node.js usando Docker:
-
-🛠️ Construir la imagen
+### 🛠️ Build the image
+```bash
 docker build -t weather-dashboard .
+```
 
-### ▶️ Ejecutar el contenedor
+### ▶️ Run the container
+```bash
 docker run --name weather-dashboard -d -p 8080:80 weather-dashboard
+```
 
+Access at: `http://localhost:8080`
 
-### 📍 Accede en: http://localhost:8080
-
-### 🔄 Ciclo de redeploy
+### 🔄 Redeploy cycle
+```bash
 docker stop weather-dashboard || true
 docker rm weather-dashboard || true
 docker build -t weather-dashboard .
 docker run --name weather-dashboard -d -p 8080:80 weather-dashboard
+```
 
-### 📊 Logs y mantenimiento
-docker logs -f weather-dashboard
-docker stop weather-dashboard
-docker rm weather-dashboard
+### 📊 Logs and maintenance
+```bash
+docker logs -f weather-dashboard    # View logs
+docker stop weather-dashboard       # Stop container
+docker rm weather-dashboard         # Remove container
+```
 
+💡 **Note**: If port 8080 is occupied, use another: `-p 8081:80`
 
-### 💡 Si el puerto 8080 está ocupado, usa otro: -p 8081:80
+### 📦 Docker Compose Option
 
-### 📦 Opción con docker-compose
+Create `docker-compose.yml`:
 
-docker-compose.yml:
-
+```yaml
 services:
   weather-dashboard:
     build: .
@@ -242,31 +279,41 @@ services:
       - "8080:80"
     container_name: weather-dashboard
     restart: unless-stopped
+```
 
+Commands:
+```bash
+docker compose up -d              # Start
+docker compose logs -f            # View logs
+docker compose down               # Stop
+```
 
-### Comandos:
+### 🐳 How the Dockerfile Works
 
-docker compose up -d
-docker compose logs -f
-docker compose down
+- **Stage 1 (Node 18-alpine)**: Installs dependencies and compiles Angular
+- **Stage 2 (nginx:alpine)**: Serves static files from `/usr/share/nginx/html`
 
-### 🐳 Cómo funciona el Dockerfile
+✅ Result: Lightweight, fast, production-ready image
 
-Stage 1 (Node 18-alpine): instala dependencias y compila Angular.
+## 📐 Unit Conversion
 
-Stage 2 (nginx:alpine): sirve los archivos estáticos desde /usr/share/nginx/html.
+### Temperature Conversion
 
-✅ Resultado: imagen ligera, rápida y lista para producción.
-
-📐 Conversión de Unidades
+```typescript
 convertDKToCelsius(dK: number): number {
   return (dK / 10) - 273.15;
 }
+```
 
+**Formula**: °C = (dK / 10) - 273.15
 
-Fórmula: °C = (dK / 10) - 273.15
+### Energy Conversion
 
-📁 Formato de datos YAML esperado
+Energy values are automatically converted from Watt-hours (Wh) to Kilowatt-hours (kWh).
+
+## 📁 Expected YAML Data Format
+
+```yaml
 temperature:
   unit: "dK"
   values:
@@ -274,11 +321,28 @@ temperature:
       value: 2921
     - time: "00:00:05"
       value: 2921
+    - time: "00:00:10"
+      value: 2920
+    # ... more entries
 
-### 👤 Autor
+energy:
+  unit: "Wh"
+  values:
+    - time: "00:00:00"
+      value: 1250
+    - time: "00:00:05"
+      value: 1280
+    # ... more entries
+```
 
-### Antonio Quijano Bernedo
+## 👤 Author
 
-### Dashboard desarrollado como prueba técnica para Meteologica.
+**Antonio Quijano Bernedo**
 
-### Tecnologías: Angular · TypeScript · Chart.js · RxJS · Docker
+Weather Dashboard developed as a technical assessment project.
+
+**Technologies**: Angular · TypeScript · Chart.js · RxJS · Docker · CSS3
+
+---
+
+**Built with ❤️ using modern web technologies**
