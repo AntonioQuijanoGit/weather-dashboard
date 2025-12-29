@@ -1799,7 +1799,14 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Alerts Functions ----------
   toggleAlerts(): void {
-    this.showAlerts = !this.showAlerts;
+    if (this.showAlerts) {
+      this.showAlerts = false;
+    } else {
+      // Close other modals
+      this.showFilters = false;
+      this.showSavedViews = false;
+      this.showAlerts = true;
+    }
   }
 
   addAlert(type: 'temperature' | 'energy', threshold: number, condition: 'above' | 'below'): void {
@@ -2017,7 +2024,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
         if (key === 'v' && !ctrl && !shift) {
           ev.preventDefault();
-          this.showSavedViews = !this.showSavedViews;
+          this.toggleSavedViews();
           return;
         }
 
@@ -2054,19 +2061,15 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
         // Escape to close modals/panels
         if (key === 'escape') {
           if (this.showHelp) {
-            this.showHelp = false;
-          }
-          if (this.showAlerts) {
-            this.showAlerts = false;
-          }
-          if (this.showFilters) {
-            this.showFilters = false;
-          }
-          if (this.showSavedViews) {
-            this.showSavedViews = false;
-          }
-          if (this.comparisonMode) {
-            this.comparisonMode = false;
+            this.closeHelp();
+          } else if (this.showAlerts) {
+            this.toggleAlerts();
+          } else if (this.showFilters) {
+            this.toggleFilters();
+          } else if (this.showSavedViews) {
+            this.toggleSavedViews();
+          } else if (this.comparisonMode) {
+            this.toggleComparison();
           }
         }
       })
@@ -2182,7 +2185,25 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Filter Functions - Enhanced ----------
   toggleFilters(): void {
-    this.showFilters = !this.showFilters;
+    if (this.showFilters) {
+      this.showFilters = false;
+    } else {
+      // Close other modals
+      this.showAlerts = false;
+      this.showSavedViews = false;
+      this.showFilters = true;
+    }
+  }
+
+  toggleSavedViews(): void {
+    if (this.showSavedViews) {
+      this.showSavedViews = false;
+    } else {
+      // Close other modals
+      this.showAlerts = false;
+      this.showFilters = false;
+      this.showSavedViews = true;
+    }
   }
 
   applyFilters(): void {

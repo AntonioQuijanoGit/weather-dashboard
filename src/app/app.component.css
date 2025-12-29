@@ -807,13 +807,16 @@ body.theme-dark .theme-switch__thumb {
 }
 
 .tool-card.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--text-inverse);
+  background: var(--accent-subtle);
+  border-color: color-mix(in srgb, var(--accent) 65%, #ffffff 35%);
+  color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+  font-weight: var(--fw-semibold);
 }
 
 .tool-card.active:hover {
-  opacity: 0.9;
+  background: var(--accent-subtle-hover);
+  border-color: color-mix(in srgb, var(--accent) 80%, #ffffff 20%);
 }
 
 .tool-card__label {
@@ -5301,10 +5304,7 @@ lucide-icon {
 }
 
 /* =============== Comparison Panel =============== */
-.comparison-panel,
-.alerts-panel,
-.filters-panel,
-.saved-views-panel {
+.comparison-panel {
   margin-top: var(--space-4);
   margin-bottom: var(--space-6);
   animation: fadeInUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -5314,19 +5314,16 @@ lucide-icon {
   background: var(--surface);
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  padding: var(--space-5);
   box-shadow: var(--shadow-sm);
 }
 
-.comparison-header,
-.alerts-header,
-.filters-header,
-.saved-views-header {
+.comparison-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-5);
-  padding-bottom: var(--space-4);
+  align-items: center;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
   border-bottom: var(--border-width) solid var(--border);
   gap: var(--space-4);
 }
@@ -5792,19 +5789,13 @@ lucide-icon {
     align-items: stretch;
   }
 
-  .comparison-panel,
-  .alerts-panel,
-  .filters-panel,
-  .saved-views-panel {
+  .comparison-panel {
     padding: var(--space-5);
     margin-top: var(--space-4);
     margin-bottom: var(--space-5);
   }
 
-  .comparison-header,
-  .alerts-header,
-  .filters-header,
-  .saved-views-header {
+  .comparison-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);
@@ -5812,10 +5803,7 @@ lucide-icon {
     padding-bottom: var(--space-3);
   }
 
-  .comparison-header h3,
-  .alerts-header h3,
-  .filters-header h3,
-  .saved-views-header h3 {
+  .comparison-header h3 {
     font-size: var(--fs-base);
     width: 100%;
   }
@@ -5843,9 +5831,6 @@ lucide-icon {
 
 @media (max-width: 640px) {
   .comparison-panel,
-  .alerts-panel,
-  .filters-panel,
-  .saved-views-panel {
     padding: var(--space-4);
     margin-top: var(--space-3);
     margin-bottom: var(--space-4);
@@ -5890,9 +5875,6 @@ lucide-icon {
 
 @media (max-width: 480px) {
   .comparison-panel,
-  .alerts-panel,
-  .filters-panel,
-  .saved-views-panel {
     padding: var(--space-3);
     margin-bottom: var(--space-3);
   }

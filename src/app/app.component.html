@@ -280,7 +280,7 @@
             </button>
             <button
               class="tool-card"
-              (click)="showSavedViews = !showSavedViews"
+              (click)="toggleSavedViews()"
               [class.active]="showSavedViews"
               type="button"
               aria-label="Saved views"
@@ -427,16 +427,26 @@
     </div>
     }
 
-    <!-- Alerts Panel -->
+    <!-- Alerts Modal -->
     @if (showAlerts) {
-    <div class="alerts-panel">
-      <div class="alerts-header">
-        <h3>Configure Alerts</h3>
-        <button class="close-button" (click)="toggleAlerts()" type="button" aria-label="Close alerts">
-          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
-        </button>
-      </div>
-      <div class="alerts-content">
+    <div class="help-modal-overlay" (click)="toggleAlerts()" role="dialog" aria-modal="true" aria-labelledby="alerts-title">
+      <div class="help-modal" (click)="$event.stopPropagation()">
+        <div class="help-modal__header">
+          <div class="help-modal__header-content">
+            <h2 id="alerts-title" class="help-modal__title">Configure Alerts</h2>
+            <p class="help-modal__subtitle">Set up notifications for temperature and energy thresholds</p>
+          </div>
+          <button
+            class="help-modal__close"
+            (click)="toggleAlerts()"
+            aria-label="Close alerts"
+            type="button"
+          >
+            <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+          </button>
+        </div>
+        <div class="help-modal__content">
+          <div class="alerts-content">
         <div class="alerts-explanation">
           <p class="muted">
             <lucide-icon [name]="Info" [size]="14" aria-hidden="true"></lucide-icon>
@@ -593,20 +603,32 @@
             </div>
           </div>
         }
+          </div>
+        </div>
       </div>
     </div>
     }
 
-    <!-- Filters Panel -->
+    <!-- Filters Modal -->
     @if (showFilters) {
-    <div class="filters-panel">
-      <div class="filters-header">
-        <h3>Filter Data</h3>
-        <button class="close-button" (click)="toggleFilters()" type="button" aria-label="Close filters">
-          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
-        </button>
-      </div>
-      <div class="filters-content">
+    <div class="help-modal-overlay" (click)="toggleFilters()" role="dialog" aria-modal="true" aria-labelledby="filters-title">
+      <div class="help-modal" (click)="$event.stopPropagation()">
+        <div class="help-modal__header">
+          <div class="help-modal__header-content">
+            <h2 id="filters-title" class="help-modal__title">Filter Data</h2>
+            <p class="help-modal__subtitle">Filter data by temperature, energy, time, and trends</p>
+          </div>
+          <button
+            class="help-modal__close"
+            (click)="toggleFilters()"
+            aria-label="Close filters"
+            type="button"
+          >
+            <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+          </button>
+        </div>
+        <div class="help-modal__content">
+          <div class="filters-content">
         <div class="filter-group">
           <label>Temperature Range</label>
           <div class="filter-inputs">
@@ -679,20 +701,32 @@
           <button class="export-button" (click)="applyFilters()" type="button">Apply Filters</button>
           <button class="export-button export-button--secondary" (click)="clearFilters()" type="button">Clear</button>
         </div>
+          </div>
+        </div>
       </div>
     </div>
     }
 
-    <!-- Saved Views Panel -->
+    <!-- Saved Views Modal -->
     @if (showSavedViews) {
-    <div class="saved-views-panel">
-      <div class="saved-views-header">
-        <h3>Saved Views</h3>
-        <button class="close-button" (click)="showSavedViews = false" type="button" aria-label="Close saved views">
-          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
-        </button>
-      </div>
-      <div class="saved-views-content">
+    <div class="help-modal-overlay" (click)="toggleSavedViews()" role="dialog" aria-modal="true" aria-labelledby="views-title">
+      <div class="help-modal" (click)="$event.stopPropagation()">
+        <div class="help-modal__header">
+          <div class="help-modal__header-content">
+            <h2 id="views-title" class="help-modal__title">Saved Views</h2>
+            <p class="help-modal__subtitle">Save and load your dashboard configurations</p>
+          </div>
+          <button
+            class="help-modal__close"
+            (click)="toggleSavedViews()"
+            aria-label="Close saved views"
+            type="button"
+          >
+            <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+          </button>
+        </div>
+        <div class="help-modal__content">
+          <div class="saved-views-content">
         <div class="save-view-form">
           <input #viewName type="text" class="form-input" placeholder="View name" />
           <button class="export-button" (click)="saveCurrentView(viewName.value); viewName.value = ''" type="button">
@@ -710,6 +744,8 @@
             </div>
           </div>
           }
+        </div>
+          </div>
         </div>
       </div>
     </div>
