@@ -1,4 +1,5 @@
 /* === Premium Design System 2025 — Modern & Accessible === */
+/* Based on Vercel, Linear, Stripe design principles */
 
 /* LIGHT THEME - Vercel Style (Minimalist & Clean) */
 :root {
@@ -37,7 +38,7 @@
   --info: #1e40af;
   --info-light: #3b82f6;
 
-  /* Shadows - Vercel Style (Very Subtle) */
+  /* Shadows - Vercel Style (Very Subtle) - Elevation System */
   --shadow-none: none;
   --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
   --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
@@ -49,7 +50,7 @@
   --shadow-accent: 0 2px 8px 0 rgba(0, 0, 0, 0.06);
   --shadow-glow: none;
 
-  /* Border Radius - Vercel Style (Subtle) */
+  /* Border Radius - Vercel Style (Subtle) - Consistent System */
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 8px;
@@ -64,50 +65,60 @@
   --font-display: "Inter", var(--font-sans);
   --font-mono: "SF Mono", "Monaco", "Consolas", "Liberation Mono", "Courier New", monospace;
 
-  /* Font Sizes - Refined Scale */
-  --fs-xs: 0.75rem;    /* 12px */
-  --fs-sm: 0.875rem;   /* 14px */
-  --fs-base: 1rem;     /* 16px */
-  --fs-md: 1rem;       /* 16px */
-  --fs-lg: 1.125rem;   /* 18px */
-  --fs-xl: 1.25rem;    /* 20px */
-  --fs-2xl: 1.5rem;    /* 24px */
-  --fs-3xl: 1.875rem;  /* 30px */
-  --fs-4xl: 2.25rem;   /* 36px */
-  --fs-5xl: 3rem;      /* 48px */
-  --fs-kpi: 3.5rem;    /* 56px */
-  --fs-display: 4rem;  /* 64px */
+  /* Font Sizes - Harmonic Scale (8pt based) */
+  --fs-xs: 0.75rem;    /* 12px - Labels, captions */
+  --fs-sm: 0.875rem;   /* 14px - Small text, metadata */
+  --fs-base: 1rem;     /* 16px - Body text (default) */
+  --fs-md: 1rem;       /* 16px - Alias for base */
+  --fs-lg: 1.125rem;   /* 18px - Large body, subheadings */
+  --fs-xl: 1.25rem;    /* 20px - Small headings */
+  --fs-2xl: 1.5rem;    /* 24px - Section headings */
+  --fs-3xl: 1.875rem;  /* 30px - Page headings */
+  --fs-4xl: 2.25rem;   /* 36px - Large headings */
+  --fs-5xl: 3rem;      /* 48px - Display text */
+  --fs-kpi: 3.5rem;    /* 56px - KPI values */
+  --fs-display: 4rem;  /* 64px - Hero text */
 
-  /* Line Heights */
+  /* Line Heights - Typography System */
   --lh-none: 1;
-  --lh-tight: 1.25;
-  --lh-snug: 1.375;
-  --lh-normal: 1.5;
-  --lh-relaxed: 1.75;
+  --lh-tight: 1.25;      /* Headings, large text */
+  --lh-snug: 1.375;      /* Subheadings */
+  --lh-normal: 1.5;      /* Body text (default) */
+  --lh-relaxed: 1.625;   /* Long-form content */
+  --lh-loose: 1.75;      /* Very relaxed reading */
+  
+  /* Letter Spacing - Typography System */
+  --ls-tighter: -0.05em;  /* Large headings */
+  --ls-tight: -0.03em;    /* Headings */
+  --ls-normal: -0.01em;   /* Body text */
+  --ls-wide: 0.01em;      /* Small text, labels */
+  --ls-wider: 0.03em;     /* Uppercase labels */
+  --ls-widest: 0.05em;    /* Uppercase headings */
 
-  /* Font Weights */
+  /* Font Weights - Consistent System */
   --fw-light: 300;
-  --fw-normal: 400;
-  --fw-medium: 500;
-  --fw-semibold: 600;
-  --fw-bold: 700;
+  --fw-normal: 400;      /* Body text */
+  --fw-medium: 500;       /* Emphasis, labels */
+  --fw-semibold: 600;    /* Headings, buttons */
+  --fw-bold: 700;        /* Strong headings */
   --fw-extrabold: 800;
 
-  /* Spacing Scale - Vercel Style (Very Generous) */
-  --space-1: 0.25rem;  /* 4px */
-  --space-2: 0.5rem;   /* 8px */
+  /* Spacing Scale - 8pt Grid System (Vercel/Linear Style) */
+  --space-0: 0;         /* 0px - No spacing */
+  --space-1: 0.25rem;    /* 4px - Tight spacing */
+  --space-2: 0.5rem;    /* 8px - Base unit */
   --space-3: 0.75rem;  /* 12px */
-  --space-4: 1rem;     /* 16px */
-  --space-5: 1.25rem;  /* 20px */
-  --space-6: 1.5rem;   /* 24px */
-  --space-8: 2rem;     /* 32px */
-  --space-10: 2.5rem;  /* 40px */
-  --space-12: 3rem;    /* 48px */
-  --space-14: 3.5rem;  /* 56px */
-  --space-16: 4rem;    /* 64px */
-  --space-20: 5rem;    /* 80px */
-  --space-24: 6rem;    /* 96px */
-  --space-32: 8rem;    /* 128px */
+  --space-4: 1rem;      /* 16px - Standard spacing */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px - Comfortable spacing */
+  --space-8: 2rem;      /* 32px - Section spacing */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px - Large section spacing */
+  --space-14: 3.5rem;   /* 56px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px - Extra large spacing */
+  --space-32: 8rem;     /* 128px */
 
   /* Transitions - Smooth & Natural */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -132,7 +143,7 @@
   --glass-bg: rgba(255, 255, 255, 1);
   --glass-border: rgba(0, 0, 0, 0.06);
   
-  /* Icon Sizes */
+  /* Icon Sizes - Consistent System */
   --icon-xs: 12px;
   --icon-sm: 14px;
   --icon-md: 16px;
@@ -140,7 +151,7 @@
   --icon-xl: 20px;
   --icon-2xl: 24px;
 
-  /* Breakpoints */
+  /* Breakpoints - Mobile First */
   --breakpoint-xs: 480px;
   --breakpoint-sm: 640px;
   --breakpoint-md: 768px;
@@ -253,10 +264,10 @@ body {
   font-size: var(--fs-base);
   font-weight: var(--fw-normal);
   line-height: var(--lh-normal);
+  letter-spacing: var(--ls-normal);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  letter-spacing: -0.011em;
   transition: background-color var(--transition-slow),
     color var(--transition-slow);
   position: relative;
@@ -443,4 +454,246 @@ textarea:focus-visible {
     transform: translateX(100%);
     opacity: 0;
   }
+}
+
+/* ========================================
+   COMPONENT SYSTEM - Base Components
+   ======================================== */
+
+/* === Button System - Unified Variants === */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-semibold);
+  line-height: var(--lh-tight);
+  letter-spacing: var(--ls-normal);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  min-height: 40px;
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  user-select: none;
+}
+
+.btn-base:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--accent-subtle), var(--shadow-sm);
+}
+
+.btn-base:active {
+  transform: scale(0.98);
+}
+
+/* Button Variants */
+.btn-primary {
+  background: var(--accent-subtle);
+  border-color: color-mix(in srgb, var(--accent) 65%, #ffffff 35%);
+  color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+.btn-primary:hover {
+  background: var(--accent-subtle-hover);
+  border-color: color-mix(in srgb, var(--accent) 80%, #ffffff 20%);
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent), var(--shadow-md);
+}
+
+.btn-secondary {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  color: var(--text-2);
+}
+
+.btn-secondary:hover {
+  background: var(--surface);
+  border-color: var(--border-hover);
+  color: var(--text);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--text-2);
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  color: var(--text);
+}
+
+/* Button Sizes */
+.btn-sm {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-xs);
+  min-height: 32px;
+  gap: var(--space-1);
+}
+
+.btn-lg {
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--fs-base);
+  min-height: 48px;
+  gap: var(--space-3);
+}
+
+/* === Input System - Unified === */
+.input-base {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  font-weight: var(--fw-normal);
+  line-height: var(--lh-normal);
+  letter-spacing: var(--ls-normal);
+  transition: all var(--transition-base);
+  min-height: 40px;
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-subtle);
+}
+
+.input-base::placeholder {
+  color: var(--text-3);
+}
+
+/* === Card System - Unified === */
+.card-base {
+  background: var(--surface);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.card-base:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-hover);
+  transform: translateY(-1px);
+}
+
+.card-elevated {
+  box-shadow: var(--shadow-md);
+}
+
+.card-elevated:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* === Badge/Chip System === */
+.badge-base {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-xs);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-tight);
+  white-space: nowrap;
+}
+
+.badge-primary {
+  background: var(--accent-subtle);
+  color: var(--accent);
+  border: var(--border-width) solid var(--accent);
+}
+
+.badge-secondary {
+  background: var(--bg-secondary);
+  color: var(--text-2);
+  border: var(--border-width) solid var(--border);
+}
+
+/* === Typography Utilities === */
+.text-xs { font-size: var(--fs-xs); }
+.text-sm { font-size: var(--fs-sm); }
+.text-base { font-size: var(--fs-base); }
+.text-lg { font-size: var(--fs-lg); }
+.text-xl { font-size: var(--fs-xl); }
+.text-2xl { font-size: var(--fs-2xl); }
+.text-3xl { font-size: var(--fs-3xl); }
+.text-4xl { font-size: var(--fs-4xl); }
+
+.font-normal { font-weight: var(--fw-normal); }
+.font-medium { font-weight: var(--fw-medium); }
+.font-semibold { font-weight: var(--fw-semibold); }
+.font-bold { font-weight: var(--fw-bold); }
+
+/* === Spacing Utilities === */
+.gap-0 { gap: var(--space-0); }
+.gap-1 { gap: var(--space-1); }
+.gap-2 { gap: var(--space-2); }
+.gap-3 { gap: var(--space-3); }
+.gap-4 { gap: var(--space-4); }
+.gap-5 { gap: var(--space-5); }
+.gap-6 { gap: var(--space-6); }
+.gap-8 { gap: var(--space-8); }
+
+.p-0 { padding: var(--space-0); }
+.p-1 { padding: var(--space-1); }
+.p-2 { padding: var(--space-2); }
+.p-3 { padding: var(--space-3); }
+.p-4 { padding: var(--space-4); }
+.p-5 { padding: var(--space-5); }
+.p-6 { padding: var(--space-6); }
+.p-8 { padding: var(--space-8); }
+
+.m-0 { margin: var(--space-0); }
+.m-1 { margin: var(--space-1); }
+.m-2 { margin: var(--space-2); }
+.m-3 { margin: var(--space-3); }
+.m-4 { margin: var(--space-4); }
+.m-5 { margin: var(--space-5); }
+.m-6 { margin: var(--space-6); }
+.m-8 { margin: var(--space-8); }
+
+/* === Alignment Utilities === */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.text-center {
+  text-align: center;
 }

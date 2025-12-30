@@ -2269,6 +2269,89 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     };
     this.applyFilters();
   }
+
+  // Get active filter chips for display
+  getActiveFilterChips(): Array<{ label: string; value: string; type: string }> {
+    const chips: Array<{ label: string; value: string; type: string }> = [];
+    
+    // Temperature range
+    if (this.valueFilters.tempMin > 0 || this.valueFilters.tempMax < 100) {
+      chips.push({
+        label: 'Temp',
+        value: `${this.valueFilters.tempMin}–${this.valueFilters.tempMax}°C`,
+        type: 'temp'
+      });
+    }
+    
+    // Energy range
+    if (this.valueFilters.energyMin > 0 || this.valueFilters.energyMax < 100) {
+      chips.push({
+        label: 'Energy',
+        value: `${this.valueFilters.energyMin}–${this.valueFilters.energyMax}kWh`,
+        type: 'energy'
+      });
+    }
+    
+    // Time range
+    if (this.advancedFilters.hourStart > 0 || this.advancedFilters.hourEnd < 23) {
+      chips.push({
+        label: 'Time',
+        value: `${this.advancedFilters.hourStart}:00–${this.advancedFilters.hourEnd}:00`,
+        type: 'time'
+      });
+    }
+    
+    // Days of week
+    if (this.advancedFilters.daysOfWeek.length < 7) {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const selectedDays = this.advancedFilters.daysOfWeek.map(d => dayNames[d]).join(', ');
+      chips.push({
+        label: 'Days',
+        value: selectedDays,
+        type: 'days'
+      });
+    }
+    
+    // Trend filter
+    if (this.advancedFilters.trendFilter !== 'all') {
+      chips.push({
+        label: 'Trend',
+        value: this.advancedFilters.trendFilter === 'up' ? 'Rising' : 
+               this.advancedFilters.trendFilter === 'down' ? 'Falling' : 'Stable',
+        type: 'trend'
+      });
+    }
+    
+    return chips;
+  }
+
+  hasActiveFilters(): boolean {
+    return this.getActiveFilterChips().length > 0;
+  }
+
+  removeFilterChip(type: string): void {
+    switch (type) {
+      case 'temp':
+        this.valueFilters.tempMin = 0;
+        this.valueFilters.tempMax = 100;
+        break;
+      case 'energy':
+        this.valueFilters.energyMin = 0;
+        this.valueFilters.energyMax = 100;
+        break;
+      case 'time':
+        this.advancedFilters.hourStart = 0;
+        this.advancedFilters.hourEnd = 23;
+        break;
+      case 'days':
+        this.advancedFilters.daysOfWeek = [0, 1, 2, 3, 4, 5, 6];
+        break;
+      case 'trend':
+        this.advancedFilters.trendFilter = 'all';
+        break;
+    }
+    this.applyFilters();
+  }
   
 
   // ---------- Saved Views Functions ----------

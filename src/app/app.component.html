@@ -85,7 +85,7 @@
             ></lucide-icon>
             <span style="font-weight: var(--fw-semibold);">{{ getTempTrendLabel() }}</span>
             @if (additionalMetrics.tempChangeRate !== 0) {
-              <span class="muted" style="font-size: 11px; margin-left: 4px;">
+              <span class="muted filter-chip-rate">
                 ({{ additionalMetrics.tempChangeRate > 0 ? '+' : '' }}{{ additionalMetrics.tempChangeRate.toFixed(2) }}°C/min)
               </span>
             }
@@ -171,7 +171,7 @@
             ></lucide-icon>
             <span style="font-weight: var(--fw-semibold);">{{ getEnergyTrendLabel() }}</span>
             @if (additionalMetrics.energyChangeRate !== 0) {
-              <span class="muted" style="font-size: 11px; margin-left: 4px;">
+              <span class="muted filter-chip-rate">
                 ({{ additionalMetrics.energyChangeRate > 0 ? '+' : '' }}{{ additionalMetrics.energyChangeRate.toFixed(2) }}kWh/min)
               </span>
             }
@@ -491,7 +491,7 @@
               max="3600"
               step="10"
             />
-            <span class="muted" style="font-size: 12px; margin-top: 4px; display: block;">
+            <span class="muted filter-help-text">
               Prevent alert spam by waiting {{ alertSettings.cooldownSeconds }}s between triggers
             </span>
           </div>
@@ -547,7 +547,7 @@
                   <span class="alert-status">Active</span>
                 }
                 @if (alert.triggerCount > 0) {
-                  <span class="muted" style="font-size: 11px; margin-top: 2px;">
+                  <span class="muted filter-chip-rate">
                     Triggered {{ alert.triggerCount }} time{{ alert.triggerCount !== 1 ? 's' : '' }}
                   </span>
                 }
@@ -571,7 +571,7 @@
                 class="action-button action-button--secondary"
                 (click)="clearAlertHistory()"
                 type="button"
-                style="padding: 4px 8px; font-size: 11px;"
+                class="filter-chip-rate"
               >
                 Clear
               </button>
@@ -587,15 +587,15 @@
                         aria-hidden="true"
                       ></lucide-icon>
                       <strong>{{ historyItem.type === 'temperature' ? 'Temperature' : 'Energy' }}</strong>
-                      <span class="muted" style="font-size: 11px;">
+                      <span class="muted filter-chip-rate">
                         {{ historyItem.condition === 'above' ? '>' : '<' }} {{ historyItem.threshold }}{{ historyItem.type === 'temperature' ? '°C' : 'kWh' }}
                       </span>
                     </div>
-                    <span class="muted" style="font-size: 11px;">
+                    <span class="muted filter-chip-rate">
                       Value: {{ historyItem.value.toFixed(2) }}{{ historyItem.type === 'temperature' ? '°C' : 'kWh' }}
                     </span>
                   </div>
-                  <span class="muted" style="font-size: 11px;">
+                  <span class="muted filter-chip-rate">
                     {{ formatTimestamp(historyItem.timestamp) }}
                   </span>
                 </div>
@@ -611,7 +611,7 @@
 
     <!-- Filters Modal -->
     @if (showFilters) {
-    <div class="help-modal-overlay" (click)="toggleFilters()" role="dialog" aria-modal="true" aria-labelledby="filters-title">
+    <div class="help-modal-overlay" data-modal-type="filters" (click)="toggleFilters()" role="dialog" aria-modal="true" aria-labelledby="filters-title">
       <div class="help-modal" (click)="$event.stopPropagation()">
         <div class="help-modal__header">
           <div class="help-modal__header-content">
@@ -668,7 +668,7 @@
                 max="23"
               />
             </div>
-            <span class="muted" style="font-size: 12px; margin-top: 4px; display: block;">
+            <span class="muted filter-help-text">
               Filter data by time of day (0-23)
             </span>
           </div>
@@ -676,7 +676,7 @@
             <label>Days of Week</label>
             <div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2);">
               @for (day of [0,1,2,3,4,5,6]; track day) {
-                <label style="display: flex; align-items: center; gap: 4px; font-size: 13px;">
+                <label class="filter-day-label">
                   <input 
                     type="checkbox" 
                     [checked]="advancedFilters.daysOfWeek.includes(day)"
@@ -748,6 +748,34 @@
           </div>
         </div>
       </div>
+    </div>
+    }
+
+    <!-- Active Filters Summary Chips -->
+    @if (hasActiveFilters()) {
+    <div class="filter-summary" role="region" aria-label="Active filters">
+      <span class="filter-summary-label">Active Filters:</span>
+      @for (chip of getActiveFilterChips(); track chip.type) {
+      <span class="filter-chip">
+        <strong>{{ chip.label }}:</strong> {{ chip.value }}
+        <button 
+          class="filter-chip__remove" 
+          (click)="removeFilterChip(chip.type)" 
+          type="button"
+          [attr.aria-label]="'Remove ' + chip.label + ' filter'"
+        >
+          ×
+        </button>
+      </span>
+      }
+      <button 
+        class="export-button export-button--secondary" 
+        (click)="clearFilters()" 
+        type="button"
+        style="margin-left: auto; padding: var(--space-1) var(--space-3); font-size: var(--fs-xs);"
+      >
+        Clear All
+      </button>
     </div>
     }
 
@@ -975,7 +1003,7 @@
           <div class="metric-item">
             <span class="metric-label">Correlation:</span>
             <span class="metric-value">{{ additionalMetrics.correlation.toFixed(3) }}</span>
-            <span class="muted" style="font-size: 11px; margin-left: 4px;">
+            <span class="muted filter-chip-rate">
               ({{ additionalMetrics.correlation > 0.7 ? 'Strong' : additionalMetrics.correlation > 0.3 ? 'Moderate' : 'Weak' }})
             </span>
           </div>
