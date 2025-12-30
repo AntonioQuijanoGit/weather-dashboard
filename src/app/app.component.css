@@ -847,7 +847,7 @@ body.theme-dark .theme-switch__thumb {
 .charts-toolbar__exports-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
   background: var(--bg-secondary);
