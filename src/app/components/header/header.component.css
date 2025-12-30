@@ -117,7 +117,7 @@
   opacity: 1;
 }
 
-.brand__logo iconify-icon {
+.brand__logo lucide-icon {
   transition: transform var(--transition-base);
   animation: iconFloat 3s ease-in-out infinite;
 }
@@ -538,7 +538,7 @@ body.theme-dark .theme-switch__thumb {
   .header,
   .brand,
   .brand__logo,
-  .brand__logo iconify-icon,
+  .brand__logo lucide-icon,
   .brand__text,
   .brand__text h1,
   .brand__text p,

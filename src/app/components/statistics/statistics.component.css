@@ -162,18 +162,18 @@ body.theme-dark .progress-bar {
   color: inherit;
 }
 
-.statistics .delta iconify-icon,
-.delta iconify-icon {
+.statistics .delta lucide-icon,
+.delta lucide-icon {
   transition: color var(--transition-slow);
   vertical-align: -2px;
 }
 
-.statistics .delta.up iconify-icon,
-.delta.up iconify-icon {
+.statistics .delta.up lucide-icon,
+.delta.up lucide-icon {
   color: var(--success);
 }
 
-.statistics .delta.down iconify-icon,
-.delta.down iconify-icon {
+.statistics .delta.down lucide-icon,
+.delta.down lucide-icon {
   color: var(--error);
 }

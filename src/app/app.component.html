@@ -292,6 +292,331 @@
       </div>
         </div>
       </div>
+
+      <!-- Alerts Modal -->
+      @if (showAlerts) {
+      <div class="help-modal-overlay" data-modal-type="tools" (click)="toggleAlerts()" role="dialog" aria-modal="true" aria-labelledby="alerts-title">
+        <div class="help-modal" (click)="$event.stopPropagation()">
+          <div class="help-modal__header">
+            <div class="help-modal__header-content">
+              <h2 id="alerts-title" class="help-modal__title">Configure Alerts</h2>
+              <p class="help-modal__subtitle">Set up notifications for temperature and energy thresholds</p>
+            </div>
+            <button
+              class="help-modal__close"
+              (click)="toggleAlerts()"
+              aria-label="Close alerts"
+              type="button"
+            >
+              <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+            </button>
+          </div>
+          <div class="help-modal__content">
+            <div class="alerts-content">
+          <div class="alerts-explanation">
+            <p class="muted">
+              <lucide-icon [name]="Info" [size]="14" aria-hidden="true"></lucide-icon>
+              Alerts notify you when values exceed your thresholds. You'll see a notification when triggered.
+            </p>
+          </div>
+          <div class="alert-settings">
+            <div class="form-group">
+              <label>
+                <input 
+                  type="checkbox" 
+                  [checked]="alertSettings.enableBrowserNotifications"
+                  (change)="alertSettings.enableBrowserNotifications = ($any($event.target).checked); requestNotificationPermission()"
+                />
+                Enable browser notifications
+              </label>
+              @if (notificationPermission === 'default') {
+                <button 
+                  class="action-button action-button--secondary"
+                  (click)="requestNotificationPermission()"
+                  type="button"
+                  style="margin-top: 8px;"
+                >
+                  Request Permission
+                </button>
+              }
+              @if (notificationPermission === 'granted') {
+                <span class="muted" style="margin-left: 8px; color: var(--success);">✓ Enabled</span>
+              }
+              @if (notificationPermission === 'denied') {
+                <span class="muted" style="margin-left: 8px; color: var(--error);">✗ Denied</span>
+              }
+            </div>
+            <div class="form-group">
+              <label>Cooldown (seconds)</label>
+              <input 
+                type="number" 
+                class="form-input" 
+                [value]="alertSettings.cooldownSeconds"
+                (input)="updateCooldown($any($event.target).value)"
+                min="10"
+                max="3600"
+                step="10"
+              />
+              <span class="muted filter-help-text">
+                Prevent alert spam by waiting {{ alertSettings.cooldownSeconds }}s between triggers
+              </span>
+            </div>
+          </div>
+          <div class="alert-form">
+            <div class="form-group">
+              <label>Metric</label>
+              <select #alertType class="form-input">
+                <option value="temperature">Temperature</option>
+                <option value="energy">Energy</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Condition</label>
+              <select #alertCondition class="form-input">
+                <option value="above">Above</option>
+                <option value="below">Below</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Threshold</label>
+              <input type="number" #alertThreshold class="form-input" placeholder="Value" step="0.1" />
+            </div>
+            <button
+              class="export-button"
+              (click)="addAlertFromInputs(alertType.value, alertThreshold.value, alertCondition.value)"
+              type="button"
+            >
+              Add Alert
+            </button>
+          </div>
+          @if (alerts.length > 0) {
+            <div class="alerts-list">
+              <div class="alerts-list-header">
+                <span class="alerts-count">{{ alerts.length }} alert{{ alerts.length !== 1 ? 's' : '' }}</span>
+              </div>
+              @for (alert of alerts; track alert.id) {
+              <div class="alert-item" [class.triggered]="alert.triggered">
+                <div class="alert-info">
+                  <div class="alert-metric">
+                    <lucide-icon 
+                      [name]="alert.type === 'temperature' ? Thermometer : Zap" 
+                      [size]="14" 
+                      aria-hidden="true"
+                    ></lucide-icon>
+                    <strong>{{ alert.type === 'temperature' ? 'Temperature' : 'Energy' }}</strong>
+                  </div>
+                  <span class="alert-condition">
+                    {{ alert.condition === 'above' ? '>' : '<' }} 
+                    <strong>{{ alert.threshold }}{{ alert.type === 'temperature' ? '°C' : 'kWh' }}</strong>
+                  </span>
+                  @if (alert.triggered) {
+                    <span class="alert-status">Active</span>
+                  }
+                  @if (alert.triggerCount > 0) {
+                    <span class="muted filter-chip-rate">
+                      Triggered {{ alert.triggerCount }} time{{ alert.triggerCount !== 1 ? 's' : '' }}
+                    </span>
+                  }
+                </div>
+                <button class="alert-remove" (click)="removeAlert(alert.id)" type="button" aria-label="Remove alert">
+                  <lucide-icon [name]="X" [size]="16" aria-hidden="true"></lucide-icon>
+                </button>
+              </div>
+              }
+            </div>
+          } @else {
+            <div class="alerts-empty">
+              <p class="muted">No alerts configured. Add one above to get notified when values exceed thresholds.</p>
+            </div>
+          }
+          @if (alertHistory.length > 0) {
+            <div class="alert-history-section">
+              <div class="alerts-list-header" style="margin-top: var(--space-4);">
+                <span class="alerts-count">Alert History ({{ alertHistory.length }})</span>
+                <button 
+                  class="action-button action-button--secondary"
+                  (click)="clearAlertHistory()"
+                  type="button"
+                  class="filter-chip-rate"
+                >
+                  Clear
+                </button>
+              </div>
+              <div class="alert-history-list" style="max-height: 300px; overflow-y: auto;">
+                @for (historyItem of alertHistory.slice(0, 20); track historyItem.id) {
+                  <div class="alert-history-item">
+                    <div class="alert-history-info">
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <lucide-icon 
+                          [name]="historyItem.type === 'temperature' ? Thermometer : Zap" 
+                          [size]="12" 
+                          aria-hidden="true"
+                        ></lucide-icon>
+                        <strong>{{ historyItem.type === 'temperature' ? 'Temperature' : 'Energy' }}</strong>
+                        <span class="muted filter-chip-rate">
+                          {{ historyItem.condition === 'above' ? '>' : '<' }} {{ historyItem.threshold }}{{ historyItem.type === 'temperature' ? '°C' : 'kWh' }}
+                        </span>
+                      </div>
+                      <span class="muted filter-chip-rate">
+                        Value: {{ historyItem.value.toFixed(2) }}{{ historyItem.type === 'temperature' ? '°C' : 'kWh' }}
+                      </span>
+                    </div>
+                    <span class="muted filter-chip-rate">
+                      {{ formatTimestamp(historyItem.timestamp) }}
+                    </span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Filters Modal -->
+      @if (showFilters) {
+      <div class="help-modal-overlay" data-modal-type="filters" (click)="toggleFilters()" role="dialog" aria-modal="true" aria-labelledby="filters-title">
+        <div class="help-modal" (click)="$event.stopPropagation()">
+          <div class="help-modal__header">
+            <div class="help-modal__header-content">
+              <h2 id="filters-title" class="help-modal__title">Filter Data</h2>
+              <p class="help-modal__subtitle">Filter data by temperature, energy, time, and trends</p>
+            </div>
+            <button
+              class="help-modal__close"
+              (click)="toggleFilters()"
+              aria-label="Close filters"
+              type="button"
+            >
+              <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+            </button>
+          </div>
+          <div class="help-modal__content">
+            <div class="filters-content">
+          <div class="filter-group">
+            <label>Temperature Range</label>
+            <div class="filter-inputs">
+              <input type="number" [(ngModel)]="valueFilters.tempMin" class="form-input" placeholder="Min" />
+              <span>to</span>
+              <input type="number" [(ngModel)]="valueFilters.tempMax" class="form-input" placeholder="Max" />
+            </div>
+          </div>
+          <div class="filter-group">
+            <label>Energy Range</label>
+            <div class="filter-inputs">
+              <input type="number" [(ngModel)]="valueFilters.energyMin" class="form-input" placeholder="Min" />
+              <span>to</span>
+              <input type="number" [(ngModel)]="valueFilters.energyMax" class="form-input" placeholder="Max" />
+            </div>
+          </div>
+          <div class="filter-group" style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: var(--border-width) solid var(--border);">
+            <label style="font-weight: var(--fw-semibold); margin-bottom: var(--space-2);">Advanced Filters</label>
+            <div class="form-group" style="margin-top: var(--space-3);">
+              <label>Time Range (Hours)</label>
+              <div class="filter-inputs">
+                <input 
+                  type="number" 
+                  [(ngModel)]="advancedFilters.hourStart" 
+                  class="form-input" 
+                  placeholder="Start"
+                  min="0"
+                  max="23"
+                />
+                <span>to</span>
+                <input 
+                  type="number" 
+                  [(ngModel)]="advancedFilters.hourEnd" 
+                  class="form-input" 
+                  placeholder="End"
+                  min="0"
+                  max="23"
+                />
+              </div>
+              <span class="muted filter-help-text">
+                Filter data by time of day (0-23)
+              </span>
+            </div>
+            <div class="form-group" style="margin-top: var(--space-3);">
+              <label>Days of Week</label>
+              <div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2);">
+                @for (day of [0,1,2,3,4,5,6]; track day) {
+                  <label class="filter-day-label">
+                    <input 
+                      type="checkbox" 
+                      [checked]="advancedFilters.daysOfWeek.includes(day)"
+                      (change)="toggleDayOfWeek(day, $any($event.target).checked)"
+                    />
+                    {{ ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day] }}
+                  </label>
+                }
+              </div>
+            </div>
+            <div class="form-group" style="margin-top: var(--space-3);">
+              <label>Trend Filter</label>
+              <select [(ngModel)]="advancedFilters.trendFilter" class="form-input">
+                <option value="all">All Trends</option>
+                <option value="up">Rising Only</option>
+                <option value="down">Falling Only</option>
+                <option value="flat">Stable Only</option>
+              </select>
+            </div>
+          </div>
+          <div class="filter-actions">
+            <button class="export-button" (click)="applyFilters()" type="button">Apply Filters</button>
+            <button class="export-button export-button--secondary" (click)="clearFilters()" type="button">Clear</button>
+          </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Saved Views Modal -->
+      @if (showSavedViews) {
+      <div class="help-modal-overlay" data-modal-type="tools" (click)="toggleSavedViews()" role="dialog" aria-modal="true" aria-labelledby="views-title">
+        <div class="help-modal" (click)="$event.stopPropagation()">
+          <div class="help-modal__header">
+            <div class="help-modal__header-content">
+              <h2 id="views-title" class="help-modal__title">Saved Views</h2>
+              <p class="help-modal__subtitle">Save and load your dashboard configurations</p>
+            </div>
+            <button
+              class="help-modal__close"
+              (click)="toggleSavedViews()"
+              aria-label="Close saved views"
+              type="button"
+            >
+              <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+            </button>
+          </div>
+          <div class="help-modal__content">
+            <div class="saved-views-content">
+          <div class="save-view-form">
+            <input #viewName type="text" class="form-input" placeholder="View name" />
+            <button class="export-button" (click)="saveCurrentView(viewName.value); viewName.value = ''" type="button">
+              <lucide-icon [name]="Save" [size]="16" aria-hidden="true"></lucide-icon>
+              Save Current View
+            </button>
+          </div>
+          <div class="saved-views-list">
+            @for (view of savedViews; track view.id) {
+            <div class="saved-view-item">
+              <span>{{ view.name }}</span>
+              <div class="saved-view-actions">
+                <button class="action-button action-button--small" (click)="loadView(view.id)" type="button">Load</button>
+                <button class="action-button action-button--small action-button--danger" (click)="deleteView(view.id)" type="button">Delete</button>
+              </div>
+            </div>
+            }
+          </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      }
+
       <div class="charts-toolbar__exports-bar" aria-label="Exports">
         <span class="range-selector-label">Export</span>
         <div class="charts-toolbar__exports">
@@ -427,324 +752,60 @@
     </div>
     }
 
-    <!-- Alerts Modal -->
-    @if (showAlerts) {
-    <div class="help-modal-overlay" (click)="toggleAlerts()" role="dialog" aria-modal="true" aria-labelledby="alerts-title">
-      <div class="help-modal" (click)="$event.stopPropagation()">
-        <div class="help-modal__header">
-          <div class="help-modal__header-content">
-            <h2 id="alerts-title" class="help-modal__title">Configure Alerts</h2>
-            <p class="help-modal__subtitle">Set up notifications for temperature and energy thresholds</p>
-          </div>
-          <button
-            class="help-modal__close"
-            (click)="toggleAlerts()"
-            aria-label="Close alerts"
-            type="button"
-          >
-            <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
-          </button>
-        </div>
-        <div class="help-modal__content">
-          <div class="alerts-content">
-        <div class="alerts-explanation">
+    <!-- Comparison Panel - Appears right after header when active -->
+    @if (comparisonMode) {
+    <div class="comparison-panel">
+      <div class="comparison-header">
+        <div>
+          <h3>Period Comparison</h3>
+          <p class="comparison-subtitle">
+            Comparing <strong>current {{ activeRangeLabel }}</strong> 
+            with <strong>previous {{ activeRangeLabel }}</strong>
+          </p>
+    </div>
+        <button class="close-button" (click)="toggleComparison()" type="button" aria-label="Close comparison">
+          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+        </button>
+      </div>
+      <div class="comparison-content">
+        <div class="comparison-explanation">
           <p class="muted">
             <lucide-icon [name]="Info" [size]="14" aria-hidden="true"></lucide-icon>
-            Alerts notify you when values exceed your thresholds. You'll see a notification when triggered.
+            The dashed line in the charts shows the previous period for visual comparison.
           </p>
         </div>
-        <div class="alert-settings">
-          <div class="form-group">
-            <label>
-              <input 
-                type="checkbox" 
-                [checked]="alertSettings.enableBrowserNotifications"
-                (change)="alertSettings.enableBrowserNotifications = ($any($event.target).checked); requestNotificationPermission()"
-              />
-              Enable browser notifications
-            </label>
-            @if (notificationPermission === 'default') {
-              <button 
-                class="action-button action-button--secondary"
-                (click)="requestNotificationPermission()"
-                type="button"
-                style="margin-top: 8px;"
-              >
-                Request Permission
-              </button>
-            }
-            @if (notificationPermission === 'granted') {
-              <span class="muted" style="margin-left: 8px; color: var(--success);">✓ Enabled</span>
-            }
-            @if (notificationPermission === 'denied') {
-              <span class="muted" style="margin-left: 8px; color: var(--error);">✗ Denied</span>
-            }
-          </div>
-          <div class="form-group">
-            <label>Cooldown (seconds)</label>
-            <input 
-              type="number" 
-              class="form-input" 
-              [value]="alertSettings.cooldownSeconds"
-              (input)="updateCooldown($any($event.target).value)"
-              min="10"
-              max="3600"
-              step="10"
-            />
-            <span class="muted filter-help-text">
-              Prevent alert spam by waiting {{ alertSettings.cooldownSeconds }}s between triggers
-            </span>
-          </div>
-        </div>
-        <div class="alert-form">
-          <div class="form-group">
-            <label>Metric</label>
-            <select #alertType class="form-input">
-              <option value="temperature">Temperature</option>
-              <option value="energy">Energy</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Condition</label>
-            <select #alertCondition class="form-input">
-              <option value="above">Above</option>
-              <option value="below">Below</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Threshold</label>
-            <input type="number" #alertThreshold class="form-input" placeholder="Value" step="0.1" />
-          </div>
-          <button
-            class="export-button"
-            (click)="addAlertFromInputs(alertType.value, alertThreshold.value, alertCondition.value)"
-            type="button"
-          >
-            Add Alert
-          </button>
-        </div>
-        @if (alerts.length > 0) {
-          <div class="alerts-list">
-            <div class="alerts-list-header">
-              <span class="alerts-count">{{ alerts.length }} alert{{ alerts.length !== 1 ? 's' : '' }}</span>
+        <div class="comparison-stats">
+          <div class="comparison-stat">
+            <div class="comparison-stat-header">
+              <span class="comparison-label">Temperature</span>
+              <span class="comparison-value" [class.positive]="deltas.tempAvgPct > 0" [class.negative]="deltas.tempAvgPct < 0">
+                {{ deltas.tempAvgPct > 0 ? '+' : '' }}{{ deltas.tempAvgPct.toFixed(1) }}%
+              </span>
             </div>
-            @for (alert of alerts; track alert.id) {
-            <div class="alert-item" [class.triggered]="alert.triggered">
-              <div class="alert-info">
-                <div class="alert-metric">
-                  <lucide-icon 
-                    [name]="alert.type === 'temperature' ? Thermometer : Zap" 
-                    [size]="14" 
-                    aria-hidden="true"
-                  ></lucide-icon>
-                  <strong>{{ alert.type === 'temperature' ? 'Temperature' : 'Energy' }}</strong>
-                </div>
-                <span class="alert-condition">
-                  {{ alert.condition === 'above' ? '>' : '<' }} 
-                  <strong>{{ alert.threshold }}{{ alert.type === 'temperature' ? '°C' : 'kWh' }}</strong>
-                </span>
-                @if (alert.triggered) {
-                  <span class="alert-status">Active</span>
-                }
-                @if (alert.triggerCount > 0) {
-                  <span class="muted filter-chip-rate">
-                    Triggered {{ alert.triggerCount }} time{{ alert.triggerCount !== 1 ? 's' : '' }}
-                  </span>
-                }
-              </div>
-              <button class="alert-remove" (click)="removeAlert(alert.id)" type="button" aria-label="Remove alert">
-                <lucide-icon [name]="X" [size]="16" aria-hidden="true"></lucide-icon>
-              </button>
-            </div>
-            }
-          </div>
-        } @else {
-          <div class="alerts-empty">
-            <p class="muted">No alerts configured. Add one above to get notified when values exceed thresholds.</p>
-          </div>
-        }
-        @if (alertHistory.length > 0) {
-          <div class="alert-history-section">
-            <div class="alerts-list-header" style="margin-top: var(--space-4);">
-              <span class="alerts-count">Alert History ({{ alertHistory.length }})</span>
-              <button 
-                class="action-button action-button--secondary"
-                (click)="clearAlertHistory()"
-                type="button"
-                class="filter-chip-rate"
-              >
-                Clear
-              </button>
-            </div>
-            <div class="alert-history-list" style="max-height: 300px; overflow-y: auto;">
-              @for (historyItem of alertHistory.slice(0, 20); track historyItem.id) {
-                <div class="alert-history-item">
-                  <div class="alert-history-info">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <lucide-icon 
-                        [name]="historyItem.type === 'temperature' ? Thermometer : Zap" 
-                        [size]="12" 
-                        aria-hidden="true"
-                      ></lucide-icon>
-                      <strong>{{ historyItem.type === 'temperature' ? 'Temperature' : 'Energy' }}</strong>
-                      <span class="muted filter-chip-rate">
-                        {{ historyItem.condition === 'above' ? '>' : '<' }} {{ historyItem.threshold }}{{ historyItem.type === 'temperature' ? '°C' : 'kWh' }}
-                      </span>
-                    </div>
-                    <span class="muted filter-chip-rate">
-                      Value: {{ historyItem.value.toFixed(2) }}{{ historyItem.type === 'temperature' ? '°C' : 'kWh' }}
-                    </span>
-                  </div>
-                  <span class="muted filter-chip-rate">
-                    {{ formatTimestamp(historyItem.timestamp) }}
-                  </span>
-                </div>
-              }
+            <div class="comparison-details">
+              <span class="comparison-detail">
+                Current: <strong>{{ comparisonValues.currentTempAvg.toFixed(1) }}°C</strong>
+              </span>
+              <span class="comparison-detail">
+                Previous: <strong>{{ comparisonValues.previousTempAvg.toFixed(1) }}°C</strong>
+              </span>
             </div>
           </div>
-        }
-          </div>
-        </div>
-      </div>
-    </div>
-    }
-
-    <!-- Filters Modal -->
-    @if (showFilters) {
-    <div class="help-modal-overlay" data-modal-type="filters" (click)="toggleFilters()" role="dialog" aria-modal="true" aria-labelledby="filters-title">
-      <div class="help-modal" (click)="$event.stopPropagation()">
-        <div class="help-modal__header">
-          <div class="help-modal__header-content">
-            <h2 id="filters-title" class="help-modal__title">Filter Data</h2>
-            <p class="help-modal__subtitle">Filter data by temperature, energy, time, and trends</p>
-          </div>
-          <button
-            class="help-modal__close"
-            (click)="toggleFilters()"
-            aria-label="Close filters"
-            type="button"
-          >
-            <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
-          </button>
-        </div>
-        <div class="help-modal__content">
-          <div class="filters-content">
-        <div class="filter-group">
-          <label>Temperature Range</label>
-          <div class="filter-inputs">
-            <input type="number" [(ngModel)]="valueFilters.tempMin" class="form-input" placeholder="Min" />
-            <span>to</span>
-            <input type="number" [(ngModel)]="valueFilters.tempMax" class="form-input" placeholder="Max" />
-          </div>
-        </div>
-        <div class="filter-group">
-          <label>Energy Range</label>
-          <div class="filter-inputs">
-            <input type="number" [(ngModel)]="valueFilters.energyMin" class="form-input" placeholder="Min" />
-            <span>to</span>
-            <input type="number" [(ngModel)]="valueFilters.energyMax" class="form-input" placeholder="Max" />
-          </div>
-        </div>
-        <div class="filter-group" style="margin-top: var(--space-4); padding-top: var(--space-4); border-top: var(--border-width) solid var(--border);">
-          <label style="font-weight: var(--fw-semibold); margin-bottom: var(--space-2);">Advanced Filters</label>
-          <div class="form-group" style="margin-top: var(--space-3);">
-            <label>Time Range (Hours)</label>
-            <div class="filter-inputs">
-              <input 
-                type="number" 
-                [(ngModel)]="advancedFilters.hourStart" 
-                class="form-input" 
-                placeholder="Start"
-                min="0"
-                max="23"
-              />
-              <span>to</span>
-              <input 
-                type="number" 
-                [(ngModel)]="advancedFilters.hourEnd" 
-                class="form-input" 
-                placeholder="End"
-                min="0"
-                max="23"
-              />
+          <div class="comparison-stat">
+            <div class="comparison-stat-header">
+              <span class="comparison-label">Energy</span>
+              <span class="comparison-value" [class.positive]="deltas.energySumPct > 0" [class.negative]="deltas.energySumPct < 0">
+                {{ deltas.energySumPct > 0 ? '+' : '' }}{{ deltas.energySumPct.toFixed(1) }}%
+              </span>
             </div>
-            <span class="muted filter-help-text">
-              Filter data by time of day (0-23)
-            </span>
-          </div>
-          <div class="form-group" style="margin-top: var(--space-3);">
-            <label>Days of Week</label>
-            <div style="display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2);">
-              @for (day of [0,1,2,3,4,5,6]; track day) {
-                <label class="filter-day-label">
-                  <input 
-                    type="checkbox" 
-                    [checked]="advancedFilters.daysOfWeek.includes(day)"
-                    (change)="toggleDayOfWeek(day, $any($event.target).checked)"
-                  />
-                  {{ ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day] }}
-                </label>
-              }
+            <div class="comparison-details">
+              <span class="comparison-detail">
+                Current: <strong>{{ comparisonValues.currentEnergySum.toFixed(2) }} kWh</strong>
+              </span>
+              <span class="comparison-detail">
+                Previous: <strong>{{ comparisonValues.previousEnergySum.toFixed(2) }} kWh</strong>
+              </span>
             </div>
-          </div>
-          <div class="form-group" style="margin-top: var(--space-3);">
-            <label>Trend Filter</label>
-            <select [(ngModel)]="advancedFilters.trendFilter" class="form-input">
-              <option value="all">All Trends</option>
-              <option value="up">Rising Only</option>
-              <option value="down">Falling Only</option>
-              <option value="flat">Stable Only</option>
-            </select>
-          </div>
-        </div>
-        <div class="filter-actions">
-          <button class="export-button" (click)="applyFilters()" type="button">Apply Filters</button>
-          <button class="export-button export-button--secondary" (click)="clearFilters()" type="button">Clear</button>
-        </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    }
-
-    <!-- Saved Views Modal -->
-    @if (showSavedViews) {
-    <div class="help-modal-overlay" (click)="toggleSavedViews()" role="dialog" aria-modal="true" aria-labelledby="views-title">
-      <div class="help-modal" (click)="$event.stopPropagation()">
-        <div class="help-modal__header">
-          <div class="help-modal__header-content">
-            <h2 id="views-title" class="help-modal__title">Saved Views</h2>
-            <p class="help-modal__subtitle">Save and load your dashboard configurations</p>
-          </div>
-          <button
-            class="help-modal__close"
-            (click)="toggleSavedViews()"
-            aria-label="Close saved views"
-            type="button"
-          >
-            <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
-          </button>
-        </div>
-        <div class="help-modal__content">
-          <div class="saved-views-content">
-        <div class="save-view-form">
-          <input #viewName type="text" class="form-input" placeholder="View name" />
-          <button class="export-button" (click)="saveCurrentView(viewName.value); viewName.value = ''" type="button">
-            <lucide-icon [name]="Save" [size]="16" aria-hidden="true"></lucide-icon>
-            Save Current View
-          </button>
-        </div>
-        <div class="saved-views-list">
-          @for (view of savedViews; track view.id) {
-          <div class="saved-view-item">
-            <span>{{ view.name }}</span>
-            <div class="saved-view-actions">
-              <button class="action-button action-button--small" (click)="loadView(view.id)" type="button">Load</button>
-              <button class="action-button action-button--small action-button--danger" (click)="deleteView(view.id)" type="button">Delete</button>
-            </div>
-          </div>
-          }
-        </div>
           </div>
         </div>
       </div>

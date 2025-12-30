@@ -2347,8 +2347,8 @@ body.theme-dark .card.kpi:focus-within {
 }
 
 .kpi-card__icon {
-  color: var(--accent);
-  opacity: 0.8;
+  color: var(--text-2);
+  opacity: 0.6;
   flex-shrink: 0;
   width: var(--icon-lg);
   height: var(--icon-lg);
@@ -2568,8 +2568,8 @@ body.theme-dark .card.kpi:focus-within {
 }
 
 .kpi-trend__icon,
-.kpi-trend iconify-icon,
-.delta iconify-icon {
+.kpi-trend lucide-icon,
+.delta lucide-icon {
   width: var(--icon-sm);
   height: var(--icon-sm);
   display: inline-block;
@@ -3174,18 +3174,18 @@ section.statistics.card-surface,
   line-height: var(--lh-snug);
 }
 
-.statistics .stat-label iconify-icon,
-.stat-label iconify-icon {
+.statistics .stat-label lucide-icon,
+.stat-label lucide-icon {
   width: var(--icon-xl);
   height: var(--icon-xl);
-  color: var(--accent);
-  opacity: 0.85;
+  color: var(--text-2);
+  opacity: 0.6;
   flex-shrink: 0;
   transition: all var(--transition-base);
 }
 
-.statistics .stat:hover .stat-label iconify-icon,
-.stat:hover .stat-label iconify-icon {
+.statistics .stat:hover .stat-label lucide-icon,
+.stat:hover .stat-label lucide-icon {
   opacity: 1;
   transform: scale(1.05);
 }
@@ -3413,9 +3413,9 @@ body.theme-dark .kpi-hovercard::before {
   flex: 1;
 }
 
-.kpi-card__tooltip-title iconify-icon {
-  color: var(--accent);
-  opacity: 0.9;
+.kpi-card__tooltip-title lucide-icon {
+  color: var(--text-2);
+  opacity: 0.6;
 }
 
 .kpi-card__tooltip-badge {
@@ -3568,11 +3568,11 @@ body.theme-dark .kpi-hovercard::before {
   color: var(--text-2);
 }
 
-.delta-pill-mini.up iconify-icon {
+.delta-pill-mini.up lucide-icon {
   color: var(--text);
 }
 
-.delta-pill-mini.down iconify-icon {
+.delta-pill-mini.down lucide-icon {
   color: var(--text-2);
 }
 
@@ -3824,16 +3824,16 @@ body.theme-dark .kpi-hovercard::before {
 
 /* =============== Microinteracciones Mejoradas 2025 =============== */
 .kpi-card__icon,
-.stat .stat-label iconify-icon,
-.card.kpi .kpi-title iconify-icon {
+.stat .stat-label lucide-icon,
+.card.kpi .kpi-title lucide-icon {
   transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), filter 200ms ease,
     opacity 200ms ease;
 }
 
 .kpi-card:hover .kpi-card__icon,
-.stat:hover .stat-label iconify-icon,
-.stat:focus-within .stat-label iconify-icon,
-.card.kpi:hover .kpi-title iconify-icon {
+.stat:hover .stat-label lucide-icon,
+.stat:focus-within .stat-label lucide-icon,
+.card.kpi:hover .kpi-title lucide-icon {
   transform: translateY(-2px) scale(1.05);
   opacity: 1;
 }
@@ -4190,12 +4190,11 @@ body.theme-dark .progress-bar {
   flex: 1;
 }
 
-.card.kpi .kpi-title iconify-icon,
 .card.kpi .kpi-title lucide-icon {
   width: 16px;
   height: 16px;
-  color: var(--accent);
-  opacity: 0.9;
+  color: var(--text-2);
+  opacity: 0.6;
   flex-shrink: 0;
 }
 
@@ -4330,87 +4329,93 @@ body.theme-dark .progress-bar {
   animation: overlayFadeIn 0.2s ease-out;
 }
 
-/* Bottom Sheet Pattern for Filters on Mobile */
-@media (max-width: 640px) {
-  /* Filters modal uses bottom sheet pattern */
-  .help-modal-overlay[data-modal-type="filters"] {
-    align-items: flex-end;
-    justify-content: stretch;
-    padding: 0;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
+/* Bottom Sheet Pattern for Tools Modals (Alerts, Filters, Views) */
+.help-modal-overlay[data-modal-type="tools"],
+.help-modal-overlay[data-modal-type="filters"] {
+  align-items: flex-end;
+  justify-content: stretch;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
 
-  .help-modal-overlay[data-modal-type="filters"] .help-modal {
-    max-width: 100%;
-    width: 100%;
-    max-height: 85vh;
-    border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-    margin: 0;
-    animation: bottomSheetSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    box-shadow: var(--shadow-2xl);
-  }
+.help-modal-overlay[data-modal-type="tools"] .help-modal,
+.help-modal-overlay[data-modal-type="filters"] .help-modal {
+  max-width: 100%;
+  width: 100%;
+  max-height: 85vh;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  margin: 0;
+  animation: bottomSheetSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-shadow: var(--shadow-2xl);
+}
 
-  @keyframes bottomSheetSlideUp {
-    from {
-      opacity: 0;
-      transform: translateY(100%);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
+@keyframes bottomSheetSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
   }
-
-  /* Drag handle indicator */
-  .help-modal-overlay[data-modal-type="filters"] .help-modal::before {
-    content: "";
-    position: absolute;
-    top: var(--space-3);
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 4px;
-    background: var(--border-strong);
-    border-radius: var(--radius-full);
-    opacity: 0.5;
-    z-index: 1;
-  }
-
-  .help-modal-overlay[data-modal-type="filters"] .help-modal__header {
-    padding-top: var(--space-8);
-    padding-bottom: var(--space-4);
-    border-bottom: var(--border-width) solid var(--border);
-  }
-
-  .help-modal-overlay[data-modal-type="filters"] .help-modal__close {
-    top: var(--space-4);
-    right: var(--space-4);
-    width: 32px;
-    height: 32px;
-  }
-
-  .help-modal-overlay[data-modal-type="filters"] .help-modal__content {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    flex: 1;
-    min-height: 0;
-  }
-
-  /* Ensure results remain partially visible */
-  .help-modal-overlay[data-modal-type="filters"] {
-    pointer-events: auto;
-  }
-
-  /* Prevent body scroll when bottom sheet is open */
-  body:has(.help-modal-overlay[data-modal-type="filters"]) {
-    overflow: hidden;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
+
+/* Drag handle indicator */
+.help-modal-overlay[data-modal-type="tools"] .help-modal::before,
+.help-modal-overlay[data-modal-type="filters"] .help-modal::before {
+  content: "";
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: var(--radius-full);
+  opacity: 0.5;
+  z-index: 1;
+}
+
+.help-modal-overlay[data-modal-type="tools"] .help-modal__header,
+.help-modal-overlay[data-modal-type="filters"] .help-modal__header {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-4);
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.help-modal-overlay[data-modal-type="tools"] .help-modal__close,
+.help-modal-overlay[data-modal-type="filters"] .help-modal__close {
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 32px;
+  height: 32px;
+}
+
+.help-modal-overlay[data-modal-type="tools"] .help-modal__content,
+.help-modal-overlay[data-modal-type="filters"] .help-modal__content {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1;
+  min-height: 0;
+}
+
+/* Ensure results remain partially visible */
+.help-modal-overlay[data-modal-type="tools"],
+.help-modal-overlay[data-modal-type="filters"] {
+  pointer-events: auto;
+}
+
+/* Prevent body scroll when bottom sheet is open */
+body:has(.help-modal-overlay[data-modal-type="tools"]),
+body:has(.help-modal-overlay[data-modal-type="filters"]) {
+  overflow: hidden;
+}
+
 
 @keyframes overlayFadeIn {
   from {
@@ -4962,7 +4967,7 @@ lucide-icon {
   margin: 0 0 var(--space-4) 0;
 }
 
-.help-section__title iconify-icon {
+.help-section__title lucide-icon {
   color: var(--accent);
   flex-shrink: 0;
   width: var(--icon-md);
@@ -6169,7 +6174,7 @@ lucide-icon {
 
 .additional-metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: var(--space-4);
 }
 
