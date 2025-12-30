@@ -1761,6 +1761,18 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // ---------- Comparison Functions ----------
   toggleComparison(): void {
+    if (this.showComparison) {
+      this.showComparison = false;
+    } else {
+      // Close other modals
+      this.showAlerts = false;
+      this.showFilters = false;
+      this.showSavedViews = false;
+      this.showComparison = true;
+    }
+  }
+
+  toggleComparisonMode(): void {
     this.comparisonMode = !this.comparisonMode;
     if (this.comparisonMode) {
       // Load comparison data when enabling
@@ -1803,6 +1815,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
       this.showAlerts = false;
     } else {
       // Close other modals
+      this.showComparison = false;
       this.showFilters = false;
       this.showSavedViews = false;
       this.showAlerts = true;
@@ -2064,12 +2077,12 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
             this.closeHelp();
           } else if (this.showAlerts) {
             this.toggleAlerts();
+          } else if (this.showComparison) {
+            this.toggleComparison();
           } else if (this.showFilters) {
             this.toggleFilters();
           } else if (this.showSavedViews) {
             this.toggleSavedViews();
-          } else if (this.comparisonMode) {
-            this.toggleComparison();
           }
         }
       })
@@ -2190,6 +2203,7 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     } else {
       // Close other modals
       this.showAlerts = false;
+      this.showComparison = false;
       this.showSavedViews = false;
       this.showFilters = true;
     }
@@ -2199,6 +2213,10 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.showSavedViews) {
       this.showSavedViews = false;
     } else {
+      // Close other modals
+      this.showAlerts = false;
+      this.showComparison = false;
+      this.showFilters = false;
       // Close other modals
       this.showAlerts = false;
       this.showFilters = false;
@@ -2443,6 +2461,9 @@ export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
   get isComparisonMode(): boolean {
     return this.comparisonMode;
   }
+
+  // Comparison
+  showComparison = false;
 
   // Alerts system - Enhanced
   alerts: Array<{

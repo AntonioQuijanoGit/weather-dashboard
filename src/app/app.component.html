@@ -248,7 +248,7 @@
             <button
               class="tool-card"
               (click)="toggleComparison()"
-              [class.active]="comparisonMode"
+              [class.active]="showComparison"
               type="button"
               aria-label="Toggle comparison mode"
               title="Compare periods"
@@ -292,6 +292,87 @@
       </div>
         </div>
       </div>
+
+      <!-- Comparison Modal -->
+      @if (showComparison) {
+      <div class="help-modal-overlay" data-modal-type="tools" (click)="toggleComparison()" role="dialog" aria-modal="true" aria-labelledby="comparison-title">
+        <div class="help-modal" (click)="$event.stopPropagation()">
+          <div class="help-modal__header">
+            <div class="help-modal__header-content">
+              <h2 id="comparison-title" class="help-modal__title">Period Comparison</h2>
+              <p class="help-modal__subtitle">Compare current period with previous period</p>
+            </div>
+            <button
+              class="help-modal__close"
+              (click)="toggleComparison()"
+              aria-label="Close comparison"
+              type="button"
+            >
+              <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
+            </button>
+          </div>
+          <div class="help-modal__content">
+            <div class="comparison-content">
+              <div class="comparison-explanation">
+                <p class="muted">
+                  <lucide-icon [name]="Info" [size]="14" aria-hidden="true"></lucide-icon>
+                  Enable comparison mode to see the previous period overlaid on the charts as a dashed line.
+                </p>
+              </div>
+              <div class="form-group" style="margin-top: var(--space-5);">
+                <label style="display: flex; align-items: center; gap: var(--space-3); cursor: pointer;">
+                  <input 
+                    type="checkbox" 
+                    [checked]="comparisonMode"
+                    (change)="toggleComparisonMode()"
+                  />
+                  <span style="font-weight: var(--fw-medium);">Enable Comparison Mode</span>
+                </label>
+              </div>
+              @if (comparisonMode) {
+              <div class="comparison-stats" style="margin-top: var(--space-5);">
+                <div class="comparison-stat">
+                  <div class="comparison-stat-header">
+                    <span class="comparison-label">Temperature</span>
+                    <span class="comparison-value" [class.positive]="deltas.tempAvgPct > 0" [class.negative]="deltas.tempAvgPct < 0">
+                      {{ deltas.tempAvgPct > 0 ? '+' : '' }}{{ deltas.tempAvgPct.toFixed(1) }}%
+                    </span>
+                  </div>
+                  <div class="comparison-details">
+                    <span class="comparison-detail">
+                      Current: <strong>{{ comparisonValues.currentTempAvg.toFixed(1) }}°C</strong>
+                    </span>
+                    <span class="comparison-detail">
+                      Previous: <strong>{{ comparisonValues.previousTempAvg.toFixed(1) }}°C</strong>
+                    </span>
+                  </div>
+                </div>
+                <div class="comparison-stat">
+                  <div class="comparison-stat-header">
+                    <span class="comparison-label">Energy</span>
+                    <span class="comparison-value" [class.positive]="deltas.energySumPct > 0" [class.negative]="deltas.energySumPct < 0">
+                      {{ deltas.energySumPct > 0 ? '+' : '' }}{{ deltas.energySumPct.toFixed(1) }}%
+                    </span>
+                  </div>
+                  <div class="comparison-details">
+                    <span class="comparison-detail">
+                      Current: <strong>{{ comparisonValues.currentEnergySum.toFixed(2) }} kWh</strong>
+                    </span>
+                    <span class="comparison-detail">
+                      Previous: <strong>{{ comparisonValues.previousEnergySum.toFixed(2) }} kWh</strong>
+                    </span>
+                  </div>
+                </div>
+                <div class="muted" style="margin-top: var(--space-4); font-size: var(--fs-xs);">
+                  Comparing <strong>current {{ activeRangeLabel }}</strong> with <strong>previous {{ activeRangeLabel }}</strong>
+                </div>
+              </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+      }
 
       <!-- Alerts Modal -->
       @if (showAlerts) {
@@ -691,126 +772,6 @@
         <span class="toolbar-info-value">Every 5s</span>
       </div>
     </div>
-
-    <!-- Comparison Panel - Appears right after header when active -->
-    @if (comparisonMode) {
-    <div class="comparison-panel">
-      <div class="comparison-header">
-        <div>
-          <h3>Period Comparison</h3>
-          <p class="comparison-subtitle">
-            Comparing <strong>current {{ activeRangeLabel }}</strong> 
-            with <strong>previous {{ activeRangeLabel }}</strong>
-          </p>
-    </div>
-        <button class="close-button" (click)="toggleComparison()" type="button" aria-label="Close comparison">
-          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
-        </button>
-      </div>
-      <div class="comparison-content">
-        <div class="comparison-explanation">
-          <p class="muted">
-            <lucide-icon [name]="Info" [size]="14" aria-hidden="true"></lucide-icon>
-            The dashed line in the charts shows the previous period for visual comparison.
-          </p>
-        </div>
-        <div class="comparison-stats">
-          <div class="comparison-stat">
-            <div class="comparison-stat-header">
-              <span class="comparison-label">Temperature</span>
-              <span class="comparison-value" [class.positive]="deltas.tempAvgPct > 0" [class.negative]="deltas.tempAvgPct < 0">
-                {{ deltas.tempAvgPct > 0 ? '+' : '' }}{{ deltas.tempAvgPct.toFixed(1) }}%
-              </span>
-            </div>
-            <div class="comparison-details">
-              <span class="comparison-detail">
-                Current: <strong>{{ comparisonValues.currentTempAvg.toFixed(1) }}°C</strong>
-              </span>
-              <span class="comparison-detail">
-                Previous: <strong>{{ comparisonValues.previousTempAvg.toFixed(1) }}°C</strong>
-              </span>
-            </div>
-          </div>
-          <div class="comparison-stat">
-            <div class="comparison-stat-header">
-              <span class="comparison-label">Energy</span>
-              <span class="comparison-value" [class.positive]="deltas.energySumPct > 0" [class.negative]="deltas.energySumPct < 0">
-                {{ deltas.energySumPct > 0 ? '+' : '' }}{{ deltas.energySumPct.toFixed(1) }}%
-              </span>
-            </div>
-            <div class="comparison-details">
-              <span class="comparison-detail">
-                Current: <strong>{{ comparisonValues.currentEnergySum.toFixed(2) }} kWh</strong>
-              </span>
-              <span class="comparison-detail">
-                Previous: <strong>{{ comparisonValues.previousEnergySum.toFixed(2) }} kWh</strong>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    }
-
-    <!-- Comparison Panel - Appears right after header when active -->
-    @if (comparisonMode) {
-    <div class="comparison-panel">
-      <div class="comparison-header">
-        <div>
-          <h3>Period Comparison</h3>
-          <p class="comparison-subtitle">
-            Comparing <strong>current {{ activeRangeLabel }}</strong> 
-            with <strong>previous {{ activeRangeLabel }}</strong>
-          </p>
-    </div>
-        <button class="close-button" (click)="toggleComparison()" type="button" aria-label="Close comparison">
-          <lucide-icon [name]="X" [size]="18" aria-hidden="true"></lucide-icon>
-        </button>
-      </div>
-      <div class="comparison-content">
-        <div class="comparison-explanation">
-          <p class="muted">
-            <lucide-icon [name]="Info" [size]="14" aria-hidden="true"></lucide-icon>
-            The dashed line in the charts shows the previous period for visual comparison.
-          </p>
-        </div>
-        <div class="comparison-stats">
-          <div class="comparison-stat">
-            <div class="comparison-stat-header">
-              <span class="comparison-label">Temperature</span>
-              <span class="comparison-value" [class.positive]="deltas.tempAvgPct > 0" [class.negative]="deltas.tempAvgPct < 0">
-                {{ deltas.tempAvgPct > 0 ? '+' : '' }}{{ deltas.tempAvgPct.toFixed(1) }}%
-              </span>
-            </div>
-            <div class="comparison-details">
-              <span class="comparison-detail">
-                Current: <strong>{{ comparisonValues.currentTempAvg.toFixed(1) }}°C</strong>
-              </span>
-              <span class="comparison-detail">
-                Previous: <strong>{{ comparisonValues.previousTempAvg.toFixed(1) }}°C</strong>
-              </span>
-            </div>
-          </div>
-          <div class="comparison-stat">
-            <div class="comparison-stat-header">
-              <span class="comparison-label">Energy</span>
-              <span class="comparison-value" [class.positive]="deltas.energySumPct > 0" [class.negative]="deltas.energySumPct < 0">
-                {{ deltas.energySumPct > 0 ? '+' : '' }}{{ deltas.energySumPct.toFixed(1) }}%
-              </span>
-            </div>
-            <div class="comparison-details">
-              <span class="comparison-detail">
-                Current: <strong>{{ comparisonValues.currentEnergySum.toFixed(2) }} kWh</strong>
-              </span>
-              <span class="comparison-detail">
-                Previous: <strong>{{ comparisonValues.previousEnergySum.toFixed(2) }} kWh</strong>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    }
 
     <!-- Active Filters Summary Chips -->
     @if (hasActiveFilters()) {
