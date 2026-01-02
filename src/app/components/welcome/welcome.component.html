@@ -6,40 +6,80 @@
       <lucide-icon [name]="X" [size]="20" strokeWidth="2"></lucide-icon>
     </button>
 
-    <!-- Content -->
-    <div class="welcome-content">
+    <!-- Hero Content -->
+    <div class="welcome-hero">
       <div class="welcome-icon-wrapper">
         <div class="welcome-icon-circle">
-          <lucide-icon [name]="Wind" [size]="48" strokeWidth="1.5"></lucide-icon>
+          <lucide-icon [name]="Wind" [size]="56" strokeWidth="1.5"></lucide-icon>
         </div>
       </div>
 
       <h1 class="welcome-title">Welcome to WeatherFlow</h1>
       
-      <p class="welcome-description">
-        Monitor and visualize real-time weather data. 
-        Temperature, energy, and statistics updated every 5 seconds.
+      <p class="welcome-subtitle">
+        Real-time weather dashboard for monitoring temperature and energy production
       </p>
-
-      <div class="welcome-features">
-        <div class="welcome-feature-item">
-          <lucide-icon [name]="Thermometer" [size]="20" strokeWidth="2"></lucide-icon>
-          <span>Real-time monitoring</span>
-        </div>
-        <div class="welcome-feature-item">
-          <lucide-icon [name]="TrendingUp" [size]="20" strokeWidth="2"></lucide-icon>
-          <span>Interactive charts</span>
-        </div>
-        <div class="welcome-feature-item">
-          <lucide-icon [name]="Zap" [size]="20" strokeWidth="2"></lucide-icon>
-          <span>Automatic updates</span>
-        </div>
-      </div>
+      
+      <p class="welcome-description">
+        Monitor and visualize real-time weather data with interactive charts, advanced analytics, and smart alerts. 
+        Data updates every 5 seconds to keep you informed.
+      </p>
 
       <button class="welcome-button" (click)="getStarted()">
         Get Started
         <lucide-icon [name]="ArrowRight" [size]="18" strokeWidth="2"></lucide-icon>
       </button>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="welcome-features-grid">
+      <div class="welcome-feature-card">
+        <div class="feature-icon">
+          <lucide-icon [name]="Thermometer" [size]="24" strokeWidth="2"></lucide-icon>
+        </div>
+        <h3 class="feature-title">Real-time Monitoring</h3>
+        <p class="feature-desc">Live data updates every 5 seconds</p>
+      </div>
+      
+      <div class="welcome-feature-card">
+        <div class="feature-icon">
+          <lucide-icon [name]="TrendingUp" [size]="24" strokeWidth="2"></lucide-icon>
+        </div>
+        <h3 class="feature-title">Interactive Charts</h3>
+        <p class="feature-desc">Time series visualization with Chart.js</p>
+      </div>
+      
+      <div class="welcome-feature-card">
+        <div class="feature-icon">
+          <lucide-icon [name]="Zap" [size]="24" strokeWidth="2"></lucide-icon>
+        </div>
+        <h3 class="feature-title">Advanced Analytics</h3>
+        <p class="feature-desc">Statistics, trends, and comparisons</p>
+      </div>
+      
+      <div class="welcome-feature-card">
+        <div class="feature-icon">
+          <lucide-icon [name]="BarChart3" [size]="24" strokeWidth="2"></lucide-icon>
+        </div>
+        <h3 class="feature-title">Data Export</h3>
+        <p class="feature-desc">Download charts as PNG, data as CSV/JSON</p>
+      </div>
+      
+      <div class="welcome-feature-card">
+        <div class="feature-icon">
+          <lucide-icon [name]="Bell" [size]="24" strokeWidth="2"></lucide-icon>
+        </div>
+        <h3 class="feature-title">Smart Alerts</h3>
+        <p class="feature-desc">Configure threshold-based notifications</p>
+      </div>
+      
+      <div class="welcome-feature-card">
+        <div class="feature-icon">
+          <lucide-icon [name]="Filter" [size]="24" strokeWidth="2"></lucide-icon>
+        </div>
+        <h3 class="feature-title">Advanced Filters</h3>
+        <p class="feature-desc">Filter by ranges, time, and trends</p>
+      </div>
     </div>
   </div>
 </div>

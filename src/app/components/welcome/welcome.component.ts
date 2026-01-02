@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Wind, Thermometer, Zap, TrendingUp, X, ArrowRight } from 'lucide-angular';
+import { LucideAngularModule, Wind, Thermometer, Zap, TrendingUp, X, ArrowRight, BarChart3, Bell, Filter } from 'lucide-angular';
 
 @Component({
   selector: 'app-welcome',
@@ -17,6 +17,9 @@ export class WelcomeComponent implements OnInit {
   Thermometer = Thermometer;
   Zap = Zap;
   TrendingUp = TrendingUp;
+  BarChart3 = BarChart3;
+  Bell = Bell;
+  Filter = Filter;
   X = X;
   ArrowRight = ArrowRight;
 
