@@ -24,6 +24,7 @@ import {
   StatisticsComponent,
   StatisticsData,
 } from './components/statistics/statistics.component';
+import { WelcomeComponent } from './components/welcome/welcome.component';
 import {
   LucideAngularModule,
   Thermometer,
@@ -96,6 +97,7 @@ type OverlaySummary = {
     FooterComponent,
     KpiCardComponent,
     StatisticsComponent,
+    WelcomeComponent,
     LucideAngularModule,
   ],
   templateUrl: './app.component.html',

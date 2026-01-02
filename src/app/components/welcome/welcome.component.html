@@ -1,0 +1,70 @@
+@if (showWelcome()) {
+<div class="welcome-overlay" (click)="closeWelcome()">
+  <div class="welcome-container" (click)="$event.stopPropagation()">
+    <!-- Background decorative elements -->
+    <div class="welcome-bg">
+      <div class="weather-cloud cloud-1">☁️</div>
+      <div class="weather-cloud cloud-2">☁️</div>
+      <div class="weather-sun">☀️</div>
+    </div>
+
+    <!-- Close button -->
+    <button class="welcome-close" (click)="closeWelcome()" aria-label="Close welcome screen">
+      <lucide-icon [name]="X" [size]="20" strokeWidth="2"></lucide-icon>
+    </button>
+
+    <!-- Content -->
+    <div class="welcome-content">
+      <div class="welcome-icon-wrapper">
+        <div class="welcome-icon-large">🌤️</div>
+        <div class="weather-pulse"></div>
+      </div>
+
+      <h1 class="welcome-title">Weather Dashboard</h1>
+      
+      <p class="welcome-description">
+        Real-time weather visualization dashboard with progressive data streaming. 
+        Monitor meteorological data with interactive charts and live updates powered by WebSocket integration.
+      </p>
+
+      <div class="welcome-features">
+        <div class="welcome-feature">
+          <div class="feature-icon-wrapper">
+            <lucide-icon [name]="Zap" [size]="20" strokeWidth="2"></lucide-icon>
+          </div>
+          <div class="feature-content">
+            <h3 class="feature-title">Real-time Streaming</h3>
+            <p class="feature-desc">Live data updates every 5 seconds via WebSocket</p>
+          </div>
+        </div>
+
+        <div class="welcome-feature">
+          <div class="feature-icon-wrapper">
+            <lucide-icon [name]="TrendingUp" [size]="20" strokeWidth="2"></lucide-icon>
+          </div>
+          <div class="feature-content">
+            <h3 class="feature-title">Interactive Charts</h3>
+            <p class="feature-desc">Chart.js visualizations with smooth animations</p>
+          </div>
+        </div>
+
+        <div class="welcome-feature">
+          <div class="feature-icon-wrapper">
+            <lucide-icon [name]="Thermometer" [size]="20" strokeWidth="2"></lucide-icon>
+          </div>
+          <div class="feature-content">
+            <h3 class="feature-title">Advanced Analytics</h3>
+            <p class="feature-desc">Temperature and energy production metrics</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="welcome-button" (click)="getStarted()">
+        Get Started
+        <lucide-icon [name]="ArrowRight" [size]="18" strokeWidth="2"></lucide-icon>
+      </button>
+    </div>
+  </div>
+</div>
+}
+
