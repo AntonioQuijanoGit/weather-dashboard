@@ -1,6 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { LucideAngularModule, Cloud, Thermometer, Zap, TrendingUp, X, ArrowRight } from 'lucide-angular';
+import { LucideAngularModule, Wind, Thermometer, Zap, TrendingUp, X, ArrowRight } from 'lucide-angular';
 
 @Component({
   selector: 'app-welcome',
@@ -13,7 +13,7 @@ export class WelcomeComponent implements OnInit {
   showWelcome = signal(true);
   
   // Lucide icons
-  Cloud = Cloud;
+  Wind = Wind;
   Thermometer = Thermometer;
   Zap = Zap;
   TrendingUp = TrendingUp;
@@ -21,16 +21,14 @@ export class WelcomeComponent implements OnInit {
   ArrowRight = ArrowRight;
 
   ngOnInit() {
-    // Check if user has seen welcome screen before
-    const hasSeenWelcome = localStorage.getItem('weather-dashboard-welcome-seen');
-    if (hasSeenWelcome === 'true') {
-      this.showWelcome.set(false);
-    }
+    // Welcome screen always shows on page load
+    // No localStorage - user can see it every time they reload
+    this.showWelcome.set(true);
   }
 
   closeWelcome() {
     this.showWelcome.set(false);
-    localStorage.setItem('weather-dashboard-welcome-seen', 'true');
+    // Don't save to localStorage - allow user to see welcome screen on next visit
   }
 
   getStarted() {

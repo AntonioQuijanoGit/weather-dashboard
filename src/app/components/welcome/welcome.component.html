@@ -1,13 +1,6 @@
 @if (showWelcome()) {
 <div class="welcome-overlay" (click)="closeWelcome()">
   <div class="welcome-container" (click)="$event.stopPropagation()">
-    <!-- Background decorative elements -->
-    <div class="welcome-bg">
-      <div class="weather-cloud cloud-1">☁️</div>
-      <div class="weather-cloud cloud-2">☁️</div>
-      <div class="weather-sun">☀️</div>
-    </div>
-
     <!-- Close button -->
     <button class="welcome-close" (click)="closeWelcome()" aria-label="Close welcome screen">
       <lucide-icon [name]="X" [size]="20" strokeWidth="2"></lucide-icon>
@@ -16,46 +9,30 @@
     <!-- Content -->
     <div class="welcome-content">
       <div class="welcome-icon-wrapper">
-        <div class="welcome-icon-large">🌤️</div>
-        <div class="weather-pulse"></div>
+        <div class="welcome-icon-circle">
+          <lucide-icon [name]="Wind" [size]="48" strokeWidth="1.5"></lucide-icon>
+        </div>
       </div>
 
-      <h1 class="welcome-title">Weather Dashboard</h1>
+      <h1 class="welcome-title">Welcome to WeatherFlow</h1>
       
       <p class="welcome-description">
-        Real-time weather visualization dashboard with progressive data streaming. 
-        Monitor meteorological data with interactive charts and live updates powered by WebSocket integration.
+        Monitor and visualize real-time weather data. 
+        Temperature, energy, and statistics updated every 5 seconds.
       </p>
 
       <div class="welcome-features">
-        <div class="welcome-feature">
-          <div class="feature-icon-wrapper">
-            <lucide-icon [name]="Zap" [size]="20" strokeWidth="2"></lucide-icon>
-          </div>
-          <div class="feature-content">
-            <h3 class="feature-title">Real-time Streaming</h3>
-            <p class="feature-desc">Live data updates every 5 seconds via WebSocket</p>
-          </div>
+        <div class="welcome-feature-item">
+          <lucide-icon [name]="Thermometer" [size]="20" strokeWidth="2"></lucide-icon>
+          <span>Real-time monitoring</span>
         </div>
-
-        <div class="welcome-feature">
-          <div class="feature-icon-wrapper">
-            <lucide-icon [name]="TrendingUp" [size]="20" strokeWidth="2"></lucide-icon>
-          </div>
-          <div class="feature-content">
-            <h3 class="feature-title">Interactive Charts</h3>
-            <p class="feature-desc">Chart.js visualizations with smooth animations</p>
-          </div>
+        <div class="welcome-feature-item">
+          <lucide-icon [name]="TrendingUp" [size]="20" strokeWidth="2"></lucide-icon>
+          <span>Interactive charts</span>
         </div>
-
-        <div class="welcome-feature">
-          <div class="feature-icon-wrapper">
-            <lucide-icon [name]="Thermometer" [size]="20" strokeWidth="2"></lucide-icon>
-          </div>
-          <div class="feature-content">
-            <h3 class="feature-title">Advanced Analytics</h3>
-            <p class="feature-desc">Temperature and energy production metrics</p>
-          </div>
+        <div class="welcome-feature-item">
+          <lucide-icon [name]="Zap" [size]="20" strokeWidth="2"></lucide-icon>
+          <span>Automatic updates</span>
         </div>
       </div>
 
@@ -67,4 +44,3 @@
   </div>
 </div>
 }
-
